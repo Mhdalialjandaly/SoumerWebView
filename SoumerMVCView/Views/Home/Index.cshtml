@@ -1,0 +1,54 @@
+﻿@model SoumerMVCView.Models.HomeViewModel
+@{
+    ViewData["Title"] = "الرئيسية";
+}
+
+<h2 class="section-title">🏆 نخبة الأساتذة</h2>
+<div class="horizontal-scroll" id="featuredTeachers">
+    @foreach (var teacher in Model.FeaturedTeachers)
+    {
+        <div class="teacher-card" data-teacher-id="@teacher.Id">
+            <img src="@teacher.Image" alt="@teacher.Name" class="card-img">
+            <div class="card-info">
+                <h3 class="teacher-name">@teacher.Name</h3>
+                <div class="teacher-subject">@teacher.Subject</div>
+                <p class="teacher-bio">@teacher.Bio</p>
+            </div>
+        </div>
+    }
+</div>
+
+<h2 class="section-title">📖 جميع المراحل الدراسية</h2>
+<div id="gradesContainer">
+    @foreach (var grade in Model.GradesTeachers)
+    {
+        <div class="grade-section">
+            <div class="grade-header">
+                <span class="grade-number">الصف @grade.Grade</span>
+                <span class="grade-desc">@grade.GradeLevel</span>
+            </div>
+            <div class="horizontal-scroll">
+                @foreach (var teacher in grade.Teachers)
+                {
+                    <div class="teacher-card" data-teacher-id="@teacher.Id">
+                        <img src="@teacher.Image" alt="@teacher.Name" class="card-img">
+                        <div class="card-info">
+                            <h3 class="teacher-name">@teacher.Name</h3>
+                            <div class="teacher-subject">@teacher.Subject</div>
+                            <p class="teacher-bio">@teacher.Bio</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // التأكد من ربط الأحداث بعد تحميل المحتوى
+        if (typeof attachTeacherCardEvents === 'function') {
+            attachTeacherCardEvents();
+        }
+    </script>
+}

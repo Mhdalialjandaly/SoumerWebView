@@ -1,0 +1,465 @@
+﻿@{
+    ViewData["Title"] = "الإعدادات";
+}
+
+<div class="settings-container">
+    <div class="settings-header">
+        <h1>⚙️ الإعدادات</h1>
+        <p>قم بتخصيص تجربتك في أكاديمية المعرفة</p>
+    </div>
+
+    <div class="settings-content">
+        <div class="settings-sidebar">
+            <div class="settings-nav">
+                <button class="settings-nav-item active" data-tab="general">
+                    <span>🎨</span>
+                    عام
+                </button>
+                <button class="settings-nav-item" data-tab="notifications">
+                    <span>🔔</span>
+                    الإشعارات
+                </button>
+                <button class="settings-nav-item" data-tab="privacy">
+                    <span>🔒</span>
+                    الخصوصية
+                </button>
+                <button class="settings-nav-item" data-tab="appearance">
+                    <span>🎨</span>
+                    المظهر
+                </button>
+                <button class="settings-nav-item" data-tab="language">
+                    <span>🌐</span>
+                    اللغة
+                </button>
+                <button class="settings-nav-item" data-tab="security">
+                    <span>🛡️</span>
+                    الأمان
+                </button>
+            </div>
+        </div>
+
+        <div class="settings-main">
+            <!-- تبويب عام -->
+            <div class="settings-tab active" id="general-tab">
+                <div class="settings-card">
+                    <h3>الإعدادات العامة</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>الوضع الليلي</label>
+                            <p>قم بتفعيل الوضع الليلي لتقليل إجهاد العين</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="darkModeToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>تشغيل الصوت تلقائياً</label>
+                            <p>تشغيل الصوت في مقاطع الفيديو تلقائياً</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoPlayToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>حفظ التقدم تلقائياً</label>
+                            <p>حفظ تقدمك في الكورسات تلقائياً</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoSaveToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>تفضيلات العرض</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>عدد العناصر في الصفحة</label>
+                            <p>اختر عدد العناصر التي تظهر في الصفحة الواحدة</p>
+                        </div>
+                        <select id="itemsPerPage" class="settings-select">
+                            <option value="12">12 عنصر</option>
+                            <option value="24" selected>24 عنصر</option>
+                            <option value="48">48 عنصر</option>
+                            <option value="96">96 عنصر</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>ترتيب الكورسات</label>
+                            <p>اختر الترتيب الافتراضي للكورسات</p>
+                        </div>
+                        <select id="courseOrder" class="settings-select">
+                            <option value="newest" selected>الأحدث أولاً</option>
+                            <option value="oldest">الأقدم أولاً</option>
+                            <option value="popular">الأكثر شعبية</option>
+                            <option value="rating">الأعلى تقييماً</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تبويب الإشعارات -->
+            <div class="settings-tab" id="notifications-tab">
+                <div class="settings-card">
+                    <h3>إشعارات البريد الإلكتروني</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>إشعارات الكورسات الجديدة</label>
+                            <p>استلم إشعارات عند إضافة كورسات جديدة</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="newCoursesNotify" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>تحديثات الكورسات</label>
+                            <p>استلم إشعارات عند تحديث الكورسات المسجل فيها</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="courseUpdatesNotify" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>عروض وتخفيضات</label>
+                            <p>استلم عروض وتخفيضات حصرية</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="offersNotify">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>إشعارات التطبيق</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>إشعارات المتصفح</label>
+                            <p>استلم إشعارات فورية في المتصفح</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="browserNotify" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>إشعارات الإنجازات</label>
+                            <p>استلم إشعارات عند تحقيق إنجازات جديدة</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="achievementsNotify" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تبويب الخصوصية -->
+            <div class="settings-tab" id="privacy-tab">
+                <div class="settings-card">
+                    <h3>الخصوصية</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>إظهار الملف الشخصي للآخرين</label>
+                            <p>السماح للآخرين برؤية ملفك الشخصي</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="showProfileToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>إظهار التقدم في الكورسات</label>
+                            <p>السماح للآخرين برؤية تقدمك في الكورسات</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="showProgressToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>إظهار الإنجازات</label>
+                            <p>السماح للآخرين برؤية إنجازاتك</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="showAchievementsToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-card danger-zone">
+                    <h3>منطقة الخطر</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>تصدير البيانات</label>
+                            <p>قم بتصدير جميع بياناتك الشخصية</p>
+                        </div>
+                        <button class="danger-btn" onclick="exportData()">
+                            📥 تصدير البيانات
+                        </button>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>حذف الحساب</label>
+                            <p>حذف حسابك بشكل دائم - هذا الإجراء لا يمكن التراجع عنه</p>
+                        </div>
+                        <button class="danger-btn delete" onclick="deleteAccount()">
+                            🗑️ حذف الحساب
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تبويب المظهر -->
+            <div class="settings-tab" id="appearance-tab">
+                <div class="settings-card">
+                    <h3>الألوان</h3>
+                    <div class="color-themes">
+                        <div class="color-theme" data-color="blue" style="background: linear-gradient(135deg, #2563eb, #1e40af)"></div>
+                        <div class="color-theme" data-color="purple" style="background: linear-gradient(135deg, #7c3aed, #5b21b6)"></div>
+                        <div class="color-theme" data-color="green" style="background: linear-gradient(135deg, #059669, #047857)"></div>
+                        <div class="color-theme" data-color="orange" style="background: linear-gradient(135deg, #ea580c, #c2410c)"></div>
+                        <div class="color-theme" data-color="red" style="background: linear-gradient(135deg, #dc2626, #b91c1c)"></div>
+                        <div class="color-theme" data-color="pink" style="background: linear-gradient(135deg, #ec4899, #db2777)"></div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>حجم الخط</h3>
+                    <div class="font-size-options">
+                        <button class="font-size-option" data-size="small">صغير</button>
+                        <button class="font-size-option active" data-size="medium">متوسط</button>
+                        <button class="font-size-option" data-size="large">كبير</button>
+                        <button class="font-size-option" data-size="xlarge">كبير جداً</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تبويب اللغة -->
+            <div class="settings-tab" id="language-tab">
+                <div class="settings-card">
+                    <h3>اختر اللغة</h3>
+                    <div class="language-options">
+                        <button class="language-option active" data-lang="ar">
+                            <span>🇸🇦</span>
+                            العربية
+                        </button>
+                        <button class="language-option" data-lang="en">
+                            <span>🇬🇧</span>
+                            English
+                        </button>
+                        <button class="language-option" data-lang="fr">
+                            <span>🇫🇷</span>
+                            Français
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تبويب الأمان -->
+            <div class="settings-tab" id="security-tab">
+                <div class="settings-card">
+                    <h3>تغيير كلمة المرور</h3>
+                    <div class="password-form">
+                        <div class="form-group">
+                            <label>كلمة المرور الحالية</label>
+                            <input type="password" class="form-control" id="currentPassword" placeholder="••••••••">
+                        </div>
+                        <div class="form-group">
+                            <label>كلمة المرور الجديدة</label>
+                            <input type="password" class="form-control" id="newPassword" placeholder="••••••••">
+                        </div>
+                        <div class="form-group">
+                            <label>تأكيد كلمة المرور الجديدة</label>
+                            <input type="password" class="form-control" id="confirmPassword" placeholder="••••••••">
+                        </div>
+                        <button class="save-settings-btn" onclick="changePassword()">
+                            تغيير كلمة المرور
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>جلسات الدخول النشطة</h3>
+                    <div class="sessions-list">
+                        <div class="session-item">
+                            <div class="session-info">
+                                <span class="session-device">💻 Windows - Chrome</span>
+                                <span class="session-location">📍 الرياض، السعودية</span>
+                            </div>
+                            <span class="session-active">نشط الآن</span>
+                        </div>
+                        <div class="session-item">
+                            <div class="session-info">
+                                <span class="session-device">📱 iPhone - Safari</span>
+                                <span class="session-location">📍 جدة، السعودية</span>
+                            </div>
+                            <button class="session-logout" onclick="logoutSession(this)">تسجيل خروج</button>
+                        </div>
+                    </div>
+                    <button class="logout-all-btn" onclick="logoutAllSessions()">
+                        تسجيل خروج من جميع الأجهزة
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-actions">
+                <button class="save-all-btn" onclick="saveAllSettings()">
+                    💾 حفظ جميع الإعدادات
+                </button>
+                <button class="reset-btn" onclick="resetSettings()">
+                    ↩️ إعادة تعيين
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    // تبديل التبويبات
+    document.querySelectorAll('.settings-nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const tabId = item.getAttribute('data-tab');
+
+            // تحديث حالة التبويبات
+            document.querySelectorAll('.settings-nav-item').forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+
+            document.querySelectorAll('.settings-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+        });
+    });
+
+    // ألوان المظهر
+    document.querySelectorAll('.color-theme').forEach(theme => {
+        theme.addEventListener('click', () => {
+            document.querySelectorAll('.color-theme').forEach(t => t.classList.remove('selected'));
+            theme.classList.add('selected');
+            const color = theme.getAttribute('data-color');
+            // تطبيق تغيير اللون
+            document.documentElement.style.setProperty('--primary', getComputedStyle(theme).background);
+        });
+    });
+
+    // حجم الخط
+    document.querySelectorAll('.font-size-option').forEach(option => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('.font-size-option').forEach(opt => opt.classList.remove('active'));
+            option.classList.add('active');
+            const size = option.getAttribute('data-size');
+            let fontSize = '16px';
+            if (size === 'small') fontSize = '14px';
+            else if (size === 'medium') fontSize = '16px';
+            else if (size === 'large') fontSize = '18px';
+            else if (size === 'xlarge') fontSize = '20px';
+            document.body.style.fontSize = fontSize;
+        });
+    });
+
+    // اللغة
+    document.querySelectorAll('.language-option').forEach(option => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('.language-option').forEach(opt => opt.classList.remove('active'));
+            option.classList.add('active');
+            const lang = option.getAttribute('data-lang');
+            // تغيير اللغة
+            console.log('Language changed to:', lang);
+        });
+    });
+
+    // حفظ جميع الإعدادات
+    function saveAllSettings() {
+        const settings = {
+            darkMode: document.getElementById('darkModeToggle')?.checked,
+            autoPlay: document.getElementById('autoPlayToggle')?.checked,
+            autoSave: document.getElementById('autoSaveToggle')?.checked,
+            itemsPerPage: document.getElementById('itemsPerPage')?.value,
+            courseOrder: document.getElementById('courseOrder')?.value,
+            newCoursesNotify: document.getElementById('newCoursesNotify')?.checked,
+            courseUpdatesNotify: document.getElementById('courseUpdatesNotify')?.checked,
+            offersNotify: document.getElementById('offersNotify')?.checked,
+            browserNotify: document.getElementById('browserNotify')?.checked,
+            achievementsNotify: document.getElementById('achievementsNotify')?.checked,
+            showProfile: document.getElementById('showProfileToggle')?.checked,
+            showProgress: document.getElementById('showProgressToggle')?.checked,
+            showAchievements: document.getElementById('showAchievementsToggle')?.checked
+        };
+
+        console.log('Saving settings:', settings);
+        alert('تم حفظ الإعدادات بنجاح!');
+
+        // هنا يمكن إرسال البيانات إلى الخادم
+        // fetch('/Account/SaveSettings', { method: 'POST', body: JSON.stringify(settings), ... })
+    }
+
+    function resetSettings() {
+        if (confirm('هل أنت متأكد من إعادة تعيين جميع الإعدادات إلى الوضع الافتراضي؟')) {
+            location.reload();
+        }
+    }
+
+    function changePassword() {
+        const current = document.getElementById('currentPassword')?.value;
+        const newPass = document.getElementById('newPassword')?.value;
+        const confirm = document.getElementById('confirmPassword')?.value;
+
+        if (!current || !newPass || !confirm) {
+            alert('الرجاء ملء جميع الحقول');
+            return;
+        }
+
+        if (newPass !== confirm) {
+            alert('كلمة المرور الجديدة وتأكيدها غير متطابقين');
+            return;
+        }
+
+        if (newPass.length < 6) {
+            alert('كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل');
+            return;
+        }
+
+        alert('تم تغيير كلمة المرور بنجاح');
+        // هنا يمكن إرسال الطلب إلى الخادم
+    }
+
+    function exportData() {
+        alert('سيتم إعداد ملف تصدير بياناتك قريباً');
+    }
+
+    function deleteAccount() {
+        if (confirm('تحذير: هذا الإجراء لا يمكن التراجع عنه. هل أنت متأكد من حذف حسابك بشكل دائم؟')) {
+            if (confirm('الرجاء التأكيد مرة أخيرة: هل تريد حذف حسابك وجميع بياناتك؟')) {
+                alert('تم حذف الحساب بنجاح');
+                // توجيه إلى صفحة تسجيل الخروج
+                window.location.href = '/Account/Logout';
+            }
+        }
+    }
+
+    function logoutSession(btn) {
+        const sessionItem = btn.closest('.session-item');
+        sessionItem.remove();
+        alert('تم تسجيل الخروج من هذا الجهاز');
+    }
+
+    function logoutAllSessions() {
+        if (confirm('هل تريد تسجيل الخروج من جميع الأجهزة؟')) {
+            alert('تم تسجيل الخروج من جميع الأجهزة');
+        }
+    }
+</script>

@@ -1,0 +1,341 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using DataAccess.Entities
+@inject UserManager<User> UserManager
+@{
+    ViewData["Title"] = "الملف الشخصي";
+    var user = await UserManager.GetUserAsync(User);
+}
+
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-cover">
+            <div class="profile-avatar-wrapper">
+                <div class="profile-avatar">
+                    <span class="avatar-emoji">👨‍🏫</span>
+                </div>
+                <button class="change-avatar-btn" id="changeAvatarBtn" title="تغيير الصورة">
+                    📷
+                </button>
+            </div>
+            <div class="profile-info">
+                <h1 class="profile-name">@user?.UserName</h1>
+                <p class="profile-email">@user?.Email</p>
+                <div class="profile-badges">
+                    <span class="badge">
+                        <span class="badge-icon">✅</span>
+                        البريد مؤكد
+                    </span>
+                    @if (user?.IsActive == true)
+                    {
+                        <span class="badge success">
+                            <span class="badge-icon">🟢</span>
+                            نشط
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge warning">
+                            <span class="badge-icon">🔴</span>
+                            غير نشط
+                        </span>
+                    }
+                </div>
+            </div>
+            <button class="edit-profile-btn" id="editProfileBtn">
+                ✏️ تعديل الملف الشخصي
+            </button>
+        </div>
+    </div>
+
+    <div class="profile-content">
+        <div class="profile-sidebar">
+            <div class="stats-card">
+                <h3>إحصائيات سريعة</h3>
+                <div class="stat-item">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-info">
+                        <span class="stat-label">تاريخ الانضمام</span>
+                        <span class="stat-value">@user?.CreatedAt.ToString("dd MMMM yyyy")</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">🕒</div>
+                    <div class="stat-info">
+                        <span class="stat-label">آخر تسجيل دخول</span>
+                        <span class="stat-value">@(user?.LastLogin?.ToString("dd MMMM yyyy - hh:mm tt") ?? "لم يسجل بعد")</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">📚</div>
+                    <div class="stat-info">
+                        <span class="stat-label">الكورسات المسجلة</span>
+                        <span class="stat-value">8 كورسات</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">💎</div>
+                    <div class="stat-info">
+                        <span class="stat-label">النقاط</span>
+                        <span class="stat-value">1,250 نقطة</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-actions-card">
+                <h3>إجراءات سريعة</h3>
+                <button class="quick-action" onclick="location.href='/Account/ChangePassword'">
+                    <span>🔑</span>
+                    تغيير كلمة المرور
+                </button>
+                <button class="quick-action" onclick="location.href='/Account/Settings'">
+                    <span>⚙️</span>
+                    الإعدادات المتقدمة
+                </button>
+                <button class="quick-action" onclick="location.href='/Home/MyCourses'">
+                    <span>📖</span>
+                    كورساتي
+                </button>
+            </div>
+        </div>
+
+        <div class="profile-main">
+            <div class="info-card">
+                <div class="card-header">
+                    <h3>📋 المعلومات الشخصية</h3>
+                    <button class="edit-section-btn" data-section="personal">
+                        تعديل
+                    </button>
+                </div>
+                <div class="info-grid">
+                    <div class="info-field">
+                        <label>اسم المستخدم</label>
+                        <div class="field-value" id="usernameValue">@user?.UserName</div>
+                        <input type="text" class="edit-input" id="usernameInput" value="@user?.UserName" style="display: none;">
+                    </div>
+                    <div class="info-field">
+                        <label>البريد الإلكتروني</label>
+                        <div class="field-value" id="emailValue">@user?.Email</div>
+                        <input type="email" class="edit-input" id="emailInput" value="@user?.Email" style="display: none;">
+                    </div>
+                    <div class="info-field">
+                        <label>رقم الهاتف</label>
+                        <div class="field-value" id="phoneValue">@(user?.PhoneNumber ?? "غير مضاف")</div>
+                        <input type="tel" class="edit-input" id="phoneInput" value="@user?.PhoneNumber" style="display: none;">
+                    </div>
+                    <div class="info-field full-width">
+                        <label>الوصف</label>
+                        <div class="field-value" id="descriptionValue">@(user?.Description ?? "لا يوجد وصف")</div>
+                        <textarea class="edit-input" id="descriptionInput" rows="3" style="display: none;">@user?.Description</textarea>
+                    </div>
+                </div>
+                <div class="edit-actions" id="personalEditActions" style="display: none;">
+                    <button class="save-btn" onclick="savePersonalInfo()">💾 حفظ التغييرات</button>
+                    <button class="cancel-btn" onclick="cancelEdit('personal')">❌ إلغاء</button>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="card-header">
+                    <h3>🔐 الأمان والخصوصية</h3>
+                </div>
+                <div class="security-options">
+                    <div class="security-item">
+                        <div class="security-info">
+                            <span class="security-icon">🔑</span>
+                            <div>
+                                <h4>كلمة المرور</h4>
+                                <p>آخر تغيير: منذ 3 أشهر</p>
+                            </div>
+                        </div>
+                        <button class="security-action" onclick="location.href='/Account/ChangePassword'">
+                            تغيير
+                        </button>
+                    </div>
+                    <div class="security-item">
+                        <div class="security-info">
+                            <span class="security-icon">📱</span>
+                            <div>
+                                <h4>المصادقة الثنائية</h4>
+                                <p>أضف طبقة أمان إضافية لحسابك</p>
+                            </div>
+                        </div>
+                        <button class="security-action" onclick="enableTwoFactor()">
+                            تفعيل
+                        </button>
+                    </div>
+                    <div class="security-item">
+                        <div class="security-info">
+                            <span class="security-icon">📧</span>
+                            <div>
+                                <h4>البريد الإلكتروني</h4>
+                                <p>@(user.EmailConfirmed ? "تم التحقق" : "لم يتم التحقق")</p>
+                            </div>
+                        </div>
+                        @if (!user?.EmailConfirmed == true)
+                        {
+                            <button class="security-action" onclick="verifyEmail()">
+                                تحقق
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="card-header">
+                    <h3>📊 النشاط والإنجازات</h3>
+                </div>
+                <div class="activity-timeline">
+                    <div class="activity-item">
+                        <div class="activity-icon">🏆</div>
+                        <div class="activity-content">
+                            <h4>أكملت 5 كورسات</h4>
+                            <p>منذ أسبوعين</p>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon">⭐</div>
+                        <div class="activity-content">
+                            <h4>حصلت على شارة المتفوق</h4>
+                            <p>منذ شهر</p>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon">💬</div>
+                        <div class="activity-content">
+                            <h4>أضفت 10 تعليقات</h4>
+                            <p>منذ 3 أشهر</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal لتغيير الصورة -->
+<div id="avatarModal" class="modal">
+    <div class="modal-content avatar-modal">
+        <h3>تغيير الصورة الشخصية</h3>
+        <div class="avatar-options">
+            <div class="avatar-option" data-avatar="👨‍🏫">👨‍🏫</div>
+            <div class="avatar-option" data-avatar="👩‍🏫">👩‍🏫</div>
+            <div class="avatar-option" data-avatar="👨‍🎓">👨‍🎓</div>
+            <div class="avatar-option" data-avatar="👩‍🎓">👩‍🎓</div>
+            <div class="avatar-option" data-avatar="📚">📚</div>
+            <div class="avatar-option" data-avatar="🎓">🎓</div>
+        </div>
+        <button class="close-modal-btn">إغلاق</button>
+    </div>
+</div>
+
+
+<script>
+    let currentEditSection = null;
+    let originalValues = {};
+
+    function editSection(section) {
+        currentEditSection = section;
+
+        // حفظ القيم الأصلية
+        if (section === 'personal') {
+            originalValues = {
+                username: document.getElementById('usernameValue').innerText,
+                email: document.getElementById('emailValue').innerText,
+                phone: document.getElementById('phoneValue').innerText,
+                description: document.getElementById('descriptionValue').innerText
+            };
+
+            // إظهار حقول التعديل
+            document.getElementById('usernameValue').style.display = 'none';
+            document.getElementById('usernameInput').style.display = 'block';
+            document.getElementById('emailValue').style.display = 'none';
+            document.getElementById('emailInput').style.display = 'block';
+            document.getElementById('phoneValue').style.display = 'none';
+            document.getElementById('phoneInput').style.display = 'block';
+            document.getElementById('descriptionValue').style.display = 'none';
+            document.getElementById('descriptionInput').style.display = 'block';
+            document.getElementById('personalEditActions').style.display = 'flex';
+        }
+    }
+
+    function cancelEdit(section) {
+        if (section === 'personal') {
+            // استعادة القيم الأصلية
+            document.getElementById('usernameValue').innerText = originalValues.username;
+            document.getElementById('emailValue').innerText = originalValues.email;
+            document.getElementById('phoneValue').innerText = originalValues.phone;
+            document.getElementById('descriptionValue').innerText = originalValues.description;
+
+            // إخفاء حقول التعديل
+            document.getElementById('usernameValue').style.display = 'block';
+            document.getElementById('usernameInput').style.display = 'none';
+            document.getElementById('emailValue').style.display = 'block';
+            document.getElementById('emailInput').style.display = 'none';
+            document.getElementById('phoneValue').style.display = 'block';
+            document.getElementById('phoneInput').style.display = 'none';
+            document.getElementById('descriptionValue').style.display = 'block';
+            document.getElementById('descriptionInput').style.display = 'none';
+            document.getElementById('personalEditActions').style.display = 'none';
+        }
+    }
+
+    async function savePersonalInfo() {
+        const data = {
+            username: document.getElementById('usernameInput').value,
+            email: document.getElementById('emailInput').value,
+            phoneNumber: document.getElementById('phoneInput').value,
+            description: document.getElementById('descriptionInput').value
+        };
+
+        try {
+            const response = await fetch('/Account/UpdateProfile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert('تم حفظ التغييرات بنجاح');
+                location.reload();
+            } else {
+                alert('حدث خطأ في حفظ التغييرات');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('حدث خطأ في حفظ التغييرات');
+        }
+    }
+
+    function enableTwoFactor() {
+        alert('سيتم تفعيل المصادقة الثنائية قريباً');
+    }
+
+    function verifyEmail() {
+        alert('سيتم إرسال رابط التحقق إلى بريدك الإلكتروني');
+    }
+
+    // ربط أزرار التعديل
+    document.querySelectorAll('.edit-section-btn').forEach(btn => {
+        btn.addEventListener('click', () => editSection('personal'));
+    });
+
+    document.getElementById('editProfileBtn')?.addEventListener('click', () => editSection('personal'));
+
+    // Modal for avatar
+    const avatarModal = document.getElementById('avatarModal');
+    document.getElementById('changeAvatarBtn')?.addEventListener('click', () => {
+        if (avatarModal) avatarModal.style.display = 'flex';
+    });
+
+    document.querySelectorAll('.avatar-option').forEach(option => {
+        option.addEventListener('click', () => {
+            const avatar = option.getAttribute('data-avatar');
+            document.querySelector('.avatar-emoji').textContent = avatar;
+            if (avatarModal) avatarModal.style.display = 'none';
+            // هنا يمكن إرسال التغيير إلى الخادم
+        });
+    });
+</script>
