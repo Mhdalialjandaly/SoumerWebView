@@ -4,6 +4,7 @@ using DataAccess.Setup;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace SoumerMVCView
 {
@@ -56,6 +57,16 @@ namespace SoumerMVCView
 
             var app = builder.Build();
 
+            using (var context = new ApplicationDbContext())
+            {
+                context.Database.MigrateAsync();
+            }
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                dbContext.Database.Migrate();
+            }
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
