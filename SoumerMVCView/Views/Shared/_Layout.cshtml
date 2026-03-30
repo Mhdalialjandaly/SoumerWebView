@@ -4,14 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>@ViewData["Title"] - أكاديمية المعرفة</title>
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />   <!-- Font Awesome 6 (Free) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 </head>
 <body>
 
     <header class="header">
         <div class="header-container">
             <div class="logo">
-                <h1>📚 أكاديمية المعرفة</h1>
+                <h1>⬟ Soumer</h1>
                 <p>منصة الأساتذة المتميزين</p>
             </div>
             <div class="user-actions">
@@ -19,30 +20,37 @@
                 {
                     <div class="user-info">
                         <button class="icon-btn" id="userMenuBtn" aria-label="قائمة المستخدم">
-                            <span class="user-avatar">👤</span>
+                            <span class="user-avatar">
+                                <i class="fa-regular fa-user"></i>
+                            </span>
                             <span class="user-name">@User.Identity.Name</span>
-                            <span class="dropdown-arrow">▼</span>
+                            <span class="dropdown-arrow">
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </span>
                         </button>
                         <div id="userDropdown" class="dropdown-menu">
                             <a asp-controller="Account" asp-action="Profile" class="dropdown-item">
-                                <span>👤</span> ملفي الشخصي
+                                <span><i class="fa-regular fa-id-card"></i></span>
+                                ملفي الشخصي
                             </a>
                             <a asp-controller="Account" asp-action="Settings" class="dropdown-item">
-                                <span>⚙️</span> الإعدادات
+                                <span><i class="fa-regular fa-gear"></i></span>
+                                الإعدادات
                             </a>
                             <div class="dropdown-divider"></div>
                             <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm">
                                 <button type="submit" class="dropdown-item logout-item">
-                                    <span>🚪</span> تسجيل خروج
+                                    <span><i class="fa-solid fa-right-from-bracket"></i></span>
+                                    تسجيل خروج
                                 </button>
                             </form>
                         </div>
                     </div>
-                    <button class="icon-btn" id="settingsBtn" aria-label="الإعدادات">⚙️</button>
+                  @*   <button class="icon-btn" id="settingsBtn" aria-label="الإعدادات">⚙️</button> *@
                 }
                 else
                 {
-                    <button class="icon-btn" id="settingsBtn" aria-label="الإعدادات">⚙️</button>
+                   @*  <button class="icon-btn" id="settingsBtn" aria-label="الإعدادات">⚙️</button> *@
                     <button class="icon-btn login-btn" id="loginBtn">👤 دخول</button>
                 }
             </div>
@@ -54,25 +62,25 @@
     </main>
 
     <div class="footer">
-        <p>© 2026 أكاديمية المعرفة | جميع الحقوق محفوظة</p>
+        <p>© 2026 DidItDev | جميع الحقوق محفوظة</p>
     </div>
 
     <div class="bottom-navbar">
         <div class="nav-container">
             <button class="nav-item active" data-page="home">
-                <div class="nav-icon">🏠</div>
+                <div class="nav-icon">⌂</div>
                 <div class="nav-label">الرئيسية</div>
             </button>
             <button class="nav-item" data-page="mycourses">
-                <div class="nav-icon">📘</div>
+                <div class="nav-icon">☰</div>
                 <div class="nav-label">كورساتي</div>
             </button>
             <button class="nav-item" data-page="points">
-                <div class="nav-icon">💎</div>
+                <div class="nav-icon">⬟</div>
                 <div class="nav-label">نقاطي</div>
             </button>
             <button class="nav-item" data-page="institutes">
-                <div class="nav-icon">🏫</div>
+                <div class="nav-icon">⌂</div>
                 <div class="nav-label">المعاهد</div>
             </button>
         </div>
