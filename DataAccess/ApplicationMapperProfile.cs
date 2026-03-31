@@ -27,7 +27,26 @@ namespace DataAccess
                 .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
+            CreateMap<TeacherDto,Teacher>().ReverseMap();
+            CreateMap<Teacher, TeacherDto>();
 
+            CreateMap<CourseDto, Course>().ReverseMap();
+            CreateMap<Course, CourseDto>();
+
+            CreateMap<TeacherCourseDto, TeacherCourse>().ReverseMap();
+            CreateMap<TeacherCourse, TeacherCourseDto>();
+
+            CreateMap<BalanceDto, Balance>().ReverseMap();
+            CreateMap<Balance, BalanceDto>();
+
+            CreateMap<BalanceTransactionDto, BalanceTransaction>().ReverseMap();
+            CreateMap<BalanceTransaction, BalanceTransactionDto>();
+          
+            CreateMap<CourseRegistrationDto, CourseRegistration>().ReverseMap();          
+            CreateMap<CourseRegistration, CourseRegistrationDto>();
+          
+            CreateMap<TeacherGradeAssignmentDto, TeacherGradeAssignment>().ReverseMap();          
+            CreateMap<TeacherGradeAssignment, TeacherGradeAssignmentDto>();
         }
     }
 }

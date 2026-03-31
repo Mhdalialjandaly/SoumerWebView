@@ -11,7 +11,15 @@ namespace DataAccess
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
         public ApplicationDbContext() { }
+
+
      
+        DbSet<Teacher> Teachers { get; set; }
+        DbSet<Course> Courses { get; set; }
+        DbSet<TeacherCourse> TeacherCourses { get; set; }
+        DbSet<CourseRegistration> CourseRegistrations { get; set; }
+        DbSet<Balance> Balances { get; set; }
+        DbSet<BalanceTransaction> BalanceTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
