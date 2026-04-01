@@ -1,0 +1,151 @@
+﻿@model CourseDetailViewModel
+@{
+    ViewData["Title"] = Model.Course.Name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .course-detail-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .course-price-large {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #2563eb;
+    }
+
+    .balance-warning {
+        background: #fef3c7;
+        border: 1px solid #fcd34d;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .enrolled-badge-large {
+        background: #10b981;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        display: inline-block;
+    }
+</style>
+
+<div class="container-fluid mt-4" dir="rtl">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="course-detail-card">
+                <h1>@Model.Course.Name</h1>
+                <p class="text-muted">@Model.Course.Description</p>
+
+                <div class="mt-4">
+                    <div class="course-price-large">
+                        @Model.Course.Price.ToString("N0") <small>نقطة</small>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    @if (Model.IsEnrolled)
+                    {
+                        <div class="enrolled-badge-large">
+                            ✅ أنت مسجل في هذا الكورس
+                        </div>
+                        <button class="btn btn-danger mt-3" onclick="unenrollFromCourse()">
+                            إلغاء التسجيل
+                        </button>
+                    }
+                    else if (Model.CanEnroll)
+                    {
+                        <button class="btn btn-success btn-lg" onclick="enrollInCourse()">
+                            تسجيل الآن (@Model.Course.Price نقطة)
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="balance-warning">
+                            ⚠️ @Model.EnrollmentMessage
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="course-detail-card">
+                <h5>💎 رصيدك الحالي</h5>
+                <div class="course-price-large">
+                    @Model.UserBalance.ToString("N0") <small>نقطة</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function enrollInCourse() {
+            Swal.fire({
+                title: 'تأكيد التسجيل',
+                text: `هل أنت متأكد من رغبتك في التسجيل في كورس "${@Html.Raw(Model.Course.Name)}" مقابل ${@Model.Course.Price} نقطة؟`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، سجلني',
+                cancelButtonText: 'إلغاء'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/Course/Enroll?courseId=${@Model.Course.Id}`, {
+                            method: 'POST'
+                        });
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire('تم', data.message, 'success')
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('خطأ', data.message, 'error');
+                        }
+                    } catch (error) {
+                        Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
+                    }
+                }
+            });
+        }
+
+        function unenrollFromCourse() {
+            Swal.fire({
+                title: 'تأكيد إلغاء التسجيل',
+                text: 'هل أنت متأكد من رغبتك في إلغاء التسجيل من هذا الكورس؟',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، ألغِ التسجيل',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#d33'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/Course/Unenroll?courseId=${@Model.Course.Id}`, {
+                            method: 'POST'
+                        });
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire('تم', data.message, 'success')
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('خطأ', data.message, 'error');
+                        }
+                    } catch (error) {
+                        Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
+                    }
+                }
+            });
+        }
+    </script>
+}

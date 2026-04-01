@@ -7,7 +7,8 @@ namespace DataAccess.Entities
     {
         public int Id { get; set; }
         public decimal Amount { get; set; }
-        public TransactionType MyProperty { get; set; }
+        public TransactionType TransactionType { get; set; }
+        public string Description { get; set; }
         public int BalanceId { get; set; }
         public Balance Balance { get; set; }
         public DateTime CreatedAt { get ; set ; }

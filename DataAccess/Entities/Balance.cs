@@ -13,8 +13,9 @@ namespace DataAccess.Entities
         
         public int Id { get; set; }
         public decimal Amount { get; set; }
-        
+
         // إضافة العلاقة العكسية
+        public string UserId { get; set; }
         public virtual User User { get; set; }
         
         public virtual ICollection<BalanceTransaction> BalanceTransactions { get; set; }

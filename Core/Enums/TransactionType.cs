@@ -3,9 +3,13 @@ namespace Core.Enums
 {
     public enum TransactionType
     {
+        [Description("إيداع")]
+        Credit = 1,
+        [Description("سحب")]
+        Debit = 2,
         [Description("دخل")]
-        In,
+        In = 3,
         [Description("خرج")]
-        Out
+        Out = 4
     }
 }

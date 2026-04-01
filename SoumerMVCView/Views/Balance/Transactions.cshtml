@@ -1,0 +1,113 @@
+﻿@model BalanceViewModel
+@{
+    ViewData["Title"] = "جميع المعاملات";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .transaction-table {
+        background: white;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+        .transaction-table th {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .transaction-table td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+    .pagination {
+        margin-top: 2rem;
+        justify-content: center;
+    }
+
+    .page-link {
+        margin: 0 0.25rem;
+        border-radius: 0.5rem;
+    }
+</style>
+
+<div class="container-fluid mt-4" dir="rtl">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h4 class="mb-0">📊 سجل المعاملات</h4>
+            <small class="text-muted">الرصيد الحالي: <strong>@Model.CurrentBalance.ToString("N0")</strong> نقطة</small>
+        </div>
+        <div class="card-body p-0">
+            <div class="transaction-table">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>النوع</th>
+                            <th>المبلغ</th>
+                            <th>الوصف</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.RecentTransactions != null && Model.RecentTransactions.Any())
+                        {
+                            foreach (var transaction in Model.RecentTransactions)
+                            {
+                                <tr>
+                                    <td>@transaction.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                                    <td>
+                                        @if (transaction.TransactionType == TransactionType.Credit)
+                                        {
+                                            <span class="badge bg-success">إضافة</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">خصم</span>
+                                        }
+                                    </td>
+                                    <td class="@(transaction.TransactionType == TransactionType.Credit ? "text-success" : "text-danger")">
+                                        @(transaction.TransactionType == TransactionType.Credit ? "+" : "-") @transaction.Amount.ToString("N0")
+                                    </td>
+                                    <td>@(string.IsNullOrEmpty(transaction.Description) ? "-" : transaction.Description)</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <div class="empty-transactions">
+                                        <p>لا توجد معاملات حتى الآن</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                        <a class="page-link" href="/Balance/Transactions?page=@i">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+
+    <div class="text-center mt-3">
+        <a href="/Balance/Index" class="btn btn-outline-secondary">
+            ← العودة للصفحة الرئيسية
+        </a>
+    </div>
+</div>

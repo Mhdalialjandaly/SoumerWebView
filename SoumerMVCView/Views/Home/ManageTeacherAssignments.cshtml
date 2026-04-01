@@ -1,0 +1,345 @@
+﻿@using Models
+@model ManageTeacherAssignmentsViewModel
+
+@{
+    ViewData["Title"] = "إدارة توزيع الأساتذة على الصفوف";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid mt-4" dir="rtl">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">إدارة توزيع الأساتذة على الصفوف</h4>
+                </div>
+                <div class="card-body">
+                    <!-- نموذج إضافة أستاذ جديد -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0">إضافة أستاذ إلى صف</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="assignTeacherForm">
+                                        <div class="row">
+                                            <div class="col-md-4 mb-3">
+                                                <label for="teacherId" class="form-label">اختر الأستاذ</label>
+                                                <select id="teacherId" name="teacherId" class="form-select" required>
+                                                    <option value="">-- اختر الأستاذ --</option>
+                                                    @foreach (var teacher in Model.AssignForm.AvailableTeachers)
+                                                    {
+                                                        <option value="@teacher.Id">@teacher.Name - @teacher.Subject</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label for="grade" class="form-label">اختر الصف</label>
+                                                <select id="grade" name="grade" class="form-select" required>
+                                                    <option value="">-- اختر الصف --</option>
+                                                    @foreach (var grade in Model.AssignForm.AvailableGrades)
+                                                    {
+                                                        <option value="@grade">الصف @grade</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label for="priority" class="form-label">الأولوية</label>
+                                                <input type="number" id="priority" name="priority" class="form-control" min="1" required />
+                                                <small class="text-muted">الأولوية 1 هي الأعلى</small>
+                                            </div>
+                                            <div class="col-md-2 mb-3 d-flex align-items-end">
+                                                <button type="submit" class="btn btn-success w-100">
+                                                    <i class="fas fa-plus"></i> إضافة
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- عرض الصفوف والتوزيعات -->
+                    <div class="accordion" id="gradesAccordion">
+                        @foreach (var gradeItem in Model.GradesAssignments)
+                        {
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading@(gradeItem.Grade)">
+                                    <button class="accordion-button @(gradeItem.Grade != 1 ? "collapsed" : "")"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#collapse@(gradeItem.Grade)"
+                                            aria-expanded="@(gradeItem.Grade == 1 ? "true" : "false")"
+                                            aria-controls="collapse@(gradeItem.Grade)">
+                                        <div class="d-flex justify-content-between w-100 me-3">
+                                            <span class="fw-bold">الصف @gradeItem.Grade - @gradeItem.GradeLevel</span>
+                                            <span class="badge bg-secondary ms-2">
+                                                @gradeItem.AssignedTeachers.Count / @gradeItem.RequiredTeachersCount أستاذ
+                                            </span>
+                                            @if (gradeItem.AssignedTeachers.Count < gradeItem.RequiredTeachersCount)
+                                            {
+                                                <span class="badge bg-warning ms-2">بحاجة إلى @(gradeItem.RequiredTeachersCount - gradeItem.AssignedTeachers.Count) أستاذ</span>
+                                            }
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse@(gradeItem.Grade)"
+                                     class="accordion-collapse collapse @(gradeItem.Grade == 1 ? "show" : "")"
+                                     aria-labelledby="heading@(gradeItem.Grade)"
+                                     data-bs-parent="#gradesAccordion">
+                                    <div class="accordion-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>الصورة</th>
+                                                        <th>اسم الأستاذ</th>
+                                                        <th>المادة</th>
+                                                        <th>الأولوية</th>
+                                                        <th>الإجراءات</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="teachersList_@gradeItem.Grade">
+                                                    @foreach (var teacher in gradeItem.AssignedTeachers.OrderBy(t => t.Priority))
+                                                    {
+                                                        <tr id="teacher_@gradeItem.Grade@teacher.TeacherId">
+                                                            <td>@teacher.Priority</td>
+                                                            <td>
+                                                                @if (!string.IsNullOrEmpty(teacher.Image))
+                                                                {
+                                                                    <img src="@teacher.Image" alt="@teacher.TeacherName" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" />
+                                                                }
+                                                                else
+                                                                {
+                                                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center"
+                                                                         style="width: 40px; height: 40px; color: white;">
+                                                                        <i class="fas fa-user"></i>
+                                                                    </div>
+                                                                }
+                                                            </td>
+                                                            <td>@teacher.TeacherName</td>
+                                                            <td>@teacher.Subject</td>
+                                                            <td>
+                                                                <div class="input-group input-group-sm" style="width: 100px;">
+                                                                    <input type="number"
+                                                                           class="form-control priority-input"
+                                                                           value="@teacher.Priority"
+                                                                           data-grade="@gradeItem.Grade"
+                                                                           data-teacher="@teacher.TeacherId"
+                                                                           min="1"
+                                                                           max="@gradeItem.AssignedTeachers.Count" />
+                                                                    <button class="btn btn-outline-primary update-priority"
+                                                                            data-grade="@gradeItem.Grade"
+                                                                            data-teacher="@teacher.TeacherId">
+                                                                        <i class="fas fa-save"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <button class="btn btn-sm btn-danger remove-teacher"
+                                                                        data-grade="@gradeItem.Grade"
+                                                                        data-teacher="@teacher.TeacherId"
+                                                                        data-name="@teacher.TeacherName">
+                                                                    <i class="fas fa-trash"></i> حذف
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            // إرسال نموذج إضافة أستاذ
+            $('#assignTeacherForm').submit(function(e) {
+                e.preventDefault();
+
+                const teacherId = $('#teacherId').val();
+                const grade = $('#grade').val();
+                const priority = $('#priority').val();
+
+                if (!teacherId || !grade || !priority) {
+                    Swal.fire('خطأ', 'يرجى ملء جميع الحقول', 'error');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/Home/AssignTeacherToGrade',
+                    type: 'POST',
+                    data: {
+                        teacherId: teacherId,
+                        grade: grade,
+                        priority: priority
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire('تم', 'تم إضافة الأستاذ بنجاح', 'success')
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('خطأ', 'حدث خطأ أثناء إضافة الأستاذ', 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
+                    }
+                });
+            });
+
+            // تحديث الأولوية
+            $('.update-priority').click(function() {
+                const button = $(this);
+                const grade = button.data('grade');
+                const teacherId = button.data('teacher');
+                const priorityInput = button.closest('tr').find('.priority-input');
+                const newPriority = priorityInput.val();
+
+                $.ajax({
+                    url: '/Home/UpdateTeacherPriority',
+                    type: 'POST',
+                    data: {
+                        teacherId: teacherId,
+                        grade: grade,
+                        newPriority: newPriority
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire('تم', 'تم تحديث الأولوية بنجاح', 'success')
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('خطأ', 'حدث خطأ أثناء تحديث الأولوية', 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
+                    }
+                });
+            });
+
+            // حذف أستاذ من الصف
+            $('.remove-teacher').click(function() {
+                const button = $(this);
+                const grade = button.data('grade');
+                const teacherId = button.data('teacher');
+                const teacherName = button.data('name');
+
+                Swal.fire({
+                    title: 'تأكيد الحذف',
+                    text: `هل أنت متأكد من حذف الأستاذ "${teacherName}" من الصف ${grade}؟`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'نعم، احذف',
+                    cancelButtonText: 'إلغاء'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/Home/RemoveTeacherFromGrade',
+                            type: 'POST',
+                            data: {
+                                teacherId: teacherId,
+                                grade: grade
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire('تم', 'تم حذف الأستاذ بنجاح', 'success')
+                                        .then(() => location.reload());
+                                } else {
+                                    Swal.fire('خطأ', 'حدث خطأ أثناء حذف الأستاذ', 'error');
+                                }
+                            },
+                            error: function() {
+                                Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+       $('#grade').change(function() {
+            const grade = $(this).val();
+            if (grade) {
+                $.ajax({
+                    url: '/Home/GetNextPriority',
+                    type: 'POST',
+                    data: { grade: grade },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#priority').val(response.priority);
+                        }
+                    }
+                });
+            }
+        });
+
+        // تحديث قائمة الأساتذة المتاحين عند اختيار الصف
+        $('#grade').change(function() {
+            const grade = $(this).val();
+            if (grade) {
+                $.ajax({
+                    url: '/Home/GetAvailableTeachersForGrade',
+                    type: 'POST',
+                    data: { grade: grade },
+                    success: function(response) {
+                        if (response.success && response.teachers) {
+                            const teacherSelect = $('#teacherId');
+                            teacherSelect.empty();
+                            teacherSelect.append('<option value="">-- اختر الأستاذ --</option>');
+
+                            response.teachers.forEach(teacher => {
+                                teacherSelect.append(`<option value="${teacher.id}">${teacher.name} - ${teacher.subject}</option>`);
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}
+
+    <style>
+        .accordion-button:not(.collapsed) {
+            background-color: #e7f1ff;
+        }
+
+        .priority-input {
+            text-align: center;
+        }
+
+        .table th, .table td {
+            vertical-align: middle;
+        }
+
+        .card-header {
+            font-weight: bold;
+        }
+
+        .badge {
+            font-size: 0.8rem;
+        }
+
+        .accordion-button .d-flex {
+            margin-right: 10px;
+        }
+
+        .update-priority {
+            margin-right: 5px;
+        }
+    </style>

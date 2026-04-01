@@ -5,8 +5,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Services;
-using SoumerMVCView.Services;
+using SoumerMVCView.Services.BalanceService;
+using SoumerMVCView.Services.CourseService;
+using SoumerMVCView.Services.TeacherAssignmentService;
 
 namespace SoumerMVCView
 {
@@ -27,6 +28,8 @@ namespace SoumerMVCView
             builder.Services.AddIInjectableDependencies(builder.Configuration);
             // Other Services
             builder.Services.AddScoped<ITeacherAssignmentService, TeacherAssignmentService>();
+            builder.Services.AddScoped<IBalanceService, BalanceService>();
+            builder.Services.AddScoped<ICourseService, CourseService>();
             // ثانياً: تسجيل Identity
             builder.Services.AddIdentity<User, IdentityRole>(options =>
             {

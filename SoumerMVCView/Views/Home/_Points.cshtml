@@ -1,0 +1,89 @@
+﻿@model BalanceViewModel
+
+<div class="container-fluid mt-4" dir="rtl">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- بطاقة الرصيد -->
+            <div class="points-card">
+                <h2>💎 رصيد النقاط</h2>
+                <div class="points-amount">
+                    @Model.CurrentBalance.ToString("N0")
+                </div>
+                <p>نقطة</p>
+                <small>آخر تحديث: @Model.LastUpdateDate.ToString("yyyy/MM/dd HH:mm")</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- المعاملات الأخيرة -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">📋 آخر المعاملات</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.RecentTransactions != null && Model.RecentTransactions.Any())
+                    {
+                        foreach (var transaction in Model.RecentTransactions.Take(5))
+                        {
+                            <div class="transaction-item">
+                                <div>
+                                    <strong>@(transaction.TransactionType == TransactionType.Credit ? "إضافة نقاط" : "خصم نقاط")</strong>
+                                    <small class="d-block text-muted">@transaction.CreatedAt.ToString("yyyy/MM/dd HH:mm")</small>
+                                    @if (!string.IsNullOrEmpty(transaction.Description))
+                                    {
+                                        <small class="d-block text-muted">@transaction.Description</small>
+                                    }
+                                </div>
+                                <div class="@(transaction.TransactionType == TransactionType.Credit ? "transaction-credit" : "transaction-debit")">
+                                    @(transaction.TransactionType == TransactionType.Credit ? "+" : "-") @transaction.Amount.ToString("N0")
+                                </div>
+                            </div>
+                        }
+
+                        <div class="text-center mt-3">
+                            <a href="/Balance/Transactions" class="btn btn-outline-primary btn-sm">
+                                عرض جميع المعاملات
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-transactions">
+                            <p>لا توجد معاملات حتى الآن</p>
+                            <small>قم بالتسجيل في كورسات أو قم بشراء نقاط لتبدأ</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- نموذج تحويل النقاط -->
+            <div class="transfer-form">
+                <h5>🔄 تحويل النقاط</h5>
+                <form id="transferForm">
+                    <div class="mb-3">
+                        <label class="form-label">اسم المستخدم المستلم</label>
+                        <input type="text" class="form-control" id="toUserName" placeholder="أدخل اسم المستخدم" required>
+                        <input type="hidden" id="toUserId" />
+                        <div id="userSearchResults" class="mt-1"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">المبلغ</label>
+                        <input type="number" class="form-control" id="amount" min="1" max="@Model.CurrentBalance" required>
+                        <small class="text-muted">الرصيد المتاح: @Model.CurrentBalance.ToString("N0") نقطة</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الوصف (اختياري)</label>
+                        <textarea class="form-control" id="description" rows="2" placeholder="سبب التحويل..."></textarea>
+                    </div>
+                    <button type="submit" class="btn-transfer w-100">
+                        تحويل النقاط
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

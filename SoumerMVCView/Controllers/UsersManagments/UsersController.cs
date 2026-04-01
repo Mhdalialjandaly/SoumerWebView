@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Models;
 
-namespace SoumerMVCView.Controllers
+namespace SoumerMVCView.Controllers.UsersManagments
 {
     [ApiController]
     [Route("api/[controller]")]
