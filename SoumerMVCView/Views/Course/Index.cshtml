@@ -1,133 +1,97 @@
 ﻿@model CourseListViewModel
 @{
     ViewData["Title"] = "جميع الكورسات";
-    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<style>
-    .course-card {
-        background: white;
-        border-radius: 1rem;
-        overflow: hidden;
-        transition: transform 0.2s, box-shadow 0.2s;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-
-        .course-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-    .course-card-body {
-        padding: 1.5rem;
-        flex: 1;
-    }
-
-    .course-price {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: #2563eb;
-        margin: 1rem 0;
-    }
-
-        .course-price small {
-            font-size: 0.8rem;
-            color: #6c757d;
-        }
-
-    .btn-enroll {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        width: 100%;
-        transition: transform 0.2s;
-    }
-
-        .btn-enroll:hover:not(:disabled) {
-            transform: scale(1.02);
-        }
-
-        .btn-enroll:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-        }
-
-    .balance-badge {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 2rem;
-        display: inline-block;
-        margin-bottom: 1rem;
-    }
-
-    .search-box {
-        margin-bottom: 2rem;
-    }
-
-    .enrolled-badge {
-        background: #10b981;
-        color: white;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.5rem;
-        font-size: 0.75rem;
-        margin-top: 0.5rem;
-        display: inline-block;
-    }
-</style>
-
 <div class="container-fluid mt-4" dir="rtl">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h2>📚 جميع الكورسات</h2>
-            <p class="text-muted">اكتشف أفضل الكورسات التعليمية</p>
-        </div>
-        <div class="col-md-4">
-            <div class="balance-badge text-center">
-                💎 رصيدك: <strong>@Model.UserBalance.ToString("N0")</strong> نقطة
+    <!-- Header Section -->
+    <div class="courses-header-section">
+        <div class="header-content">
+            <div>
+                <h1 class="courses-main-title">📚 جميع الكورسات</h1>
+                <p class="courses-subtitle">اكتشف أفضل الكورسات التعليمية وابدأ رحلتك المعرفية</p>
             </div>
-        </div>
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="search-box">
-                <input type="text" id="searchInput" class="form-control" placeholder="🔍 ابحث عن كورس...">
-            </div>
-        </div>
-    </div>
-
-    <div class="row" id="coursesContainer">
-        @foreach (var course in Model.Courses)
-        {
-            <div class="col-md-4 col-lg-3 mb-4 course-item">
-                <div class="course-card">
-                    <div class="course-card-body">
-                        <h5>@course.Name</h5>
-                        <p class="text-muted small">@(course.Description?.Length > 100 ? course.Description.Substring(0, 100) + "..." : course.Description)</p>
-                        <div class="course-price">
-                            @course.Price.ToString("N0") <small>نقطة</small>
-                        </div>
-                        <button class="btn-enroll" onclick="enrollInCourse(@course.Id)">
-                            تسجيل الآن
-                        </button>
-                    </div>
+            <div class="balance-badge-enhanced">
+                <div class="balance-icon">💎</div>
+                <div class="balance-info">
+                    <div class="balance-label">رصيدك الحالي</div>
+                    <div class="balance-value">@Model.UserBalance.ToString("N0") <span>نقطة</span></div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Search & Filter Section -->
+    <div class="search-filter-section">
+        <div class="search-wrapper">
+            <div class="search-icon">🔍</div>
+            <input type="text" id="searchInput" class="search-input-enhanced"
+                   placeholder="ابحث عن كورس...">
+        </div>
+        <div class="filter-wrapper">
+            <select id="sortSelect" class="filter-select">
+                <option value="name">الترتيب حسب الاسم</option>
+                <option value="price_asc">الأقل سعراً</option>
+                <option value="price_desc">الأعلى سعراً</option>
+                <option value="newest">الأحدث</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Courses Grid -->
+    <div class="courses-grid-enhanced" id="coursesContainer">
+        @if (Model.Courses != null && Model.Courses.Any())
+        {
+            foreach (var course in Model.Courses)
+            {
+                <div class="course-card-enhanced-v2" data-course-id="@course.Id">
+                    <div class="course-card-badge">📖 كورس</div>
+                    <div class="course-card-content">
+                        <h3 class="course-card-title">@course.Name</h3>
+                        <p class="course-card-description">
+                            @(course.Description?.Length > 100 ? course.Description.Substring(0, 100) + "..." : course.Description)
+                        </p>
+                        <div class="course-card-price">
+                            <span class="price-amount">@course.Price.ToString("N0")</span>
+                            <span class="price-unit">نقطة</span>
+                        </div>
+                        <div class="course-card-footer">
+                            <a href="/Course/Details/@course.Id" class="btn-view-details">
+                                عرض التفاصيل
+                                <span>→</span>
+                            </a>
+                            <button class="btn-enroll-quick" onclick="enrollInCourse(@course.Id)">
+                                تسجيل الآن
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
         }
+        else
+        {
+            <div class="empty-courses-enhanced">
+                <div class="empty-icon">📭</div>
+                <h3>لا توجد كورسات متاحة حالياً</h3>
+                <p>سيتم إضافة كورسات جديدة قريباً</p>
+            </div>
+        }
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+        <div class="spinner"></div>
+        <p>جاري التحميل...</p>
     </div>
 </div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // التسجيل في الكورس
+        let searchTimeout;
+        let currentSort = 'name';
+
+        // التسجيل السريع في الكورس
         async function enrollInCourse(courseId) {
             const result = await Swal.fire({
                 title: 'تأكيد التسجيل',
@@ -135,7 +99,9 @@
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'نعم، سجلني',
-                cancelButtonText: 'إلغاء'
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#64748b'
             });
 
             if (result.isConfirmed) {
@@ -151,10 +117,21 @@
                     const data = await response.json();
 
                     if (data.success) {
-                        Swal.fire('تم', data.message, 'success')
-                            .then(() => location.reload());
+                        Swal.fire({
+                            title: 'تم التسجيل!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonText: 'حسناً',
+                            confirmButtonColor: '#10b981'
+                        }).then(() => location.reload());
                     } else {
-                        Swal.fire('خطأ', data.message, 'error');
+                        Swal.fire({
+                            title: 'خطأ',
+                            text: data.message,
+                            icon: 'error',
+                            confirmButtonText: 'حسناً',
+                            confirmButtonColor: '#ef4444'
+                        });
                     }
                 } catch (error) {
                     Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
@@ -162,46 +139,79 @@
             }
         }
 
-        // البحث عن الكورسات
-        let searchTimeout;
+        // البحث المتقدم
         $('#searchInput').on('input', function() {
             clearTimeout(searchTimeout);
             const query = $(this).val();
 
             searchTimeout = setTimeout(() => {
-                $.ajax({
-                    url: '/Course/Search',
-                    type: 'GET',
-                    data: { query: query },
-                    success: function(response) {
-                        if (response.success) {
-                            updateCoursesList(response.courses);
-                        }
-                    }
-                });
+                performSearch(query);
             }, 500);
         });
+
+        // الترتيب
+        $('#sortSelect').on('change', function() {
+            currentSort = $(this).val();
+            performSearch($('#searchInput').val());
+        });
+
+        function performSearch(query) {
+            $('#loadingIndicator').show();
+
+            $.ajax({
+                url: '/Course/Search',
+                type: 'GET',
+                data: {
+                    query: query,
+                    sortBy: currentSort
+                },
+                success: function(response) {
+                    if (response.success) {
+                        updateCoursesList(response.courses);
+                    }
+                },
+                complete: function() {
+                    $('#loadingIndicator').hide();
+                }
+            });
+        }
 
         function updateCoursesList(courses) {
             const container = $('#coursesContainer');
             container.empty();
 
             if (courses.length === 0) {
-                container.html('<div class="col-12 text-center"><p class="text-muted">لا توجد كورسات متطابقة مع بحثك</p></div>');
+                container.html(`
+                    <div class="empty-courses-enhanced">
+                        <div class="empty-icon">🔍</div>
+                        <h3>لا توجد نتائج</h3>
+                        <p>لم نجد أي كورسات تطابق بحثك</p>
+                    </div>
+                `);
                 return;
             }
 
             courses.forEach(course => {
+                const description = course.description ?
+                    (course.description.length > 100 ? course.description.substring(0, 100) + '...' : course.description) :
+                    'لا يوجد وصف';
+
                 const courseHtml = `
-                    <div class="col-md-4 col-lg-3 mb-4 course-item">
-                        <div class="course-card">
-                            <div class="course-card-body">
-                                <h5>${escapeHtml(course.name)}</h5>
-                                <p class="text-muted small">${escapeHtml(course.description?.substring(0, 100) || '')}...</p>
-                                <div class="course-price">
-                                    ${course.price.toLocaleString()} <small>نقطة</small>
-                                </div>
-                                <button class="btn-enroll" onclick="enrollInCourse(${course.id})">
+                    <div class="course-card-enhanced-v2" data-course-id="${course.id}">
+                        <div class="course-card-badge">📖 كورس</div>
+                        <div class="course-card-content">
+                            <h3 class="course-card-title">${escapeHtml(course.name)}</h3>
+                            <p class="course-card-description">${escapeHtml(description)}</p>
+                            <div class="course-card-price">
+                                <span class="price-amount">${course.price.toLocaleString()}</span>
+                                <span class="price-unit">نقطة</span>
+                            </div>
+                            <div class="course-card-footer">
+                                <a href="/Course/Details/${course.id}" class="btn-view-details">
+                                    عرض التفاصيل
+                                    <span>→</span>
+                                </a>
+                                <button class="btn-enroll-quick" onclick="enrollInCourse(${course.id})">
                                     تسجيل الآن
                                 </button>
                             </div>

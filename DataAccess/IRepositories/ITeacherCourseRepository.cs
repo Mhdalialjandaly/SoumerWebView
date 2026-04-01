@@ -7,5 +7,6 @@ namespace DataAccess.IRepositories
 {
     public interface ITeacherCourseRepository : IBaseRepository<TeacherCourseDto, TeacherCourse>, IInjectable
     {
+        Task<List<TeacherCourseDto>> GetTeacherCoursesWithDetails(int teacherId);
     }
 }

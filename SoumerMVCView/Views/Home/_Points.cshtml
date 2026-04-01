@@ -3,86 +3,148 @@
 <div class="container-fluid mt-4" dir="rtl">
     <div class="row">
         <div class="col-md-12">
-            <!-- بطاقة الرصيد -->
-            <div class="points-card">
-                <h2>💎 رصيد النقاط</h2>
-                <div class="points-amount">
-                    @Model.CurrentBalance.ToString("N0")
+            <!-- بطاقة الرصيد الرئيسية -->
+            <div class="balance-hero-card">
+                <div class="balance-hero-content">
+                    <div class="balance-icon">💎</div>
+                    <h2 class="balance-title">رصيد النقاط</h2>
+                    <div class="balance-amount">
+                        @Model.CurrentBalance.ToString("N0")
+                    </div>
+                    <p class="balance-unit">نقطة</p>
+                    <small class="balance-update">
+                        آخر تحديث: @Model.LastUpdateDate.ToString("yyyy/MM/dd HH:mm")
+                    </small>
                 </div>
-                <p>نقطة</p>
-                <small>آخر تحديث: @Model.LastUpdateDate.ToString("yyyy/MM/dd HH:mm")</small>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-8">
+    <div class="row mt-4">
+        <div class="col-lg-7">
             <!-- المعاملات الأخيرة -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">📋 آخر المعاملات</h5>
+            <div class="transactions-card">
+                <div class="card-header-custom">
+                    <div class="header-icon">📋</div>
+                    <h5 class="header-title">آخر المعاملات</h5>
+                    <span class="header-badge">آخر 5 معاملات</span>
                 </div>
-                <div class="card-body">
+                <div class="card-body-custom">
                     @if (Model.RecentTransactions != null && Model.RecentTransactions.Any())
                     {
-                        foreach (var transaction in Model.RecentTransactions.Take(5))
-                        {
-                            <div class="transaction-item">
-                                <div>
-                                    <strong>@(transaction.TransactionType == TransactionType.Credit ? "إضافة نقاط" : "خصم نقاط")</strong>
-                                    <small class="d-block text-muted">@transaction.CreatedAt.ToString("yyyy/MM/dd HH:mm")</small>
-                                    @if (!string.IsNullOrEmpty(transaction.Description))
-                                    {
-                                        <small class="d-block text-muted">@transaction.Description</small>
-                                    }
+                        <div class="transactions-list">
+                            @foreach (var transaction in Model.RecentTransactions.Take(5))
+                            {
+                                <div class="transaction-item">
+                                    <div class="transaction-info">
+                                        <div class="transaction-type">
+                                            <span class="type-icon @(transaction.TransactionType == TransactionType.Credit ? "credit-icon" : "debit-icon")">
+                                                @(transaction.TransactionType == TransactionType.Credit ? "➕" : "➖")
+                                            </span>
+                                            <strong>@(transaction.TransactionType == TransactionType.Credit ? "إضافة نقاط" : "خصم نقاط")</strong>
+                                        </div>
+                                        <small class="transaction-date">
+                                            📅 @transaction.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                                        </small>
+                                        @if (!string.IsNullOrEmpty(transaction.Description))
+                                        {
+                                            <small class="transaction-desc">📝 @transaction.Description</small>
+                                        }
+                                    </div>
+                                    <div class="transaction-amount @(transaction.TransactionType == TransactionType.Credit ? "amount-credit" : "amount-debit")">
+                                        @(transaction.TransactionType == TransactionType.Credit ? "+" : "-") @transaction.Amount.ToString("N0")
+                                    </div>
                                 </div>
-                                <div class="@(transaction.TransactionType == TransactionType.Credit ? "transaction-credit" : "transaction-debit")">
-                                    @(transaction.TransactionType == TransactionType.Credit ? "+" : "-") @transaction.Amount.ToString("N0")
-                                </div>
-                            </div>
-                        }
+                            }
+                        </div>
 
-                        <div class="text-center mt-3">
-                            <a href="/Balance/Transactions" class="btn btn-outline-primary btn-sm">
+                        <div class="text-center mt-4">
+                            <a href="/Balance/Transactions" class="btn-view-all">
                                 عرض جميع المعاملات
+                                <span>←</span>
                             </a>
                         </div>
                     }
                     else
                     {
                         <div class="empty-transactions">
+                            <div class="empty-icon">📭</div>
                             <p>لا توجد معاملات حتى الآن</p>
                             <small>قم بالتسجيل في كورسات أو قم بشراء نقاط لتبدأ</small>
+                            <div class="mt-3">
+                                <a href="/Course/Index" class="btn-browse-courses">استعرض الكورسات</a>
+                            </div>
                         </div>
                     }
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-lg-5">
             <!-- نموذج تحويل النقاط -->
-            <div class="transfer-form">
-                <h5>🔄 تحويل النقاط</h5>
-                <form id="transferForm">
-                    <div class="mb-3">
-                        <label class="form-label">اسم المستخدم المستلم</label>
-                        <input type="text" class="form-control" id="toUserName" placeholder="أدخل اسم المستخدم" required>
-                        <input type="hidden" id="toUserId" />
-                        <div id="userSearchResults" class="mt-1"></div>
+            <div class="transfer-card">
+                <div class="card-header-custom">
+                    <div class="header-icon">🔄</div>
+                    <h5 class="header-title">تحويل النقاط</h5>
+                </div>
+                <div class="card-body-custom">
+                    <form id="transferForm">
+                        <div class="form-group-custom">
+                            <label class="form-label-custom">
+                                <span class="label-icon">👤</span>
+                                اسم المستخدم المستلم
+                            </label>
+                            <input type="text" class="form-control-custom" id="toUserName"
+                                   placeholder="أدخل اسم المستخدم" required>
+                            <input type="hidden" id="toUserId" />
+                            <div id="userSearchResults" class="search-results"></div>
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label class="form-label-custom">
+                                <span class="label-icon">💰</span>
+                                المبلغ
+                            </label>
+                            <input type="number" class="form-control-custom" id="amount"
+                                   min="1" max="@Model.CurrentBalance" required>
+                            <small class="balance-hint">
+                                الرصيد المتاح: @Model.CurrentBalance.ToString("N0") نقطة
+                            </small>
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label class="form-label-custom">
+                                <span class="label-icon">📝</span>
+                                الوصف (اختياري)
+                            </label>
+                            <textarea class="form-control-custom" id="description"
+                                      rows="2" placeholder="سبب التحويل..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-transfer-custom">
+                            <span>🔄</span> تحويل النقاط
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- إحصائيات سريعة -->
+            <div class="stats-mini-card mt-3">
+                <div class="stats-mini-item">
+                    <div class="stats-mini-icon">⭐</div>
+                    <div class="stats-mini-info">
+                        <div class="stats-mini-value">@Model.RecentTransactions?.Count(t => t.TransactionType == TransactionType.Credit) ?? 0</div>
+                        <div class="stats-mini-label">عمليات إيداع</div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">المبلغ</label>
-                        <input type="number" class="form-control" id="amount" min="1" max="@Model.CurrentBalance" required>
-                        <small class="text-muted">الرصيد المتاح: @Model.CurrentBalance.ToString("N0") نقطة</small>
+                </div>
+                <div class="stats-mini-divider"></div>
+                <div class="stats-mini-item">
+                    <div class="stats-mini-icon">💸</div>
+                    <div class="stats-mini-info">
+                        <div class="stats-mini-value">@Model.RecentTransactions?.Count(t => t.TransactionType == TransactionType.Debit) ?? 0</div>
+                        <div class="stats-mini-label">عمليات سحب</div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">الوصف (اختياري)</label>
-                        <textarea class="form-control" id="description" rows="2" placeholder="سبب التحويل..."></textarea>
-                    </div>
-                    <button type="submit" class="btn-transfer w-100">
-                        تحويل النقاط
-                    </button>
-                </form>
+                </div>
             </div>
         </div>
     </div>

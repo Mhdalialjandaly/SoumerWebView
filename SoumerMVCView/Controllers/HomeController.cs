@@ -21,19 +21,21 @@ namespace SoumerMVCView.Controllers
         private readonly ITeacherAssignmentService _assignmentService;
         private readonly ICourseService _courseService;
         private readonly IBalanceService _balanceService;
-
+        private readonly ITeacherCourseRepository _teacherCourseRepository; 
         public HomeController(
             ILogger<HomeController> logger,
             ITeacherRepository teacherRepository,
             ITeacherAssignmentService assignmentService,
             ICourseService courseService,
-            IBalanceService balanceService)
+            IBalanceService balanceService,
+            ITeacherCourseRepository teacherCourseRepository)
         {
             _logger = logger;
             _teacherRepository = teacherRepository;
             _assignmentService = assignmentService;
             _courseService = courseService;
             _balanceService = balanceService;
+            _teacherCourseRepository = teacherCourseRepository;
         }
 
         public async Task<IActionResult> Index()
@@ -199,6 +201,56 @@ namespace SoumerMVCView.Controllers
             // يمكنك جلب بيانات المعاهد
             return PartialView("_Institutes");
         }
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetTeacherCourses(int id)
+        {
+            try
+            {
+                // جلب بيانات الأستاذ
+                var teacher = await _teacherRepository.GetById(id);
+                if (teacher == null)
+                {
+                    return Json(new { success = false, message = "الأستاذ غير موجود" });
+                }
+
+                // جلب الكورسات المرتبطة بهذا الأستاذ
+                var teacherCourses = await _teacherCourseRepository.GetTeacherCoursesWithDetails(id); 
+
+                // فلترة الكورسات الخاصة بهذا الأستاذ
+                var coursesForTeacher = teacherCourses
+                    .Select(tc => new
+                    {
+                        id = tc.CourseId,
+                        name = tc.Course?.Name ?? "",
+                        description = tc.Course?.Description ?? "",
+                        price = tc.Course?.Price ?? 0
+                    })
+                    .ToList();
+
+                // تحضير البيانات للإرسال
+                var result = new
+                {
+                    success = true,
+                    id = teacher.Id,
+                    name = teacher.Name,
+                    subject = teacher.Subject,
+                    bio = teacher.Bio,
+                    image = teacher.Image,
+                    courses = coursesForTeacher,
+                    teacherCourses = coursesForTeacher 
+                };
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting teacher courses for teacher ID: {TeacherId}", id);
+                return Json(new { success = false, message = "حدث خطأ في تحميل بيانات المعلم" });
+            }
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

@@ -8,11 +8,14 @@ namespace DataAccess
     {
         public static void SeedData(this ModelBuilder modelBuilder)
         {
+
             // تاريخ ثابت
             var fixedDate = new DateTime(2026, 2, 2, 0, 0, 0, DateTimeKind.Utc);
 
+
             // قيمة ثابتة لكلمة المرور المشفرة (لكلمة المرور "Admin@123")
             const string fixedPasswordHash = "AQAAAAIAAYagAAAAEIJPo4WuBKtpsZhjP/uYwhUixPJs+RLJFHwMaU12CUPdcLTVbv9T0ODgOKvSMnkITg==";
+
 
             modelBuilder.Entity<IdentityRole>()
               .HasData(new List<IdentityRole>
@@ -25,6 +28,7 @@ namespace DataAccess
                     new() { Id = "7", Name = "STUEmployee", NormalizedName = "STUEMPLOYEE", ConcurrencyStamp = "6" }
               });
 
+
             modelBuilder.Entity<User>().HasData(new User
             {
                 Id = "1",
@@ -33,7 +37,7 @@ namespace DataAccess
                 Email = "admin@system.com",
                 NormalizedEmail = "ADMIN@SYSTEM.COM",
                 EmailConfirmed = true,
-                PasswordHash = fixedPasswordHash, // استخدام القيمة الثابتة
+                PasswordHash = fixedPasswordHash, 
                 SecurityStamp = "FIXED_STAMP_12345",
                 ConcurrencyStamp = "FIXED_CONCURRENCY_12345",
                 Description = "مدير النظام",
@@ -44,6 +48,7 @@ namespace DataAccess
                 AccessFailedCount = 0,
                 CreatedAt = fixedDate
             });
+
 
             modelBuilder.Entity<IdentityUserRole<string>>().HasData(
                 new IdentityUserRole<string> { UserId = "1", RoleId = "2" }

@@ -1,59 +1,81 @@
 ﻿@model MyCoursesViewModel
 
-
 <div class="container-fluid mt-4" dir="rtl">
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="stats-card">
-                <div class="stats-number">@Model.TotalEnrolled</div>
-                <div>كورس مسجل</div>
+    <!-- بطاقات الإحصائيات -->
+    <div class="stats-grid">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-card-icon">📚</div>
+            <div class="stat-card-content">
+                <div class="stat-card-number">@Model.TotalEnrolled</div>
+                <div class="stat-card-label">كورس مسجل</div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="stats-card">
-                <div class="stats-number">@Model.TotalSpent.ToString("N0")</div>
-                <div>نقطة منفقة</div>
+
+        <div class="stat-card stat-card-success">
+            <div class="stat-card-icon">💎</div>
+            <div class="stat-card-content">
+                <div class="stat-card-number">@Model.TotalSpent.ToString("N0")</div>
+                <div class="stat-card-label">نقطة منفقة</div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="stats-card">
-                <div class="stats-number">📚</div>
-                <div>كورساتي</div>
+
+        <div class="stat-card stat-card-info">
+            <div class="stat-card-icon">🎓</div>
+            <div class="stat-card-content">
+                <div class="stat-card-number">@Model.TotalEnrolled</div>
+                <div class="stat-card-label">كورساتي</div>
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-white">
-            <h5 class="mb-0">📖 الكورسات المسجل فيها</h5>
+    <!-- قائمة الكورسات المسجلة -->
+    <div class="courses-list-card">
+        <div class="card-header-custom">
+            <div class="header-icon">📖</div>
+            <h5 class="header-title">الكورسات المسجل فيها</h5>
+            <span class="header-badge">@Model.TotalEnrolled كورس</span>
         </div>
-        <div class="card-body">
+
+        <div class="card-body-custom">
             @if (Model.EnrolledCourses != null && Model.EnrolledCourses.Any())
             {
-                foreach (var enrollment in Model.EnrolledCourses)
-                {
-                    <div class="course-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 class="mb-1">@enrollment.Course.Name</h5>
-                                <small class="text-muted">تاريخ التسجيل: @enrollment.CreatedAt.ToString("yyyy/MM/dd")</small>
-                            </div>
-                            <div>
-                                <span class="badge bg-success">@enrollment.Course.Price.ToString("N0") نقطة</span>
-                                <a href="/Course/Details/@enrollment.CourseId" class="btn btn-sm btn-outline-primary ms-2">
-                                    عرض التفاصيل
-                                </a>
+                <div class="courses-list">
+                    @foreach (var enrollment in Model.EnrolledCourses)
+                    {
+                        <div class="course-item-card">
+                            <div class="course-item-content">
+                                <div class="course-item-icon">📘</div>
+                                <div class="course-item-info">
+                                    <h5 class="course-item-title">@enrollment.Course.Name</h5>
+                                    <div class="course-item-meta">
+                                        <span class="meta-date">
+                                            📅 تاريخ التسجيل: @enrollment.CreatedAt.ToString("yyyy/MM/dd")
+                                        </span>
+                                        <span class="meta-price">
+                                            💎 @enrollment.Course.Price.ToString("N0") نقطة
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="course-item-actions">
+                                    <a href="/Course/Details/@enrollment.CourseId" class="btn-action">
+                                        عرض التفاصيل
+                                        <span>→</span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                }
+                    }
+                </div>
             }
             else
             {
-                <div class="text-center py-4">
-                    <p class="text-muted">لم تسجل في أي كورس بعد</p>
-                    <a href="/Course/Index" class="btn btn-primary">
+                <div class="empty-courses">
+                    <div class="empty-icon">📚</div>
+                    <p class="empty-title">لم تسجل في أي كورس بعد</p>
+                    <p class="empty-description">ابدأ رحلتك التعليمية الآن</p>
+                    <a href="/Course/Index" class="btn-browse-courses">
                         استعرض الكورسات
+                        <span>→</span>
                     </a>
                 </div>
             }

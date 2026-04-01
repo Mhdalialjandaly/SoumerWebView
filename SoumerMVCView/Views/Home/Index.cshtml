@@ -3,78 +3,98 @@
     ViewData["Title"] = "الرئيسية";
 }
 
-
 <div class="home-page">
     <!-- Hero Section -->
-    <div class="hero-section">
-        <h1 style="font-size: 2rem; margin-bottom: 1rem;">📚 منصة سومر التعليمية</h1>
-        <p style="font-size: 1.1rem; opacity: 0.95;">تعلم مع أفضل الأساتذة</p>
-        <div style="margin-top: 2rem;">
-            <button class="enroll-btn" onclick="document.getElementById('gradesSection').scrollIntoView({behavior: 'smooth'})">
-                استعرض الأساتذة
-            </button>
+    <div class="hero-section-enhanced">
+        <div class="hero-content">
+            <h1 class="hero-title">📚 منصة سومر التعليمية</h1>
+            <p class="hero-subtitle">تعلم مع أفضل الأساتذة</p>
+            <div class="hero-buttons">
+                <button class="hero-btn-primary" onclick="document.getElementById('gradesSection').scrollIntoView({behavior: 'smooth'})">
+                    استعرض الأساتذة
+                    <span>↓</span>
+                </button>
+            </div>
         </div>
+        <div class="hero-decoration"></div>
     </div>
 
     <!-- Featured Teachers Section -->
-    <div class="featured-section" style="margin-bottom: 3rem;">
-        <h2 class="section-title" style="border-right-color: #f97316;">🌟 أساتذة مميزون</h2>
-        <div class="horizontal-scroll" id="featuredTeachers">
+    <div class="featured-section-enhanced">
+        <div class="section-header">
+            <h2 class="section-title-enhanced">
+                <span class="title-icon">🌟</span>
+                أساتذة مميزون
+            </h2>
+        </div>
+        <div class="horizontal-scroll-enhanced" id="featuredTeachers">
             @if (Model.FeaturedTeachers != null && Model.FeaturedTeachers.Any())
             {
                 @foreach (var teacher in Model.FeaturedTeachers)
                 {
-                    <div class="teacher-card" data-teacher-id="@teacher.Id">
-                        <img src="@(string.IsNullOrEmpty(teacher.Image) ? "/images/default-avatar.png" : teacher.Image)" alt="@teacher.Name" class="card-img">
-                        <div class="card-info">
-                            <h3 class="teacher-name">@teacher.Name</h3>
-                            <div class="teacher-subject">@teacher.Subject</div>
-                            <p class="teacher-bio">@(string.IsNullOrEmpty(teacher.Bio) ? "لا يوجد وصف" : teacher.Bio)</p>
+                    <div class="teacher-card-enhanced" data-teacher-id="@teacher.Id">
+                        <div class="teacher-card-image">
+                            <img src="@(string.IsNullOrEmpty(teacher.Image) ? "/images/default-avatar.png" : teacher.Image)" alt="@teacher.Name">
+                        </div>
+                        <div class="teacher-card-info">
+                            <h3 class="teacher-name-enhanced">@teacher.Name</h3>
+                            <div class="teacher-subject-enhanced">@teacher.Subject</div>
+                            <p class="teacher-bio-enhanced">@(string.IsNullOrEmpty(teacher.Bio) ? "لا يوجد وصف" : teacher.Bio)</p>
                         </div>
                     </div>
                 }
             }
             else
             {
-                <div class="empty-teachers">لا يوجد أساتذة مميزون حالياً</div>
+                <div class="empty-state-enhanced">لا يوجد أساتذة مميزون حالياً</div>
             }
         </div>
     </div>
 
     <!-- Grades Teachers Section -->
-    <div id="gradesSection">
-        <h2 class="section-title" style="border-right-color: #2563eb;">📖 الأساتذة حسب الصفوف</h2>
+    <div id="gradesSection" class="grades-section-enhanced">
+        <div class="section-header">
+            <h2 class="section-title-enhanced">
+                <span class="title-icon">📖</span>
+                الأساتذة حسب الصفوف
+            </h2>
+        </div>
+
         <div id="gradesContainer">
             @if (Model.GradesTeachers != null && Model.GradesTeachers.Any())
             {
                 foreach (var grade in Model.GradesTeachers)
                 {
-                    <div class="grade-section">
-                        <div class="grade-header">
-                            <span class="grade-number">الصف @grade.Grade</span>
-                            <span class="grade-desc">@grade.GradeLevel</span>
-                            <span class="badge">
+                    <div class="grade-section-enhanced">
+                        <div class="grade-header-enhanced">
+                            <div class="grade-info">
+                                <span class="grade-number-enhanced">الصف @grade.Grade</span>
+                                <span class="grade-desc-enhanced">@grade.GradeLevel</span>
+                            </div>
+                            <span class="grade-badge">
                                 @grade.Teachers.Count أستاذ
                             </span>
                         </div>
-                        <div class="horizontal-scroll">
+                        <div class="horizontal-scroll-enhanced">
                             @if (grade.Teachers != null && grade.Teachers.Any())
                             {
                                 @foreach (var teacher in grade.Teachers)
                                 {
-                                    <div class="teacher-card" data-teacher-id="@teacher.Id">
-                                        <img src="@(string.IsNullOrEmpty(teacher.Image) ? "/images/default-avatar.png" : teacher.Image)" alt="@teacher.Name" class="card-img">
-                                        <div class="card-info">
-                                            <h3 class="teacher-name">@teacher.Name</h3>
-                                            <div class="teacher-subject">@teacher.Subject</div>
-                                            <p class="teacher-bio">@(string.IsNullOrEmpty(teacher.Bio) ? "لا يوجد وصف" : teacher.Bio)</p>
+                                    <div class="teacher-card-enhanced" data-teacher-id="@teacher.Id">
+                                        <div class="teacher-card-image">
+                                            <img src="@(string.IsNullOrEmpty(teacher.Image) ? "/images/default-avatar.png" : teacher.Image)" alt="@teacher.Name">
+                                        </div>
+                                        <div class="teacher-card-info">
+                                            <h3 class="teacher-name-enhanced">@teacher.Name</h3>
+                                            <div class="teacher-subject-enhanced">@teacher.Subject</div>
+                                            <p class="teacher-bio-enhanced">@(string.IsNullOrEmpty(teacher.Bio) ? "لا يوجد وصف" : teacher.Bio)</p>
                                         </div>
                                     </div>
                                 }
                             }
                             else
                             {
-                                <div class="empty-teachers">لا يوجد أساتذة في هذا الصف حالياً</div>
+                                <div class="empty-state-enhanced">لا يوجد أساتذة في هذا الصف حالياً</div>
                             }
                         </div>
                     </div>
@@ -82,7 +102,7 @@
             }
             else
             {
-                <div class="empty-teachers">لا توجد بيانات للصفوف حالياً</div>
+                <div class="empty-state-enhanced">لا توجد بيانات للصفوف حالياً</div>
             }
         </div>
     </div>
@@ -91,11 +111,9 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // ========================================
         // Teacher Card Handlers
-        // ========================================
         function attachTeacherCardEvents() {
-            document.querySelectorAll('.teacher-card').forEach(card => {
+            document.querySelectorAll('.teacher-card-enhanced').forEach(card => {
                 card.removeEventListener('click', handleTeacherClick);
                 card.addEventListener('click', handleTeacherClick);
             });
@@ -123,54 +141,40 @@
 
         function showTeacherCourses(teacher) {
             const courses = teacher.teacherCourses || teacher.courses || [];
-            const mainContainer = document.getElementById('mainContainer');
+            const mainContainer = document.querySelector('.main-container');
 
             if (!mainContainer) return;
 
             const coursesHTML = `
-                <div class="courses-page" style="padding: 2rem;">
-                    <button class="back-home-btn" onclick="location.reload()" style="
-                        background: #6c757d;
-                        color: white;
-                        border: none;
-                        padding: 0.5rem 1rem;
-                        border-radius: 0.5rem;
-                        cursor: pointer;
-                        margin-bottom: 1rem;
-                    ">
+                <div class="courses-page-enhanced">
+                    <button class="back-home-btn-enhanced" onclick="location.reload()">
                         ← العودة للرئيسية
                     </button>
-                    <div style="background: white; border-radius: 1.5rem; padding: 1.5rem; text-align: center; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <img src="${teacher.image || '/images/default-avatar.png'}" alt="${teacher.name}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover;">
-                        <h1 style="font-size: 1.8rem; margin-top: 1rem;">${teacher.name}</h1>
-                        <p style="color: #2563eb; font-weight: 600;">${teacher.subject || 'مادة غير محددة'}</p>
-                        <p style="color: #334155; margin-top: 0.5rem;">${teacher.bio || ''}</p>
+                    <div class="teacher-profile-card">
+                        <div class="teacher-profile-image">
+                            <img src="${teacher.image || '/images/default-avatar.png'}" alt="${teacher.name}">
+                        </div>
+                        <div class="teacher-profile-info">
+                            <h1 class="teacher-profile-name">${teacher.name}</h1>
+                            <div class="teacher-profile-subject">${teacher.subject || 'مادة غير محددة'}</div>
+                            <p class="teacher-profile-bio">${teacher.bio || ''}</p>
+                        </div>
                     </div>
-                    <h2 class="section-title" style="border-right-color:#f97316;">📘 كورسات ${teacher.name}</h2>
-                    <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; padding: 1rem 0;">
-                        ${courses.length > 0 ? courses.map(course => `
-                            <div class="course-card" style="
-                                background: white;
-                                border-radius: 1rem;
-                                padding: 1rem;
-                                width: 250px;
-                                text-align: center;
-                                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                            ">
-                                <div style="font-size: 2rem;">📖</div>
-                                <h3>${course.name || course}</h3>
-                                <p>${teacher.subject}</p>
-                                <button class="enroll-btn" onclick="enrollInCourse('${teacher.id}', '${course.id || course}')" style="
-                                    background: #2563eb;
-                                    color: white;
-                                    border: none;
-                                    padding: 0.5rem 1rem;
-                                    border-radius: 0.5rem;
-                                    cursor: pointer;
-                                    margin-top: 0.5rem;
-                                ">تسجيل الآن</button>
-                            </div>
-                        `).join('') : '<p style="text-align: center;">لا توجد كورسات متاحة حالياً</p>'}
+                    <div class="courses-grid">
+                        <h2 class="courses-grid-title">📘 كورسات ${teacher.name}</h2>
+                        <div class="courses-grid-container">
+                            ${courses.length > 0 ? courses.map(course => `
+                                <div class="course-card-enhanced">
+                                    <div class="course-card-icon">📖</div>
+                                    <h3 class="course-card-title">${course.name || course}</h3>
+                                    <p class="course-card-subject">${teacher.subject}</p>
+                                    <button class="enroll-btn-enhanced" onclick="enrollInCourse('${teacher.id}', '${course.id || course}')">
+                                        تسجيل الآن
+                                        <span>→</span>
+                                    </button>
+                                </div>
+                            `).join('') : '<div class="empty-state-enhanced">لا توجد كورسات متاحة حالياً</div>'}
+                        </div>
                     </div>
                 </div>
             `;
@@ -181,16 +185,15 @@
 
         function enrollInCourse(teacherId, courseId) {
             Swal.fire({
-                title: 'تم!',
-                text: '✨ تم إضافة الكورس إلى قائمة التسجيل الخاصة بك!',
+                title: 'تم الإضافة!',
+                text: '✨ تم إضافة الكورس إلى قائمة التسجيل الخاصة بك',
                 icon: 'success',
-                confirmButtonText: 'حسناً'
+                confirmButtonText: 'حسناً',
+                confirmButtonColor: '#2563eb'
             });
         }
 
-        // ========================================
         // Initialize
-        // ========================================
         document.addEventListener('DOMContentLoaded', function() {
             attachTeacherCardEvents();
         });
