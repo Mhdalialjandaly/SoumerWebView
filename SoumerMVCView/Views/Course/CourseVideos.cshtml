@@ -1,0 +1,371 @@
+﻿@model CourseVideosViewModel
+@using Core.Enums
+
+@{
+    ViewData["Title"] = $"فيديوهات - {Model.CourseName}";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid mt-4" dir="rtl">
+    <!-- رأس الصفحة -->
+    <div class="course-videos-header">
+        <div class="header-back">
+            <a href="/Course/MyCourses" class="back-button">
+                <span>←</span> العودة إلى كورساتي
+            </a>
+        </div>
+        <div class="header-info">
+            <h1 class="course-title">📺 @Model.CourseName</h1>
+            <p class="course-description">@Model.CourseDescription</p>
+            <div class="course-stats">
+                <div class="stat-badge">
+                    <span class="stat-icon">🎬</span>
+                    <span class="stat-text">@Model.TotalVideos فيديو</span>
+                </div>
+                @if (Model.ProgressPercentage > 0)
+                {
+                    <div class="stat-badge">
+                        <span class="stat-icon">📊</span>
+                        <span class="stat-text">تقدم: @Model.ProgressPercentage%</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- قائمة الفيديوهات -->
+    <div class="videos-container">
+        <div class="videos-sidebar">
+            <div class="videos-list-header">
+                <h3>📋 قائمة الفيديوهات</h3>
+                <span class="videos-count">@Model.TotalVideos مقطع</span>
+            </div>
+            <div class="videos-list" id="videosList">
+                @if (Model.Videos != null && Model.Videos.Any())
+                {
+                    foreach (var video in Model.Videos)
+                    {
+                        <div class="video-item @(video == Model.Videos.First() ? "active" : "")"
+                             data-video-id="@video.Id"
+                             data-video-title="@video.Title"
+                             data-video-description="@video.Description"
+                             data-video-platform="@((int)video.Platform)"
+                             data-video-videoid="@video.VideoId"
+                             data-video-embedurl="@video.EmbedUrl"
+                             onclick="selectVideo(this)">
+                            <div class="video-thumbnail">
+                                @if (video.Platform == VideoPlatform.YouTube)
+                                {
+                                    <img src="https://img.youtube.com/vi/@video.VideoId/mqdefault.jpg" alt="@video.Title">
+                                }
+                                else
+                                {
+                                    <img src="/images/video-placeholder.jpg" alt="@video.Title">
+                                }
+                                <div class="video-duration">
+                                    @if (video.Duration > 0)
+                                    {
+                                        <span>@(video.Duration / 60):@(video.Duration % 60)</span>
+                                    }
+                                </div>
+                                <div class="play-overlay">▶️</div>
+                            </div>
+                            <div class="video-info">
+                                <h4 class="video-title">@video.Title</h4>
+                                <div class="video-meta">
+                                    @if (video.IsFree)
+                                    {
+                                        <span class="free-badge">🎁 مجاني</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="premium-badge">💎 مدفوع</span>
+                                    }
+                                    <span class="video-order">#@video.Order</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty-videos">
+                        <div class="empty-icon">📹</div>
+                        <p>لا توجد فيديوهات في هذا الكورس حالياً</p>
+                        <small>سيتم إضافة فيديوهات جديدة قريباً</small>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="video-player-container">
+            @if (Model.Videos != null && Model.Videos.Any())
+            {
+                var firstVideo = Model.Videos.First();
+                <div class="video-player-wrapper">
+                    <div id="videoPlayerFrame" class="video-frame">
+                        <iframe id="currentVideo"
+                                src="@(firstVideo.Platform == VideoPlatform.YouTube ? $"https://www.youtube.com/embed/{firstVideo.VideoId}?autoplay=0&rel=0" : $"https://player.vimeo.com/video/{firstVideo.VideoId}")"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div class="video-details">
+                        <h2 id="currentVideoTitle">@firstVideo.Title</h2>
+                        <p id="currentVideoDescription">@firstVideo.Description</p>
+                        <div class="video-actions">
+                            <button class="btn-share" onclick="shareVideo()">
+                                <span>📤</span> مشاركة
+                            </button>
+                            <button class="btn-report" onclick="reportVideo()">
+                                <span>⚠️</span> إبلاغ عن مشكلة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="empty-player">
+                    <div class="empty-icon">🎬</div>
+                    <p>لا توجد فيديوهات متاحة</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        let currentVideo = null;
+
+        function selectVideo(element) {
+            // إزالة الكلاس active من جميع الفيديوهات
+            document.querySelectorAll('.video-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // إضافة الكلاس active للفيديو المحدد
+            element.classList.add('active');
+
+            // جلب بيانات الفيديو
+            const videoId = element.dataset.videoId;
+            const videoTitle = element.dataset.videoTitle;
+            const videoDescription = element.dataset.videoDescription;
+            const platform = parseInt(element.dataset.videoPlatform);
+            const videoVideoId = element.dataset.videoVideoid;
+
+            // تحديث عنوان ووصف الفيديو
+            document.getElementById('currentVideoTitle').textContent = videoTitle;
+            document.getElementById('currentVideoDescription').textContent = videoDescription || 'لا يوجد وصف';
+
+            // تحديث iframe
+            const iframe = document.getElementById('currentVideo');
+            let embedUrl = '';
+
+            if (platform === 1) { // YouTube
+                embedUrl = `https://www.youtube.com/embed/${videoVideoId}?autoplay=1&rel=0`;
+            } else if (platform === 2) { // Vimeo
+                embedUrl = `https://player.vimeo.com/video/${videoVideoId}?autoplay=1`;
+            }
+
+            iframe.src = embedUrl;
+
+            // حفظ الفيديو الحالي للتتبع
+            currentVideo = {
+                id: videoId,
+                title: videoTitle
+            };
+
+            // تسجيل مشاهدة الفيديو (اختياري للتتبع)
+            trackVideoView(videoId);
+        }
+
+        // تسجيل مشاهدة الفيديو
+        async function trackVideoView(videoId) {
+            try {
+                await fetch(`/Course/TrackVideoView?videoId=${videoId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() || ''
+                    }
+                });
+            } catch (error) {
+                console.error('Error tracking video view:', error);
+            }
+        }
+
+        // مشاركة الفيديو
+        function shareVideo() {
+            if (currentVideo) {
+                const url = window.location.href;
+                const text = `شاهد الفيديو: ${currentVideo.title} على منصة سومر التعليمية`;
+
+                if (navigator.share) {
+                    navigator.share({
+                        title: currentVideo.title,
+                        text: text,
+                        url: url
+                    }).catch(() => {
+                        copyToClipboard(url);
+                    });
+                } else {
+                    copyToClipboard(url);
+                }
+            }
+        }
+
+        // نسخ الرابط إلى الحافظة
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                Swal.fire({
+                    title: 'تم النسخ',
+                    text: 'تم نسخ رابط الفيديو إلى الحافظة',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            });
+        }
+
+        // الإبلاغ عن مشكلة
+        function reportVideo() {
+            if (currentVideo) {
+                Swal.fire({
+                    title: 'الإبلاغ عن مشكلة',
+                    html: `
+                        <div style="text-align: right;">
+                            <p>هل تواجه مشكلة في مشاهدة الفيديو؟</p>
+                            <textarea id="reportMessage" class="swal2-textarea"
+                                      placeholder="صف المشكلة التي تواجهها..."
+                                      rows="3"></textarea>
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'إرسال',
+                    cancelButtonText: 'إلغاء',
+                    confirmButtonColor: '#2563eb',
+                    cancelButtonColor: '#64748b',
+                    preConfirm: () => {
+                        const message = document.getElementById('reportMessage').value;
+                        if (!message) {
+                            Swal.showValidationMessage('يرجى كتابة وصف المشكلة');
+                            return false;
+                        }
+                        return message;
+                    }
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        try {
+                            const response = await fetch('/Course/ReportVideoIssue', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() || ''
+                                },
+                                body: JSON.stringify({
+                                    videoId: currentVideo.id,
+                                    message: result.value
+                                })
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                Swal.fire('تم الإرسال', 'تم استلام بلاغك وسيتم معالجته قريباً', 'success');
+                            } else {
+                                Swal.fire('خطأ', 'حدث خطأ في إرسال البلاغ', 'error');
+                            }
+                        } catch (error) {
+                            Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
+                        }
+                    }
+                });
+            }
+        }
+
+        // تحديث تقدم المشاهدة تلقائياً
+        let watchTime = 0;
+        let videoDuration = 0;
+
+        // إضافة مستمع لتتبع وقت المشاهدة
+        const iframe = document.getElementById('currentVideo');
+        if (iframe) {
+            // يمكن إضافة مستمعات لتتبع وقت المشاهدة عبر postMessage
+            window.addEventListener('message', function(event) {
+                // معالجة رسائل من iframe (إذا كانت مدعومة)
+                if (event.data && event.data.event === 'timeupdate') {
+                    watchTime = event.data.currentTime;
+                    videoDuration = event.data.duration;
+
+                    // حفظ التقدم كل 10 ثواني
+                    if (Math.floor(watchTime) % 10 === 0) {
+                        saveProgress();
+                    }
+                }
+            });
+        }
+
+        function saveProgress() {
+            if (currentVideo && videoDuration > 0) {
+                const progress = (watchTime / videoDuration) * 100;
+                fetch('/Course/SaveVideoProgress', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() || ''
+                    },
+                    body: JSON.stringify({
+                        videoId: currentVideo.id,
+                        progress: progress,
+                        watchTime: watchTime
+                    })
+                }).catch(error => console.error('Error saving progress:', error));
+            }
+        }
+
+        // حفظ التقدم عند مغادرة الصفحة
+        window.addEventListener('beforeunload', function() {
+            saveProgress();
+        });
+
+        // دعم لوحة المفاتيح
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowUp') {
+                // الفيديو السابق
+                const prevVideo = document.querySelector('.video-item.active')?.previousElementSibling;
+                if (prevVideo && prevVideo.classList.contains('video-item')) {
+                    prevVideo.click();
+                    prevVideo.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            } else if (e.key === 'ArrowDown') {
+                // الفيديو التالي
+                const nextVideo = document.querySelector('.video-item.active')?.nextElementSibling;
+                if (nextVideo && nextVideo.classList.contains('video-item')) {
+                    nextVideo.click();
+                    nextVideo.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+        });
+
+        // تحميل الفيديو الأول تلقائياً إذا كان موجوداً
+        if (document.querySelector('.video-item')) {
+            // إضافة تأثير hover للفيديوهات
+            const style = document.createElement('style');
+            style.textContent = `
+                .video-item:hover {
+                    transform: translateX(-4px);
+                    background: #f8fafc;
+                }
+                .video-item.active {
+                    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+                    border-right: 3px solid #2563eb;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    </script>
+}

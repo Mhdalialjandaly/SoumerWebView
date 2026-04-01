@@ -25,5 +25,9 @@ namespace SoumerMVCView.Models
         public List<CourseRegistrationDto> EnrolledCourses { get; set; }
         public int TotalEnrolled { get; set; }
         public decimal TotalSpent { get; set; }
+
+        // إضافة هذه الخصائص الجديدة
+        public Dictionary<int, List<CourseVideoDto>> CourseVideos { get; set; }
+        public Dictionary<int, int> CourseVideosCount { get; set; }
     }
 }

@@ -12,6 +12,7 @@ namespace SoumerMVCView.Services.CourseService
         Task<List<CourseRegistrationDto>> GetUserEnrolledCourses(string userId);
         Task<bool> IsUserEnrolled(int courseId, string userId);
         Task<CourseEnrollmentResult> CheckEnrollmentEligibility(int courseId, string userId);
+
     }
 
     public class CourseEnrollmentResult

@@ -47,6 +47,9 @@ namespace DataAccess
           
             CreateMap<TeacherGradeAssignmentDto, TeacherGradeAssignment>().ReverseMap();          
             CreateMap<TeacherGradeAssignment, TeacherGradeAssignmentDto>();
+          
+            CreateMap<CourseVideoDto, CourseVideo>().ReverseMap();          
+            CreateMap<CourseVideo, CourseVideoDto>();
         }
     }
 }

@@ -30,6 +30,8 @@ namespace SoumerMVCView
             builder.Services.AddScoped<ITeacherAssignmentService, TeacherAssignmentService>();
             builder.Services.AddScoped<IBalanceService, BalanceService>();
             builder.Services.AddScoped<ICourseService, CourseService>();
+            builder.Services.AddScoped<ICourseVideoService, CourseVideoService>();
+
             // ثانياً: تسجيل Identity
             builder.Services.AddIdentity<User, IdentityRole>(options =>
             {

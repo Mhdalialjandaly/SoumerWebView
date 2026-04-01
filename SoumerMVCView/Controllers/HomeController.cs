@@ -22,13 +22,15 @@ namespace SoumerMVCView.Controllers
         private readonly ICourseService _courseService;
         private readonly IBalanceService _balanceService;
         private readonly ITeacherCourseRepository _teacherCourseRepository; 
+        private readonly ICourseVideoService _courseVideoService;
         public HomeController(
             ILogger<HomeController> logger,
             ITeacherRepository teacherRepository,
             ITeacherAssignmentService assignmentService,
             ICourseService courseService,
             IBalanceService balanceService,
-            ITeacherCourseRepository teacherCourseRepository)
+            ITeacherCourseRepository teacherCourseRepository,
+            ICourseVideoService courseVideoService)
         {
             _logger = logger;
             _teacherRepository = teacherRepository;
@@ -36,6 +38,7 @@ namespace SoumerMVCView.Controllers
             _courseService = courseService;
             _balanceService = balanceService;
             _teacherCourseRepository = teacherCourseRepository;
+            _courseVideoService = courseVideoService;
         }
 
         public async Task<IActionResult> Index()
@@ -155,7 +158,6 @@ namespace SoumerMVCView.Controllers
         {
             return View();
         }
-        // أضف هذه الـ Actions في HomeController.cs
 
         public async Task<IActionResult> MyCourses()
         {
@@ -166,6 +168,17 @@ namespace SoumerMVCView.Controllers
             }
 
             var enrolledCourses = await _courseService.GetUserEnrolledCourses(userId);
+
+            // جلب الفيديوهات لكل كورس مسجل فيه المستخدم
+            var courseVideos = new Dictionary<int, List<CourseVideoDto>>();
+            var courseVideosCount = new Dictionary<int, int>();
+
+            foreach (var enrollment in enrolledCourses)
+            {
+                var videos = await _courseVideoService.GetCourseVideos(enrollment.CourseId);
+                courseVideos[enrollment.CourseId] = videos;
+                courseVideosCount[enrollment.CourseId] = videos.Count(v => v.IsPublished);
+            }
 
             // حساب إجمالي النقاط المنفقة
             decimal totalSpent = 0;
@@ -178,13 +191,76 @@ namespace SoumerMVCView.Controllers
             {
                 EnrolledCourses = enrolledCourses,
                 TotalEnrolled = enrolledCourses.Count,
-                TotalSpent = totalSpent
+                TotalSpent = totalSpent,
+                CourseVideos = courseVideos,
+                CourseVideosCount = courseVideosCount
             };
 
-            // يمكنك جلب بيانات الكورسات المسجل فيها المستخدم
-            return PartialView("_MyCourses",model);
+            return PartialView("_MyCourses", model);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetCourseVideos(int courseId)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Json(new { success = false, message = "يرجى تسجيل الدخول أولاً" });
+                }
+
+                // التحقق من أن المستخدم مسجل في الكورس
+                var isEnrolled = await _courseService.IsUserEnrolled(courseId, userId);
+                if (!isEnrolled)
+                {
+                    return Json(new { success = false, message = "يجب التسجيل في الكورس أولاً لمشاهدة الفيديوهات" });
+                }
+
+                var videos = await _courseVideoService.GetCourseVideos(courseId);
+                var publishedVideos = videos.Where(v => v.IsPublished).ToList();
+
+                return Json(new { success = true, videos = publishedVideos });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting videos for course {CourseId}", courseId);
+                return Json(new { success = false, message = "حدث خطأ في تحميل الفيديوهات" });
+            }
         }
 
+        // الحصول على تفاصيل فيديو معين
+        [HttpGet]
+        public async Task<IActionResult> GetVideoDetails(int videoId)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Json(new { success = false, message = "يرجى تسجيل الدخول أولاً" });
+                }
+
+                var video = await _courseVideoService.GetVideoById(videoId);
+                if (video == null)
+                {
+                    return Json(new { success = false, message = "الفيديو غير موجود" });
+                }
+
+                // التحقق من صلاحية المشاهدة
+                var canWatch = await _courseVideoService.CanWatchVideo(videoId, userId);
+                if (!canWatch)
+                {
+                    return Json(new { success = false, message = "لا يمكنك مشاهدة هذا الفيديو. يرجى التسجيل في الكورس أولاً" });
+                }
+
+                return Json(new { success = true, video });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting video details {VideoId}", videoId);
+                return Json(new { success = false, message = "حدث خطأ في تحميل الفيديو" });
+            }
+        }
         public async Task<IActionResult> Points()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);

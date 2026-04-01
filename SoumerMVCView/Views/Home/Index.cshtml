@@ -138,59 +138,336 @@
                 Swal.fire('خطأ', 'حدث خطأ في تحميل بيانات المعلم', 'error');
             }
         }
-
         function showTeacherCourses(teacher) {
             const courses = teacher.teacherCourses || teacher.courses || [];
             const mainContainer = document.querySelector('.main-container');
 
-            if (!mainContainer) return;
+            if (!mainContainer) {
+                console.error('Main container not found');
+                return;
+            }
+
+            const hasCourses = courses && courses.length > 0;
 
             const coursesHTML = `
-                <div class="courses-page-enhanced">
-                    <button class="back-home-btn-enhanced" onclick="location.reload()">
+                <div class="courses-page-enhanced" style="animation: fadeInUp 0.3s ease;">
+                    <button class="back-home-btn-enhanced" onclick="location.reload()" style="
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        padding: 0.6rem 1.2rem;
+                        background: transparent;
+                        border: 1.5px solid #cbd5e1;
+                        border-radius: 30px;
+                        cursor: pointer;
+                        font-size: 0.85rem;
+                        font-weight: 600;
+                        color: #64748b;
+                        margin-bottom: 1.5rem;
+                        transition: all 0.2s;
+                    ">
                         ← العودة للرئيسية
                     </button>
-                    <div class="teacher-profile-card">
-                        <div class="teacher-profile-image">
-                            <img src="${teacher.image || '/images/default-avatar.png'}" alt="${teacher.name}">
+
+                    <div class="teacher-profile-card" style="
+                        background: white;
+                        border-radius: 24px;
+                        padding: 2rem;
+                        text-align: center;
+                        margin-bottom: 2rem;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                    ">
+                        <div class="teacher-profile-image" style="
+                            width: 120px;
+                            height: 120px;
+                            margin: 0 auto 1rem;
+                            border-radius: 50%;
+                            overflow: hidden;
+                            border: 3px solid #2563eb;
+                        ">
+                            <img src="${teacher.image || '/images/default-avatar.png'}"
+                                 alt="${escapeHtml(teacher.name)}"
+                                 style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
                         <div class="teacher-profile-info">
-                            <h1 class="teacher-profile-name">${teacher.name}</h1>
-                            <div class="teacher-profile-subject">${teacher.subject || 'مادة غير محددة'}</div>
-                            <p class="teacher-profile-bio">${teacher.bio || ''}</p>
+                            <h1 class="teacher-profile-name" style="
+                                font-size: 1.5rem;
+                                font-weight: 700;
+                                margin-bottom: 0.5rem;
+                                color: #1e293b;
+                            ">${escapeHtml(teacher.name)}</h1>
+                            <div class="teacher-profile-subject" style="
+                                font-size: 0.85rem;
+                                color: #2563eb;
+                                font-weight: 600;
+                                margin-bottom: 0.5rem;
+                            ">${escapeHtml(teacher.subject || 'مادة غير محددة')}</div>
+                            <p class="teacher-profile-bio" style="
+                                font-size: 0.85rem;
+                                color: #64748b;
+                                line-height: 1.5;
+                            ">${escapeHtml(teacher.bio || 'لا يوجد وصف')}</p>
                         </div>
                     </div>
-                    <div class="courses-grid">
-                        <h2 class="courses-grid-title">📘 كورسات ${teacher.name}</h2>
-                        <div class="courses-grid-container">
-                            ${courses.length > 0 ? courses.map(course => `
-                                <div class="course-card-enhanced">
-                                    <div class="course-card-icon">📖</div>
-                                    <h3 class="course-card-title">${course.name || course}</h3>
-                                    <p class="course-card-subject">${teacher.subject}</p>
-                                    <button class="enroll-btn-enhanced" onclick="enrollInCourse('${teacher.id}', '${course.id || course}')">
+
+                    <div class="courses-grid" style="margin-top: 1rem;">
+                        <h2 class="courses-grid-title" style="
+                            font-size: 1.2rem;
+                            font-weight: 700;
+                            margin-bottom: 1rem;
+                            padding-right: 1rem;
+                            border-right: 3px solid #f97316;
+                        ">📘 كورسات ${escapeHtml(teacher.name)}</h2>
+                        <div class="courses-grid-container" style="
+                            display: flex;
+                            flex-wrap: wrap;
+                            gap: 1rem;
+                            justify-content: flex-start;
+                        ">
+                            ${hasCourses ? courses.map(course => `
+                                <div class="course-card-enhanced" style="
+                                    background: white;
+                                    border-radius: 16px;
+                                    padding: 1.5rem;
+                                    text-align: center;
+                                    width: calc(25% - 0.75rem);
+                                    min-width: 240px;
+                                    flex: 1;
+                                    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                                    transition: all 0.2s;
+                                ">
+                                    <div class="course-card-icon" style="font-size: 2rem; margin-bottom: 0.5rem;">📖</div>
+                                    <h3 class="course-card-title" style="
+                                        font-size: 1rem;
+                                        font-weight: 600;
+                                        margin-bottom: 0.5rem;
+                                        color: #1e293b;
+                                        min-height: 50px;
+                                    ">${escapeHtml(course.name)}</h3>
+                                    <p class="course-card-description" style="
+                                        font-size: 0.7rem;
+                                        color: #64748b;
+                                        margin-bottom: 1rem;
+                                        line-height: 1.4;
+                                        min-height: 60px;
+                                    ">${escapeHtml(course.description ? (course.description.length > 80 ? course.description.substring(0, 80) + '...' : course.description) : 'لا يوجد وصف')}</p>
+                                    <div class="course-card-price" style="
+                                        margin-bottom: 1rem;
+                                        padding: 0.5rem;
+                                        background: #f3f4f6;
+                                        border-radius: 12px;
+                                    ">
+                                        <span style="font-size: 0.7rem; color: #64748b;">السعر: </span>
+                                        <span style="font-size: 1.2rem; font-weight: 700; color: #2563eb;">${course.price ? course.price.toLocaleString() : '0'}</span>
+                                        <span style="font-size: 0.7rem; color: #64748b;"> نقطة</span>
+                                    </div>
+                                    <button class="enroll-btn-enhanced"
+                                            onclick="enrollInCourse('${teacher.id}', '${course.id}')"
+                                            style="
+                                                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                                                color: white;
+                                                border: none;
+                                                padding: 0.6rem 1rem;
+                                                border-radius: 10px;
+                                                cursor: pointer;
+                                                font-weight: 600;
+                                                font-size: 0.8rem;
+                                                display: inline-flex;
+                                                align-items: center;
+                                                gap: 0.5rem;
+                                                transition: all 0.2s;
+                                                width: 100%;
+                                                justify-content: center;
+                                            ">
                                         تسجيل الآن
                                         <span>→</span>
                                     </button>
                                 </div>
-                            `).join('') : '<div class="empty-state-enhanced">لا توجد كورسات متاحة حالياً</div>'}
+                            `).join('') : `
+                                <div class="empty-state-enhanced" style="
+                                    text-align: center;
+                                    padding: 3rem;
+                                    background: #f8fafc;
+                                    border-radius: 16px;
+                                    width: 100%;
+                                ">
+                                    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📚</div>
+                                    <p style="color: #475569; margin-bottom: 0.5rem;">لا توجد كورسات متاحة حالياً</p>
+                                    <small style="color: #94a3b8;">سيتم إضافة كورسات جديدة قريباً</small>
+                                </div>
+                            `}
                         </div>
                     </div>
                 </div>
             `;
 
             mainContainer.innerHTML = coursesHTML;
+
+            // إضافة تأثيرات hover للبطاقات
+            const style = document.createElement('style');
+            style.textContent = `
+                .course-card-enhanced:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+                }
+                .enroll-btn-enhanced:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+                }
+            `;
+            document.head.appendChild(style);
+
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function enrollInCourse(teacherId, courseId) {
-            Swal.fire({
-                title: 'تم الإضافة!',
-                text: '✨ تم إضافة الكورس إلى قائمة التسجيل الخاصة بك',
-                icon: 'success',
-                confirmButtonText: 'حسناً',
-                confirmButtonColor: '#2563eb'
-            });
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        async function enrollInCourse(teacherId, courseId) {
+            try {
+                // عرض مؤشر تحميل
+                Swal.fire({
+                    title: 'جاري التحقق...',
+                    text: 'يتم التحقق من الرصيد وإتمام التسجيل',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // إرسال طلب التسجيل إلى الخادم
+                const response = await fetch(`/Course/Enroll?courseId=${courseId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() || ''
+                    }
+                });
+
+                const data = await response.json();
+
+                // إغلاق مؤشر التحميل
+                Swal.close();
+
+                if (data.success) {
+                    // نجاح التسجيل - عرض رسالة مع تفاصيل الخصم
+                    Swal.fire({
+                        title: '🎉 تم التسجيل بنجاح!',
+                        html: `
+                            <div style="text-align: center;">
+                                <div style="font-size: 3rem; margin-bottom: 1rem;">✨</div>
+                                <p style="font-size: 1rem; margin-bottom: 0.5rem; color: #10b981;">${data.message}</p>
+                                ${data.coursePrice ? `
+                                    <div style="background: #f3f4f6; padding: 0.75rem; border-radius: 12px; margin: 1rem 0;">
+                                        <p style="margin: 0; font-size: 0.85rem;">تم خصم <strong style="color: #2563eb;">${data.coursePrice.toLocaleString()} نقطة</strong> من رصيدك</p>
+                                    </div>
+                                ` : ''}
+                                <p style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;">🎓 يمكنك الآن البدء في التعلم</p>
+                            </div>
+                        `,
+                        icon: 'success',
+                        confirmButtonText: 'عرض كورساتي',
+                        confirmButtonColor: '#10b981',
+                        showCancelButton: true,
+                        cancelButtonText: 'البقاء هنا',
+                        cancelButtonColor: '#64748b'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // إذا اختار المستخدم عرض كورساتي
+                            window.location.href = '/Course/MyCourses';
+                        } else {
+                            // تحديث الصفحة لعرض الرصيد الجديد
+                            location.reload();
+                        }
+                    });
+                } else {
+                    // فشل التسجيل - تحليل نوع الخطأ من الرسالة
+                    let errorIcon = 'error';
+                    let errorTitle = '❌ خطأ في التسجيل';
+                    let errorMessage = data.message;
+                    let showBalanceOption = false;
+
+                    // التحقق من نوع الخطأ بناءً على الرسالة
+                    if (data.message && (
+                        data.message.includes('رصيد') ||
+                        data.message.includes('نقطة') ||
+                        data.message.includes('كافي') ||
+                        data.message.includes('balance') ||
+                        data.message.toLowerCase().includes('insufficient')
+                    )) {
+                        errorIcon = 'warning';
+                        errorTitle = '⚠️ رصيد غير كافٍ';
+                        errorMessage = `
+                            <div style="text-align: center;">
+                                <div style="font-size: 3rem; margin-bottom: 1rem;">💰</div>
+                                <p style="font-size: 1rem; margin-bottom: 0.5rem; color: #dc2626;">${data.message}</p>
+                                <div style="background: #fef3c7; padding: 0.75rem; border-radius: 12px; margin: 1rem 0;">
+                                    <p style="margin: 0; font-size: 0.85rem; color: #92400e;">💡 يمكنك شحن الرصيد من خلال صفحة الرصيد</p>
+                                </div>
+                            </div>
+                        `;
+                        showBalanceOption = true;
+                    } else if (data.message && data.message.includes('مسجل')) {
+                        errorIcon = 'info';
+                        errorTitle = 'ℹ️ مسجل مسبقاً';
+                        errorMessage = `
+                            <div style="text-align: center;">
+                                <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
+                                <p style="font-size: 1rem; margin-bottom: 0.5rem;">${data.message}</p>
+                                <p style="font-size: 0.85rem; color: #64748b;">يمكنك عرض كورساتك المسجل فيها من خلال صفحة كورساتي</p>
+                            </div>
+                        `;
+                    } else if (data.message && data.message.includes('الدخول') || data.message.includes('تسجيل الدخول')) {
+                        errorIcon = 'warning';
+                        errorTitle = '🔐 يرجى تسجيل الدخول';
+                        errorMessage = `
+                            <div style="text-align: center;">
+                                <div style="font-size: 3rem; margin-bottom: 1rem;">🔐</div>
+                                <p style="font-size: 1rem; margin-bottom: 0.5rem;">${data.message}</p>
+                                <p style="font-size: 0.85rem; color: #64748b;">يرجى تسجيل الدخول أولاً للتسجيل في الكورسات</p>
+                            </div>
+                        `;
+                    }
+
+                    Swal.fire({
+                        title: errorTitle,
+                        html: errorMessage,
+                        icon: errorIcon,
+                        confirmButtonText: showBalanceOption ? 'شحن الرصيد' : 'حسناً',
+                        confirmButtonColor: showBalanceOption ? '#10b981' : '#ef4444',
+                        showCancelButton: showBalanceOption,
+                        cancelButtonText: 'إلغاء',
+                        cancelButtonColor: '#64748b'
+                    }).then((result) => {
+                        if (result.isConfirmed && showBalanceOption) {
+                            // توجيه المستخدم لصفحة شحن الرصيد
+                            window.location.href = '/Balance/Index';
+                        } else if (result.isConfirmed && errorIcon === 'info') {
+                            // توجيه المستخدم لصفحة كورساتي
+                            window.location.href = '/Course/MyCourses';
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error enrolling in course:', error);
+                Swal.close();
+                Swal.fire({
+                    title: 'خطأ في الاتصال',
+                    html: `
+                        <div style="text-align: center;">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">🌐</div>
+                            <p style="font-size: 1rem; margin-bottom: 0.5rem;">حدث خطأ في الاتصال بالخادم</p>
+                            <p style="font-size: 0.85rem; color: #64748b;">يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى</p>
+                        </div>
+                    `,
+                    icon: 'error',
+                    confirmButtonText: 'حسناً',
+                    confirmButtonColor: '#ef4444'
+                });
+            }
         }
 
         // Initialize
