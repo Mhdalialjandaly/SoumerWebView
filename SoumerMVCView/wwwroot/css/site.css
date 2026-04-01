@@ -17,6 +17,8 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    touch-action: manipulation; 
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -26,6 +28,8 @@ body {
     line-height: 1.5;
     min-height: 100vh;
     padding-bottom: 85px;
+    touch-action: pan-x pan-y; 
+    -webkit-text-size-adjust: 100%;
 }
 
 /* ========================================
