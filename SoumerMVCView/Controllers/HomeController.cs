@@ -9,7 +9,6 @@ using SoumerMVCView.Services.CourseService;
 using SoumerMVCView.Services.TeacherAssignmentService;
 using System.Diagnostics;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace SoumerMVCView.Controllers
 {
