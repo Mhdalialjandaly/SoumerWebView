@@ -9,12 +9,10 @@ namespace DataAccess
         public static void SeedData(this ModelBuilder modelBuilder)
         {
 
-            // تاريخ ثابت
             var fixedDate = new DateTime(2026, 2, 2, 0, 0, 0, DateTimeKind.Utc);
-
-
-            // قيمة ثابتة لكلمة المرور المشفرة (لكلمة المرور "Admin@123")
+            //"Admin@123"
             const string fixedPasswordHash = "AQAAAAIAAYagAAAAEIJPo4WuBKtpsZhjP/uYwhUixPJs+RLJFHwMaU12CUPdcLTVbv9T0ODgOKvSMnkITg==";
+            const string fixedPasswordHash2 = "AQAAAAIAAYagAAAAENQkDyycIUJm60T/4IcwVcKX2kl0jPBjlH8QdlXPTEwql8ASanOeRRQ5ML9l0t9S/A==";
 
 
             modelBuilder.Entity<IdentityRole>()
@@ -29,25 +27,46 @@ namespace DataAccess
               });
 
 
-            modelBuilder.Entity<User>().HasData(new User
-            {
-                Id = "1",
-                UserName = "admin@system.com",
-                NormalizedUserName = "ADMIN@SYSTEM.COM",
-                Email = "admin@system.com",
-                NormalizedEmail = "ADMIN@SYSTEM.COM",
-                EmailConfirmed = true,
-                PasswordHash = fixedPasswordHash, 
-                SecurityStamp = "FIXED_STAMP_12345",
-                ConcurrencyStamp = "FIXED_CONCURRENCY_12345",
-                Description = "مدير النظام",
-                IsActive = true,
-                PhoneNumberConfirmed = false,
-                TwoFactorEnabled = false,
-                LockoutEnabled = true,
-                AccessFailedCount = 0,
-                CreatedAt = fixedDate
-            });
+            modelBuilder.Entity<User>().HasData(
+                new User
+                {
+                    Id = "1",
+                    UserName = "admin@system.com",
+                    NormalizedUserName = "ADMIN@SYSTEM.COM",
+                    Email = "admin@system.com",
+                    NormalizedEmail = "ADMIN@SYSTEM.COM",
+                    EmailConfirmed = true,
+                    PasswordHash = fixedPasswordHash2, 
+                    SecurityStamp = "FIXED_STAMP_12345",
+                    ConcurrencyStamp = "FIXED_CONCURRENCY_12345",
+                    Description = "مدير النظام",
+                    IsActive = true,
+                    PhoneNumberConfirmed = false,
+                    TwoFactorEnabled = false,
+                    LockoutEnabled = true,
+                    AccessFailedCount = 0,
+                    CreatedAt = fixedDate
+                },
+                new User
+                {
+                    Id = "2",
+                    UserName = "testuser@diditdev.com",
+                    NormalizedUserName = "TESTUSER@DIDITDEV.COM",
+                    Email = "testuser@diditdev.com",
+                    NormalizedEmail = "TESTUSER@DIDITDEV.COM",
+                    EmailConfirmed = true,
+                    PasswordHash = fixedPasswordHash, 
+                    SecurityStamp = "FIXED_STAMP_12345",
+                    ConcurrencyStamp = "FIXED_CONCURRENCY_12345",
+                    Description = "مدير النظام",
+                    IsActive = true,
+                    PhoneNumberConfirmed = false,
+                    TwoFactorEnabled = false,
+                    LockoutEnabled = true,
+                    AccessFailedCount = 0,
+                    CreatedAt = fixedDate
+                }
+                );
 
 
             modelBuilder.Entity<IdentityUserRole<string>>().HasData(
