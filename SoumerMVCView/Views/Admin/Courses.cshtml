@@ -1,0 +1,172 @@
+﻿@model List<Course>
+@{
+    ViewData["Title"] = "إدارة الكورسات";
+    Layout = "_AdminLayout";
+}
+
+<div class="courses-page">
+    <div class="table-card">
+        <div class="table-card-header">
+            <h5 class="table-card-title">📚 قائمة الكورسات</h5>
+            <a href="/Admin/CreateCourse" class="btn-primary-admin">
+                <i class="fas fa-plus"></i> إضافة كورس جديد
+            </a>
+        </div>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <div class="table-responsive">
+            <table class="table datatable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الاسم</th>
+                        <th>الوصف</th>
+                        <th>السعر (نقطة)</th>
+                        <th>تاريخ الإضافة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var course in Model)
+                    {
+                        <tr>
+                            <td>@course.Id</td>
+                            <td>
+                                <strong>@course.Name</strong>
+                            </td>
+                            <td>
+                                @(course.Description?.Length > 60 ? course.Description.Substring(0, 60) + "..." : course.Description)
+                            </td>
+                            <td>
+                                <span class="badge badge-status" style="background: #d1fae5; color: #059669;">
+                                    @course.Price.ToString("N0") نقطة
+                                </span>
+                            </td>
+                            <td>@course.CreatedAt.ToString("yyyy/MM/dd")</td>
+                            <td>
+                                <button class="btn-action btn-view" onclick="viewCourse(@course.Id)" title="عرض التفاصيل">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <a href="/Admin/EditCourse/@course.Id" class="btn-action btn-edit" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form id="deleteForm-@course.Id" action="/Admin/DeleteCourse" method="post" style="display: inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@course.Id" />
+                                    <button type="button" class="btn-action btn-delete" onclick="confirmDelete(@course.Id, 'course')" title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Course Details Modal -->
+<div class="modal fade" id="courseDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تفاصيل الكورس</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="courseDetailsContent">
+                <!-- Content loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function viewCourse(id) {
+            $.get(`/Admin/GetCourseDetails?id=${id}`, function(response) {
+                if (response.success) {
+                    const course = response.course;
+
+                    let teachersHtml = '';
+                    if (course.teachers && course.teachers.length > 0) {
+                        teachersHtml = course.teachers.map(t =>
+                            `<span class="badge bg-primary me-1">👨‍🏫 ${t.name}</span>`
+                        ).join('');
+                    } else {
+                        teachersHtml = '<p class="text-muted">لا يوجد أساتذة مرتبطين</p>';
+                    }
+
+                    let videosHtml = '';
+                    if (course.videos && course.videos.length > 0) {
+                        videosHtml = `
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>العنوان</th>
+                                        <th>الترتيب</th>
+                                        <th>مجاني</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${course.videos.map(v => `
+                                        <tr>
+                                            <td>${v.id}</td>
+                                            <td>${v.title}</td>
+                                            <td>${v.order}</td>
+                                            <td>${v.isFree ? '✅ نعم' : '❌ لا'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        `;
+                    } else {
+                        videosHtml = '<p class="text-muted">لا توجد فيديوهات مضافة</p>';
+                    }
+
+                    $('#courseDetailsContent').html(`
+                        <div class="text-center mb-4">
+                            <div style="font-size: 4rem;">📚</div>
+                        </div>
+                        <h4 class="text-center">${course.name}</h4>
+                        <div class="text-center mb-3">
+                            <span class="badge badge-status" style="background: #d1fae5; color: #059669; font-size: 1rem;">
+                                ${course.price.toLocaleString()} نقطة
+                            </span>
+                        </div>
+                        <hr>
+                        <div class="mb-3">
+                            <strong>الوصف:</strong>
+                            <p>${course.description || 'لا يوجد وصف'}</p>
+                        </div>
+                        <div class="mb-3">
+                            <strong>الأساتذة المرتبطون:</strong>
+                            <div class="mt-2">${teachersHtml}</div>
+                        </div>
+                        <div class="mb-3">
+                            <strong>الفيديوهات:</strong>
+                            <div class="mt-2">${videosHtml}</div>
+                        </div>
+                    `);
+                    $('#courseDetailsModal').modal('show');
+                }
+            });
+        }
+    </script>
+}

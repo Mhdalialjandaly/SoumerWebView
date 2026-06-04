@@ -1,0 +1,103 @@
+﻿@model TeacherGradeAssignment
+@{
+    ViewData["Title"] = "تعيين أستاذ لصف";
+    Layout = "_AdminLayout";
+}
+
+<div class="form-card">
+    <h4 class="mb-4">
+        <i class="fas fa-layer-group me-2"></i> @ViewData["Title"]
+    </h4>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form asp-action="AssignTeacherToGrade" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="TeacherId" class="form-label fw-bold">
+                    <i class="fas fa-chalkboard-teacher me-1"></i> الأستاذ
+                </label>
+                <select asp-for="TeacherId" class="form-select select2" required>
+                    <option value="">اختر الأستاذ...</option>
+                    @if (ViewBag.Teachers != null)
+                    {
+                        @foreach (var teacher in ViewBag.Teachers)
+                        {
+                            <option value="@teacher.Id">
+                                @teacher.Name - @teacher.Subject
+                            </option>
+                        }
+                    }
+                </select>
+                <span asp-validation-for="TeacherId" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="Grade" class="form-label fw-bold">
+                    <i class="fas fa-school me-1"></i> الصف
+                </label>
+                <select asp-for="Grade" class="form-select select2" required>
+                    <option value="">اختر الصف...</option>
+                    @if (ViewBag.Grades != null)
+                    {
+                        @foreach (var grade in ViewBag.Grades)
+                        {
+                            <option value="@grade.Value">@grade.Text</option>
+                        }
+                    }
+                </select>
+                <span asp-validation-for="Grade" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="Priority" class="form-label fw-bold">
+                <i class="fas fa-star me-1"></i> أولوية التدريس
+            </label>
+            <select asp-for="Priority" class="form-select">
+                <option value="1">⭐ أساسي - المدرس الرئيسي للصف</option>
+                <option value="2">🌟 ثانوي - مدرس مساعد</option>
+                <option value="3">💫 احتياطي - مدرس بديل</option>
+                <option value="4">✨ إضافي - دعم إضافي</option>
+            </select>
+            <small class="text-muted">تحدد الأولوية ترتيب ظهور الأستاذ في الصف</small>
+            <span asp-validation-for="Priority" class="text-danger"></span>
+        </div>
+
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>ملاحظة:</strong> يمكن تعيين نفس الأستاذ لعدة صفوف مختلفة. لا يمكن تعيين نفس الأستاذ لنفس الصف مرتين.
+        </div>
+
+        <div class="d-flex gap-2 mt-4 border-top pt-3">
+            <button type="submit" class="btn-primary-admin">
+                <i class="fas fa-save"></i> تعيين الأستاذ للصف
+            </button>
+            <a href="/Admin/TeacherGrades" class="btn btn-secondary">
+                <i class="fas fa-times"></i> إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                language: 'ar',
+                dir: 'rtl',
+                placeholder: 'اختر...'
+            });
+        });
+    </script>
+}

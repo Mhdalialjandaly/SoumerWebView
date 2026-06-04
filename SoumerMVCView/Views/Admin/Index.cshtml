@@ -1,0 +1,153 @@
+﻿@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "لوحة التحكم";
+    Layout = "_AdminLayout";
+}
+
+<div class="dashboard-page">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="stat-card">
+                <h2>👋 مرحباً بك في لوحة التحكم</h2>
+                <p class="text-muted">إدارة المحتوى التعليمي لمنصة سومر</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="stat-card text-center">
+                <div class="stat-icon mx-auto" style="background: #dbeafe; color: #3b82f6;">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <div class="stat-value">@Model.TotalTeachers</div>
+                <div class="stat-label">الأساتذة</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="stat-card text-center">
+                <div class="stat-icon mx-auto" style="background: #d1fae5; color: #10b981;">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="stat-value">@Model.TotalCourses</div>
+                <div class="stat-label">الكورسات</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="stat-card text-center">
+                <div class="stat-icon mx-auto" style="background: #fef3c7; color: #f59e0b;">
+                    <i class="fas fa-video"></i>
+                </div>
+                <div class="stat-value">@Model.TotalVideos</div>
+                <div class="stat-label">الفيديوهات</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="stat-card text-center">
+                <div class="stat-icon mx-auto" style="background: #ede9fe; color: #7c3aed;">
+                    <i class="fas fa-link"></i>
+                </div>
+                <div class="stat-value">@Model.TotalTeacherCourses</div>
+                <div class="stat-label">الروابط</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <a href="/Admin/TeacherGrades" class="text-decoration-none">
+                <div class="stat-card text-center">
+                    <div class="stat-icon mx-auto" style="background: #fce7f3; color: #ec4899;">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="stat-value">@ViewBag.GradesWithTeachers</div>
+                    <div class="stat-label">توزيع الأساتذة</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="stat-card">
+                <h4>⚡ إجراءات سريعة</h4>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <a href="/Admin/CreateTeacher" class="btn-primary-admin">
+                        <i class="fas fa-plus"></i> إضافة أستاذ
+                    </a>
+                    <a href="/Admin/CreateCourse" class="btn-primary-admin" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <i class="fas fa-plus"></i> إضافة كورس
+                    </a>
+                    <a href="/Admin/CreateVideo" class="btn-primary-admin" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="fas fa-plus"></i> إضافة فيديو
+                    </a>
+                    <a href="/Admin/CreateTeacherCourse" class="btn-primary-admin" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
+                        <i class="fas fa-link"></i> ربط أستاذ بكورس
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Items -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="table-card">
+                <div class="table-card-header">
+                    <h5 class="table-card-title">📝 آخر الأساتذة المضافين</h5>
+                    <a href="/Admin/Teachers" class="btn btn-sm btn-outline-primary">عرض الكل</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>المادة</th>
+                                <th>تاريخ الإضافة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var teacher in Model.RecentTeachers)
+                            {
+                                <tr>
+                                    <td>@teacher.Name</td>
+                                    <td>@teacher.Subject</td>
+                                    <td>@teacher.CreatedAt.ToString("yyyy/MM/dd")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="table-card">
+                <div class="table-card-header">
+                    <h5 class="table-card-title">📚 آخر الكورسات المضافة</h5>
+                    <a href="/Admin/Courses" class="btn btn-sm btn-outline-primary">عرض الكل</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>السعر</th>
+                                <th>تاريخ الإضافة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var course in Model.RecentCourses)
+                            {
+                                <tr>
+                                    <td>@course.Name</td>
+                                    <td>@course.Price.ToString("N0") نقطة</td>
+                                    <td>@course.CreatedAt.ToString("yyyy/MM/dd")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

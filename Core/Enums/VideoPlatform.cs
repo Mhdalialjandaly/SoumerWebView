@@ -8,7 +8,8 @@ namespace Core.Enums
 {
     public enum VideoPlatform
     {
-        YouTube = 1,
-        Vimeo = 2
+        YouTube = 0,
+        Vimeo = 1,
+        GoogleDrive = 2
     }
 }

@@ -1,0 +1,80 @@
+﻿@model TeacherGradeAssignment
+@{
+    ViewData["Title"] = "تعديل تعيين الأستاذ";
+    Layout = "_AdminLayout";
+}
+
+<div class="form-card">
+    <h4 class="mb-4">
+        <i class="fas fa-edit me-2"></i> @ViewData["Title"]
+    </h4>
+
+    <div class="mb-4 p-3 bg-light rounded-3">
+        <div class="d-flex align-items-center">
+            <img src="@(string.IsNullOrEmpty(Model.Teacher?.Image) ? "/images/default-avatar.png" : Model.Teacher.Image)"
+                 alt="@Model.Teacher?.Name"
+                 style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-left: 15px;">
+            <div>
+                <h5 class="mb-1">@Model.Teacher?.Name</h5>
+                <p class="text-muted mb-0">@Model.Teacher?.Subject</p>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="EditTeacherGrade" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="TeacherId" />
+
+        <div class="mb-4">
+            <label asp-for="Grade" class="form-label fw-bold">
+                <i class="fas fa-school me-1"></i> الصف
+            </label>
+            <select asp-for="Grade" class="form-select select2" required>
+                @if (ViewBag.Grades != null)
+                {
+                    @foreach (var grade in ViewBag.Grades)
+                    {
+                        <option value="@grade.Value">@grade.Text</option>
+                    }
+                }
+            </select>
+            <span asp-validation-for="Grade" class="text-danger"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="Priority" class="form-label fw-bold">
+                <i class="fas fa-star me-1"></i> أولوية التدريس
+            </label>
+            <select asp-for="Priority" class="form-select">
+                <option value="1">⭐ أساسي - المدرس الرئيسي للصف</option>
+                <option value="2">🌟 ثانوي - مدرس مساعد</option>
+                <option value="3">💫 احتياطي - مدرس بديل</option>
+                <option value="4">✨ إضافي - دعم إضافي</option>
+            </select>
+            <span asp-validation-for="Priority" class="text-danger"></span>
+        </div>
+
+        <div class="d-flex gap-2 mt-4 border-top pt-3">
+            <button type="submit" class="btn-primary-admin">
+                <i class="fas fa-save"></i> حفظ التعديلات
+            </button>
+            <a href="/Admin/TeacherGrades" class="btn btn-secondary">
+                <i class="fas fa-times"></i> إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                language: 'ar',
+                dir: 'rtl'
+            });
+        });
+    </script>
+}

@@ -1,0 +1,134 @@
+﻿@model List<Teacher>
+@{
+    ViewData["Title"] = "إدارة الأساتذة";
+    Layout = "_AdminLayout";
+}
+
+<div class="teachers-page">
+    <div class="table-card">
+        <div class="table-card-header">
+            <h5 class="table-card-title">👨‍🏫 قائمة الأساتذة</h5>
+            <a href="/Admin/CreateTeacher" class="btn-primary-admin">
+                <i class="fas fa-plus"></i> إضافة أستاذ جديد
+            </a>
+        </div>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <div class="table-responsive">
+            <table class="table datatable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الصورة</th>
+                        <th>الاسم</th>
+                        <th>المادة</th>
+                        <th>الوصف</th>
+                        <th>تاريخ الإضافة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var teacher in Model)
+                    {
+                        <tr>
+                            <td>@teacher.Id</td>
+                            <td>
+                                <img src="@(string.IsNullOrEmpty(teacher.Image) ? "/images/default-avatar.png" : teacher.Image)"
+                                     alt="@teacher.Name"
+                                     style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                            </td>
+                            <td>@teacher.Name</td>
+                            <td>
+                                <span class="badge badge-status" style="background: #dbeafe; color: #3b82f6;">
+                                    @teacher.Subject
+                                </span>
+                            </td>
+                            <td>
+                                @(teacher.Bio?.Length > 50 ? teacher.Bio.Substring(0, 50) + "..." : teacher.Bio)
+                            </td>
+                            <td>@teacher.CreatedAt.ToString("yyyy/MM/dd")</td>
+                            <td>
+                                <img src="@(string.IsNullOrEmpty(teacher.Image) ? "/images/default-avatar.png" : teacher.Image)"
+                                     alt="@teacher.Name"
+                                     style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0;"
+                                     onerror="this.src='/images/default-avatar.png'">
+                            </td>
+                            <td>
+                                <button class="btn-action btn-view" onclick="viewTeacher(@teacher.Id)" title="عرض التفاصيل">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <a href="/Admin/EditTeacher/@teacher.Id" class="btn-action btn-edit" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form id="deleteForm-@teacher.Id" action="/Admin/DeleteTeacher" method="post" style="display: inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@teacher.Id" />
+                                    <button type="button" class="btn-action btn-delete" onclick="confirmDelete(@teacher.Id, 'teacher')" title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Teacher Details Modal -->
+<div class="modal fade" id="teacherDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تفاصيل الأستاذ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="teacherDetailsContent">
+                <!-- Content loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function viewTeacher(id) {
+            $.get(`/Admin/GetTeacherDetails?id=${id}`, function(response) {
+                if (response.success) {
+                    const teacher = response.teacher;
+                    let coursesHtml = '';
+                    if (teacher.courses && teacher.courses.length > 0) {
+                        coursesHtml = teacher.courses.map(c =>
+                            `<span class="badge bg-info me-1">${c.name} (${c.price} نقطة)</span>`
+                        ).join('');
+                    } else {
+                        coursesHtml = '<p class="text-muted">لا توجد كورسات مرتبطة</p>';
+                    }
+
+                    $('#teacherDetailsContent').html(`
+                        <div class="text-center mb-4">
+                            <img src="${teacher.image || '/images/default-avatar.png'}"
+                                 alt="${teacher.name}"
+                                 style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                        </div>
+                        <h4 class="text-center">${teacher.name}</h4>
+                        <p class="text-center text-muted">${teacher.subject}</p>
+                        <hr>
+                        <p><strong>الوصف:</strong> ${teacher.bio || 'لا يوجد وصف'}</p>
+                        <p><strong>الكورسات:</strong></p>
+                        <div>${coursesHtml}</div>
+                    `);
+                    $('#teacherDetailsModal').modal('show');
+                }
+            });
+        }
+    </script>
+}

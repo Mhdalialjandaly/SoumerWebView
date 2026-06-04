@@ -1,0 +1,262 @@
+﻿@model Teacher
+@{
+    ViewData["Title"] = Model.Id == 0 ? "إضافة أستاذ جديد" : "تعديل بيانات الأستاذ";
+    Layout = "_AdminLayout";
+}
+
+<div class="form-card">
+    <h4 class="mb-4">
+        <i class="fas fa-chalkboard-teacher me-2"></i> @ViewData["Title"]
+    </h4>
+
+    <form asp-action="@(Model.Id == 0 ? "CreateTeacher" : "EditTeacher")" method="post" enctype="multipart/form-data" id="teacherForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="Image" id="currentImagePath" />
+
+        <div class="row">
+            <!-- صورة الأستاذ -->
+            <div class="col-md-4 mb-3">
+                <label class="form-label">
+                    <i class="fas fa-image me-1"></i> صورة الأستاذ
+                </label>
+                <div class="image-upload-container">
+                    <div class="image-preview-wrapper">
+                        <img id="imagePreview"
+                             src="@(string.IsNullOrEmpty(Model.Image) ? "/images/default-avatar.png" : Model.Image)"
+                             alt="صورة الأستاذ"
+                             class="image-preview"
+                             style="width: 200px; height: 200px; object-fit: cover; border-radius: 20px; border: 3px solid #e2e8f0;">
+
+                        <div class="image-overlay">
+                            <button type="button" class="btn btn-light btn-sm" onclick="document.getElementById('imageUpload').click()">
+                                <i class="fas fa-camera"></i> تغيير الصورة
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeImage()" id="removeImageBtn" style="@(string.IsNullOrEmpty(Model.Image) ? "display:none;" : "")">
+                                <i class="fas fa-trash"></i> حذف
+                            </button>
+                        </div>
+                    </div>
+                    <input type="file"
+                           id="imageUpload"
+                           name="ImageFile"
+                           accept="image/*"
+                           class="form-control mt-2"
+                           onchange="previewImage(event)"
+                           style="display: none;">
+
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('imageUpload').click()">
+                            <i class="fas fa-upload me-1"></i> اختر صورة
+                        </button>
+                        <small class="text-muted d-block mt-1">الصيغ المدعومة: JPG, PNG, GIF (الحجم الأقصى: 5MB)</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- معلومات الأستاذ -->
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="FirstName" class="form-label">
+                            <i class="fas fa-user me-1"></i> الاسم الأول
+                        </label>
+                        <input asp-for="FirstName" class="form-control" required placeholder="أدخل الاسم الأول...">
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="LastName" class="form-label">
+                            <i class="fas fa-user me-1"></i> الاسم الأخير
+                        </label>
+                        <input asp-for="LastName" class="form-control" required placeholder="أدخل الاسم الأخير...">
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Subject" class="form-label">
+                        <i class="fas fa-book me-1"></i> المادة
+                    </label>
+                    <select asp-for="Subject" class="form-select" required>
+                        <option value="">اختر المادة...</option>
+                        <option value="رياضيات">رياضيات</option>
+                        <option value="فيزياء">فيزياء</option>
+                        <option value="كيمياء">كيمياء</option>
+                        <option value="أحياء">أحياء</option>
+                        <option value="لغة عربية">لغة عربية</option>
+                        <option value="لغة إنجليزية">لغة إنجليزية</option>
+                        <option value="لغة فرنسية">لغة فرنسية</option>
+                        <option value="تاريخ">تاريخ</option>
+                        <option value="جغرافيا">جغرافيا</option>
+                        <option value="فلسفة">فلسفة</option>
+                        <option value="علوم">علوم</option>
+                        <option value="تربية إسلامية">تربية إسلامية</option>
+                        <option value="تربية فنية">تربية فنية</option>
+                        <option value="موسيقى">موسيقى</option>
+                        <option value="رياضة">رياضة</option>
+                        <option value="حاسوب">حاسوب</option>
+                        <option value="أخرى">أخرى</option>
+                    </select>
+                    <span asp-validation-for="Subject" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Bio" class="form-label">
+                        <i class="fas fa-align-left me-1"></i> الوصف
+                    </label>
+                    <textarea asp-for="Bio" class="form-control" rows="4"
+                              placeholder="اكتب وصفاً مختصراً عن الأستاذ، خبراته، وإنجازاته..."></textarea>
+                    <small class="text-muted">عدد الأحرف: <span id="bioCharCount">0</span>/500</small>
+                    <span asp-validation-for="Bio" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn-primary-admin" id="submitBtn">
+                <i class="fas fa-save"></i> حفظ
+                <span class="spinner-border spinner-border-sm d-none" id="loadingSpinner" role="status"></span>
+            </button>
+            <a href="/Admin/Teachers" class="btn btn-secondary">
+                <i class="fas fa-times"></i> إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .image-upload-container {
+        text-align: center;
+    }
+
+    .image-preview-wrapper {
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+    }
+
+    .image-preview {
+        transition: all 0.3s ease;
+    }
+
+    .image-preview-wrapper:hover .image-preview {
+        opacity: 0.7;
+    }
+
+    .image-preview-wrapper:hover .image-overlay {
+        opacity: 1;
+    }
+
+    .image-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+        .image-overlay button {
+            white-space: nowrap;
+        }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Preview uploaded image
+        function previewImage(event) {
+            const file = event.target.files[0];
+
+            if (file) {
+                // Validate file type
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!validTypes.includes(file.type)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'خطأ',
+                        text: 'يرجى اختيار صورة بصيغة JPG, PNG, أو GIF',
+                        confirmButtonColor: '#ef4444'
+                    });
+                    event.target.value = '';
+                    return;
+                }
+
+                // Validate file size (max 5MB)
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                if (file.size > maxSize) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'خطأ',
+                        text: 'حجم الصورة يجب أن لا يتجاوز 5 ميجابايت',
+                        confirmButtonColor: '#ef4444'
+                    });
+                    event.target.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').src = e.target.result;
+                    document.getElementById('removeImageBtn').style.display = 'inline-block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Remove image
+        function removeImage() {
+            Swal.fire({
+                title: 'تأكيد الحذف',
+                text: 'هل أنت متأكد من حذف الصورة؟',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'نعم، احذف',
+                cancelButtonText: 'إلغاء'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('imagePreview').src = '/images/default-avatar.png';
+                    document.getElementById('imageUpload').value = '';
+                    document.getElementById('currentImagePath').value = '';
+                    document.getElementById('removeImageBtn').style.display = 'none';
+                }
+            });
+        }
+
+        // Character counter for bio
+        document.addEventListener('DOMContentLoaded', function() {
+            const bioTextarea = document.getElementById('Bio');
+            const bioCharCount = document.getElementById('bioCharCount');
+
+            if (bioTextarea && bioCharCount) {
+                bioCharCount.textContent = bioTextarea.value.length;
+
+                bioTextarea.addEventListener('input', function() {
+                    bioCharCount.textContent = this.value.length;
+
+                    if (this.value.length > 500) {
+                        bioCharCount.style.color = '#ef4444';
+                    } else {
+                        bioCharCount.style.color = '#64748b';
+                    }
+                });
+            }
+
+            // Show loading on form submit
+            const form = document.getElementById('teacherForm');
+            form.addEventListener('submit', function() {
+                const submitBtn = document.getElementById('submitBtn');
+                const spinner = document.getElementById('loadingSpinner');
+                submitBtn.disabled = true;
+                spinner.classList.remove('d-none');
+            });
+        });
+    </script>
+}

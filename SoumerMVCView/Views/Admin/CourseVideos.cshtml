@@ -1,0 +1,124 @@
+﻿@model List<CourseVideo>
+@{
+    ViewData["Title"] = "إدارة فيديوهات الكورسات";
+    Layout = "_AdminLayout";
+}
+
+<div class="videos-page">
+    <div class="table-card">
+        <div class="table-card-header">
+            <h5 class="table-card-title">🎥 قائمة الفيديوهات</h5>
+            <a href="/Admin/CreateVideo" class="btn-primary-admin" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="fas fa-plus"></i> إضافة فيديو جديد
+            </a>
+        </div>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <div class="table-responsive">
+            <table class="table datatable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>العنوان</th>
+                        <th>الكورس</th>
+                        <th>المنصة</th>
+                        <th>المدة (دقيقة)</th>
+                        <th>الترتيب</th>
+                        <th>مجاني</th>
+                        <th>منشور</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var video in Model)
+                    {
+                        <tr>
+                            <td>@video.Id</td>
+                            <td>
+                                <strong>@video.Title</strong>
+                                @if (!string.IsNullOrEmpty(video.Description))
+                                {
+                                    <br>
+                                    <small class="text-muted">
+                                        @(video.Description.Length > 40 ? video.Description.Substring(0, 40) + "..." : video.Description)
+                                    </small>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-info">@video.Course?.Name</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-status" style="background: #ede9fe; color: #7c3aed;">
+                                    @video.Platform
+                                </span>
+                            </td>
+                            <td>
+                                @if (video.Duration > 0)
+                                {
+                                    <span>@video.Duration دقيقة</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">@video.Order</span>
+                            </td>
+                            <td>
+                                @if (video.IsFree)
+                                {
+                                    <span class="badge bg-success">✅ مجاني</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">💰 مدفوع</span>
+                                }
+                            </td>
+                            <td>
+                                @if (video.IsPublished)
+                                {
+                                    <span class="badge bg-success">منشور</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">مسودة</span>
+                                }
+                            </td>
+                            <td>
+                                <a href="@video.VideoUrl" target="_blank" class="btn-action btn-view" title="مشاهدة الفيديو">
+                                    <i class="fas fa-play"></i>
+                                </a>
+                                <a href="/Admin/EditVideo/@video.Id" class="btn-action btn-edit" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form id="deleteForm-@video.Id" action="/Admin/DeleteVideo" method="post" style="display: inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@video.Id" />
+                                    <button type="button" class="btn-action btn-delete" onclick="confirmDelete(@video.Id, 'video')" title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

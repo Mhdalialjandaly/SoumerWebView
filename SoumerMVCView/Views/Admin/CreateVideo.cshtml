@@ -1,0 +1,494 @@
+﻿@model CourseVideo
+@{
+    ViewData["Title"] = Model.Id == 0 ? "إضافة فيديو جديد" : "تعديل الفيديو";
+    Layout = "_AdminLayout";
+}
+
+<div class="form-card">
+    <h4 class="mb-4">
+        <i class="fas fa-video me-2"></i> @ViewData["Title"]
+    </h4>
+
+    <form asp-action="@(Model.Id == 0 ? "CreateVideo" : "EditVideo")" method="post" id="videoForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="VideoId" id="videoIdHidden" />
+
+        <div class="row">
+            <!-- معلومات أساسية -->
+            <div class="col-md-8">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">
+                            <i class="fas fa-info-circle text-primary me-2"></i>معلومات الفيديو
+                        </h5>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label fw-bold">
+                                <i class="fas fa-heading me-1"></i> عنوان الفيديو
+                            </label>
+                            <input asp-for="Title" class="form-control form-control-lg" required
+                                   placeholder="أدخل عنوان الفيديو...">
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label fw-bold">
+                                <i class="fas fa-align-left me-1"></i> وصف الفيديو
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="4"
+                                      placeholder="وصف مختصر لمحتوى الفيديو وأهدافه التعليمية..."></textarea>
+                            <small class="text-muted">عدد الأحرف: <span id="descCharCount">0</span>/500</small>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- منصة الفيديو والرابط -->
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">
+                            <i class="fas fa-link text-warning me-2"></i>رابط الفيديو
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-5 mb-3">
+                                <label asp-for="Platform" class="form-label fw-bold">
+                                    <i class="fas fa-globe me-1"></i> المنصة
+                                </label>
+                                <select asp-for="Platform" class="form-select" id="platformSelect" required>
+                                    <option value="">اختر المنصة...</option>
+                                    <option value="0">📺 YouTube</option>
+                                    <option value="1">🎬 Vimeo</option>
+                                    <option value="2">📁 Google Drive</option>
+                                    <option value="3">🔗 أخرى</option>
+                                </select>
+                                <span asp-validation-for="Platform" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-7 mb-3">
+                                <label asp-for="VideoUrl" class="form-label fw-bold">
+                                    <i class="fas fa-link me-1"></i> رابط الفيديو
+                                </label>
+                                <div class="input-group">
+                                    <input asp-for="VideoUrl" class="form-control" required
+                                           placeholder="أدخل رابط الفيديو..." id="videoUrlInput">
+                                    <button class="btn btn-outline-primary" type="button" id="extractVideoIdBtn" title="استخراج معرف الفيديو">
+                                        <i class="fas fa-magic"></i>
+                                    </button>
+                                </div>
+                                <div id="videoUrlFeedback" class="form-text"></div>
+                                <span asp-validation-for="VideoUrl" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="videoIdSection" style="display: none;">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-id-card me-1"></i> معرف الفيديو المستخرج
+                            </label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="extractedVideoId" readonly>
+                                <button class="btn btn-outline-secondary" type="button" onclick="copyVideoId()">
+                                    <i class="fas fa-copy"></i> نسخ
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- معاينة الفيديو -->
+                        <div id="videoPreviewContainer" class="mt-3" style="display: none;">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-play-circle me-1"></i> معاينة الفيديو
+                            </label>
+                            <div class="ratio ratio-16x9 rounded-3 overflow-hidden" id="videoPreview">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الإعدادات المتقدمة -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">
+                            <i class="fas fa-cog text-info me-2"></i>الإعدادات
+                        </h5>
+
+                        <div class="mb-3">
+                            <label asp-for="CourseId" class="form-label fw-bold">
+                                <i class="fas fa-book me-1"></i> الكورس
+                            </label>
+                            <select asp-for="CourseId" class="form-select select2" required>
+                                <option value="">اختر الكورس...</option>
+                                @if (ViewBag.Courses != null)
+                                {
+                                    @foreach (var course in ViewBag.Courses)
+                                    {
+                                        <option value="@course.Id">@course.Name</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="CourseId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Duration" class="form-label fw-bold">
+                                <i class="fas fa-clock me-1"></i> المدة (بالدقائق)
+                            </label>
+                            <input asp-for="Duration" type="number" class="form-control"
+                                   min="0" step="1" placeholder="مثال: 45">
+                            <span asp-validation-for="Duration" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Order" class="form-label fw-bold">
+                                <i class="fas fa-sort-numeric-up me-1"></i> الترتيب
+                            </label>
+                            <input asp-for="Order" type="number" class="form-control"
+                                   min="1" step="1" placeholder="ترتيب الفيديو في الكورس" required>
+                            <small class="text-muted">يحدد ترتيب ظهور الفيديو ضمن الكورس</small>
+                            <span asp-validation-for="Order" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- حالة الفيديو -->
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">
+                            <i class="fas fa-toggle-on text-success me-2"></i>حالة الفيديو
+                        </h5>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsFree" class="form-check-input" type="checkbox" id="isFreeSwitch">
+                                <label asp-for="IsFree" class="form-check-label fw-bold">
+                                    <i class="fas fa-gift me-1"></i> فيديو مجاني
+                                </label>
+                                <div class="form-text">متاح للجميع بدون تسجيل في الكورس</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsPublished" class="form-check-input" type="checkbox" id="isPublishedSwitch" checked>
+                                <label asp-for="IsPublished" class="form-check-label fw-bold">
+                                    <i class="fas fa-eye me-1"></i> منشور
+                                </label>
+                                <div class="form-text">الفيديو متاح للمشاهدة فوراً</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- أزرار الإجراءات -->
+        <div class="d-flex gap-2 mt-4 border-top pt-3">
+            <button type="submit" class="btn-primary-admin btn-lg" style="background: linear-gradient(135deg, #f59e0b, #d97706);" id="submitBtn">
+                <i class="fas fa-save"></i> حفظ الفيديو
+                <span class="spinner-border spinner-border-sm d-none" id="loadingSpinner"></span>
+            </button>
+            <a href="/Admin/CourseVideos" class="btn btn-secondary btn-lg">
+                <i class="fas fa-times"></i> إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for courses
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                language: 'ar',
+                dir: 'rtl',
+                placeholder: 'اختر الكورس...'
+            });
+
+            // إذا كان الفيديو موجود (تعديل)، اعرض المعاينة
+            const currentUrl = $('#videoUrlInput').val();
+            const currentPlatform = $('#platformSelect').val();
+            if (currentUrl && currentPlatform) {
+                updateVideoPreview(currentUrl, currentPlatform);
+            }
+
+            // عند تغيير المنصة
+            $('#platformSelect').on('change', function() {
+                const platform = $(this).val();
+                const urlInput = $('#videoUrlInput');
+
+                // تحديث placeholder حسب المنصة
+                switch(platform) {
+                    case '0': // YouTube
+                        urlInput.attr('placeholder', 'https://www.youtube.com/watch?v=... أو https://youtu.be/...');
+                        break;
+                    case '1': // Vimeo
+                        urlInput.attr('placeholder', 'https://vimeo.com/...');
+                        break;
+                    case '2': // Google Drive
+                        urlInput.attr('placeholder', 'https://drive.google.com/file/d/.../view');
+                        break;
+                    default:
+                        urlInput.attr('placeholder', 'أدخل رابط الفيديو...');
+                }
+
+                // تحديث المعاينة إذا كان الرابط موجوداً
+                const url = urlInput.val();
+                if (url && platform) {
+                    updateVideoPreview(url, platform);
+                }
+            });
+
+            // عند تغيير الرابط
+            $('#videoUrlInput').on('input', function() {
+                const url = $(this).val();
+                const platform = $('#platformSelect').val();
+                if (url && platform) {
+                    updateVideoPreview(url, platform);
+                }
+            });
+
+            // استخراج معرف الفيديو
+            $('#extractVideoIdBtn').on('click', function() {
+                extractAndShowVideoId();
+            });
+
+            // Character counter
+            const descTextarea = $('textarea[name="Description"]');
+            const descCharCount = $('#descCharCount');
+            descCharCount.text(descTextarea.val().length);
+
+            descTextarea.on('input', function() {
+                const count = $(this).val().length;
+                descCharCount.text(count);
+                descCharCount.css('color', count > 500 ? '#ef4444' : '#64748b');
+            });
+
+            // Form submit loading
+            $('#videoForm').on('submit', function() {
+                $('#submitBtn').prop('disabled', true);
+                $('#loadingSpinner').removeClass('d-none');
+            });
+        });
+
+        // استخراج معرف الفيديو
+        function extractVideoId(url, platform) {
+            if (!url || !platform) return null;
+
+            let videoId = null;
+
+            switch(platform) {
+                case '0': // YouTube
+                    // أنماط روابط يوتيوب المختلفة
+                    const ytPatterns = [
+                        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^&\n?#]+)/,
+                        /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+                    ];
+
+                    for (const pattern of ytPatterns) {
+                        const match = url.match(pattern);
+                        if (match) {
+                            videoId = match[1];
+                            break;
+                        }
+                    }
+                    break;
+
+                case '1': // Vimeo
+                    const vimeoPatterns = [
+                        /vimeo\.com\/(\d+)/,
+                        /vimeo\.com\/channels\/.*\/(\d+)/,
+                        /vimeo\.com\/groups\/.*\/videos\/(\d+)/
+                    ];
+
+                    for (const pattern of vimeoPatterns) {
+                        const match = url.match(pattern);
+                        if (match) {
+                            videoId = match[1];
+                            break;
+                        }
+                    }
+                    break;
+
+                case '2': // Google Drive
+                    const driveMatch = url.match(/\/d\/([^\/]+)/);
+                    if (driveMatch) {
+                        videoId = driveMatch[1];
+                    }
+                    break;
+
+                default:
+                    videoId = url; // للمنصات الأخرى
+            }
+
+            return videoId;
+        }
+
+        // تحديث معاينة الفيديو
+        function updateVideoPreview(url, platform) {
+            const videoId = extractVideoId(url, platform);
+            const previewContainer = $('#videoPreviewContainer');
+            const preview = $('#videoPreview');
+            const videoIdSection = $('#videoIdSection');
+            const extractedIdInput = $('#extractedVideoId');
+            const videoIdHidden = $('#videoIdHidden');
+
+            if (videoId) {
+                // تحديث معرف الفيديو المخفي
+                videoIdHidden.val(videoId);
+                extractedIdInput.val(videoId);
+                videoIdSection.show();
+                previewContainer.show();
+
+                let embedHtml = '';
+
+                switch(platform) {
+                    case '0': // YouTube
+                        embedHtml = `
+                            <iframe
+                                src="https://www.youtube.com/embed/${videoId}"
+                                title="YouTube video player"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen>
+                            </iframe>`;
+                        $('#videoUrlFeedback').html('<span class="text-success">✅ رابط يوتيوب صحيح</span>');
+                        break;
+
+                    case '1': // Vimeo
+                        embedHtml = `
+                            <iframe
+                                src="https://player.vimeo.com/video/${videoId}"
+                                title="Vimeo video player"
+                                frameborder="0"
+                                allow="autoplay; fullscreen; picture-in-picture"
+                                allowfullscreen>
+                            </iframe>`;
+                        $('#videoUrlFeedback').html('<span class="text-success">✅ رابط Vimeo صحيح</span>');
+                        break;
+
+                    case '2': // Google Drive
+                        embedHtml = `
+                            <iframe
+                                src="https://drive.google.com/file/d/${videoId}/preview"
+                                title="Google Drive video player"
+                                frameborder="0"
+                                allow="autoplay"
+                                allowfullscreen>
+                            </iframe>`;
+                        $('#videoUrlFeedback').html('<span class="text-success">✅ رابط Google Drive صحيح</span>');
+                        break;
+
+                    default:
+                        previewContainer.hide();
+                        $('#videoUrlFeedback').html('<span class="text-muted">⚠️ المعاينة غير متاحة لهذه المنصة</span>');
+                }
+
+                preview.html(embedHtml);
+            } else {
+                previewContainer.hide();
+                videoIdSection.hide();
+                videoIdHidden.val('');
+
+                if (url) {
+                    $('#videoUrlFeedback').html('<span class="text-danger">❌ رابط غير صالح للمنصة المحددة</span>');
+                } else {
+                    $('#videoUrlFeedback').html('');
+                }
+            }
+        }
+
+        // استخراج وعرض معرف الفيديو
+        function extractAndShowVideoId() {
+            const url = $('#videoUrlInput').val();
+            const platform = $('#platformSelect').val();
+
+            if (!url) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'تنبيه',
+                    text: 'يرجى إدخال رابط الفيديو أولاً',
+                    confirmButtonColor: '#f59e0b'
+                });
+                return;
+            }
+
+            if (!platform) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'تنبيه',
+                    text: 'يرجى اختيار المنصة أولاً',
+                    confirmButtonColor: '#f59e0b'
+                });
+                return;
+            }
+
+            updateVideoPreview(url, platform);
+
+            const videoId = $('#videoIdHidden').val();
+            if (videoId) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تم استخراج معرف الفيديو',
+                    html: `<p>معرف الفيديو: <strong>${videoId}</strong></p>`,
+                    confirmButtonColor: '#f59e0b'
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'فشل الاستخراج',
+                    text: 'لم نتمكن من استخراج معرف الفيديو. تأكد من صحة الرابط والمنصة المختارة.',
+                    confirmButtonColor: '#ef4444'
+                });
+            }
+        }
+
+        // نسخ معرف الفيديو
+        function copyVideoId() {
+            const videoId = $('#extractedVideoId').val();
+            if (videoId) {
+                navigator.clipboard.writeText(videoId).then(() => {
+                    // Toast notification
+                    const toast = $(`
+                        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+                            <div class="toast show" role="alert">
+                                <div class="toast-header bg-success text-white">
+                                    <strong class="me-auto">✅ تم النسخ</strong>
+                                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                                </div>
+                                <div class="toast-body">
+                                    تم نسخ معرف الفيديو إلى الحافظة
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                    $('body').append(toast);
+                    setTimeout(() => toast.remove(), 3000);
+                });
+            }
+        }
+
+        // Validate before submit
+        $('#videoForm').on('submit', function(e) {
+            const url = $('#videoUrlInput').val();
+            const platform = $('#platformSelect').val();
+
+            if (url && platform) {
+                const videoId = extractVideoId(url, platform);
+                if (!videoId && platform !== '3') { // '3' = Other
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'خطأ في الرابط',
+                        text: 'يرجى التأكد من صحة رابط الفيديو أو اختيار المنصة المناسبة.',
+                        confirmButtonColor: '#ef4444'
+                    });
+                    return false;
+                }
+            }
+        });
+    </script>
+}
