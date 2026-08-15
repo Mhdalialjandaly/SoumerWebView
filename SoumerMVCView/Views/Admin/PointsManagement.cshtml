@@ -1,0 +1,272 @@
+﻿@{
+    ViewData["Title"] = "إدارة نقاط المستخدمين";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid p-4" dir="rtl">
+    <h3 class="mb-4">
+        <i class="fas fa-coins text-warning ms-2"></i>@ViewData["Title"]
+    </h3>
+
+    @Html.AntiForgeryToken()
+
+    <!-- بطاقة البحث عن مستخدم -->
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-body">
+            <label class="form-label fw-bold"><i class="fas fa-search ms-1"></i>بحث عن مستخدم</label>
+            <div class="input-group mb-3">
+                <input type="text" id="userSearchInput" class="form-control" placeholder="ابحث بالاسم أو البريد الإلكتروني...">
+                <button class="btn btn-primary" type="button" id="searchBtn">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+            </div>
+            <div id="searchResults" class="list-group" style="display:none;"></div>
+
+            <!-- المستخدم المحدد حالياً -->
+            <div id="selectedUserBox" class="alert alert-info mt-3" style="display:none;">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <i class="fas fa-user-circle me-2"></i>
+                        <strong id="selectedUserName">---</strong>
+                        <br />
+                        <small>الرصيد الحالي: <span id="selectedUserBalance" class="badge bg-success fs-6">0</span> نقطة</small>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm" id="clearUserBtn">
+                        <i class="fas fa-times"></i> تغيير المستخدم
+                    </button>
+                </div>
+                <input type="hidden" id="selectedUserId" value="" />
+            </div>
+        </div>
+    </div>
+
+    <!-- بطاقات العمليات: إضافة وخصم -->
+    <div class="row" id="pointsActions" style="display:none;">
+        <!-- إضافة نقاط -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-success shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle ms-1"></i>إضافة نقاط</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">المبلغ <span class="text-danger">*</span></label>
+                        <input type="number" id="addAmount" class="form-control" min="1" placeholder="أدخل عدد النقاط">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">السبب (اختياري)</label>
+                        <textarea id="addDescription" class="form-control" rows="2" placeholder="سبب الإضافة..."></textarea>
+                    </div>
+                    <button class="btn btn-success w-100" id="addPointsBtn">
+                        <i class="fas fa-check"></i> تأكيد الإضافة
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- خصم نقاط -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-danger shadow-sm h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-minus-circle ms-1"></i>خصم نقاط</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">المبلغ <span class="text-danger">*</span></label>
+                        <input type="number" id="deductAmount" class="form-control" min="1" placeholder="أدخل عدد النقاط">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">السبب (اختياري)</label>
+                        <textarea id="deductDescription" class="form-control" rows="2" placeholder="سبب الخصم..."></textarea>
+                    </div>
+                    <button class="btn btn-danger w-100" id="deductPointsBtn">
+                        <i class="fas fa-check"></i> تأكيد الخصم
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function() {
+            const searchInput = $('#userSearchInput');
+            const searchBtn = $('#searchBtn');
+            const resultsDiv = $('#searchResults');
+            const selectedUserBox = $('#selectedUserBox');
+            const pointsActions = $('#pointsActions');
+            const token = $('input[name="__RequestVerificationToken"]').val();
+
+            // البحث عن المستخدمين
+            function performSearch() {
+                const query = searchInput.val().trim();
+                if (query.length < 2) {
+                    resultsDiv.hide();
+                    return;
+                }
+
+                $.get('/Admin/SearchUsers', { term: query }, function(data) {
+                    if (data.success && data.users.length > 0) {
+                        let html = '';
+                        data.users.forEach(user => {
+                            html += `<a href="#" class="list-group-item list-group-item-action user-item"
+                                          data-id="${user.id}" data-name="${user.name}" data-balance="${user.balance}">
+                                          <i class="fas fa-user ms-2"></i>${user.name} (${user.email})
+                                          <span class="badge bg-secondary float-start">${user.balance} نقطة</span>
+                                      </a>`;
+                        });
+                        resultsDiv.html(html).show();
+                    } else {
+                        resultsDiv.html('<div class="list-group-item text-muted">لا توجد نتائج</div>').show();
+                    }
+                });
+            }
+
+            searchBtn.on('click', performSearch);
+            searchInput.on('keypress', function(e) {
+                if (e.which === 13) performSearch();
+            });
+
+            // اختيار مستخدم من النتائج
+            $(document).on('click', '.user-item', function(e) {
+                e.preventDefault();
+                const id = $(this).data('id');
+                const name = $(this).data('name');
+                const balance = $(this).data('balance');
+
+                $('#selectedUserId').val(id);
+                $('#selectedUserName').text(name);
+                $('#selectedUserBalance').text(Number(balance).toLocaleString());
+                selectedUserBox.show();
+                pointsActions.show();
+                resultsDiv.hide();
+                searchInput.val('');
+            });
+
+            // إلغاء تحديد المستخدم
+            $('#clearUserBtn').on('click', function() {
+                $('#selectedUserId').val('');
+                selectedUserBox.hide();
+                pointsActions.hide();
+            });
+
+            // إضافة نقاط
+            $('#addPointsBtn').on('click', function() {
+                const userId = $('#selectedUserId').val();
+                if (!userId) {
+                    Swal.fire('تنبيه', 'الرجاء اختيار مستخدم أولاً', 'warning');
+                    return;
+                }
+                const amount = parseInt($('#addAmount').val());
+                if (!amount || amount <= 0) {
+                    Swal.fire('تنبيه', 'الرجاء إدخال مبلغ صحيح', 'warning');
+                    return;
+                }
+                const description = $('#addDescription').val() || 'نقاط مضافة من الإدارة';
+
+                Swal.fire({
+                    title: 'تأكيد إضافة النقاط',
+                    text: `هل أنت متأكد من إضافة ${amount.toLocaleString()} نقطة؟`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'نعم، أضف',
+                    cancelButtonText: 'إلغاء'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // إرسال الطلب مع رمز CSRF
+                        $.ajax({
+                            url: '/Admin/GivePoints',
+                            type: 'POST',
+                            data: {
+                                userId: userId,
+                                amount: amount,
+                                description: description,
+                                __RequestVerificationToken: token
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire('تم!', response.message, 'success');
+                                    // تحديث الرصيد المعروض
+                                    $.get('/Admin/GetUserBalance', { userId: userId }, function(bal) {
+                                        if (bal.success) {
+                                            $('#selectedUserBalance').text(Number(bal.balance).toLocaleString());
+                                        }
+                                    });
+                                    $('#addAmount').val('');
+                                    $('#addDescription').val('');
+                                } else {
+                                    Swal.fire('خطأ', response.message, 'error');
+                                }
+                            },
+                            error: function(xhr) {
+                                console.error("Add points error:", xhr);
+                                Swal.fire('خطأ', 'حدث خطأ أثناء الاتصال بالخادم', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+            // خصم نقاط
+            $('#deductPointsBtn').on('click', function() {
+                const userId = $('#selectedUserId').val();
+                if (!userId) {
+                    Swal.fire('تنبيه', 'الرجاء اختيار مستخدم أولاً', 'warning');
+                    return;
+                }
+                const amount = parseInt($('#deductAmount').val());
+                if (!amount || amount <= 0) {
+                    Swal.fire('تنبيه', 'الرجاء إدخال مبلغ صحيح', 'warning');
+                    return;
+                }
+                const description = $('#deductDescription').val() || 'خصم نقاط من الإدارة';
+
+                Swal.fire({
+                    title: 'تأكيد خصم النقاط',
+                    text: `هل أنت متأكد من خصم ${amount.toLocaleString()} نقطة؟`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'نعم، اخصم',
+                    cancelButtonText: 'إلغاء'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/Admin/DeductPointsAdmin',
+                            type: 'POST',
+                            data: {
+                                userId: userId,
+                                amount: amount,
+                                description: description,
+                                __RequestVerificationToken: token
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire('تم!', response.message, 'success');
+                                    // تحديث الرصيد
+                                    $.get('/Admin/GetUserBalance', { userId: userId }, function(bal) {
+                                        if (bal.success) {
+                                            $('#selectedUserBalance').text(Number(bal.balance).toLocaleString());
+                                        }
+                                    });
+                                    $('#deductAmount').val('');
+                                    $('#deductDescription').val('');
+                                } else {
+                                    Swal.fire('خطأ', response.message, 'error');
+                                }
+                            },
+                            error: function(xhr) {
+                                console.error("Deduct points error:", xhr);
+                                Swal.fire('خطأ', 'حدث خطأ أثناء الاتصال بالخادم', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

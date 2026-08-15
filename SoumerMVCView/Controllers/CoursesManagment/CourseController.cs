@@ -492,6 +492,40 @@ namespace SoumerMVCView.Controllers.CoursesManagment
                 });
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> PlayVideo(int videoId)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return RedirectToAction("Login", "Account", new { returnUrl = Request.Path });
+                }
+
+                var video = await _courseVideoService.GetVideoById(videoId);
+                if (video == null)
+                {
+                    return NotFound("الفيديو غير موجود");
+                }
+
+                // التحقق من صلاحية المشاهدة
+                var canWatch = await _courseVideoService.CanWatchVideo(videoId, userId);
+                if (!canWatch)
+                {
+                    return Content("لا يمكنك مشاهدة هذا الفيديو. يرجى التسجيل في الكورس أولاً");
+                }
+
+                // تمرير الفيديو إلى View مخصصة لتشغيله
+                return View(video); // سننشئ View名叫 PlayVideo.cshtml
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error playing video {VideoId}", videoId);
+                return Content("حدث خطأ في تحميل الفيديو");
+            }
+        }
         // تتبع مشاهدة الفيديو
         private async Task TrackVideoView(int videoId, string userId)
         {

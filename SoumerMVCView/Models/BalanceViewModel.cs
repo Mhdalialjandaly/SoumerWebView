@@ -5,6 +5,7 @@ namespace SoumerMVCView.Models
 {
     public class BalanceViewModel
     {
+        public string UserName { get; set; }
         public decimal CurrentBalance { get; set; }
         public decimal TotalPoints { get; set; }
         public List<BalanceTransactionDto> RecentTransactions { get; set; }

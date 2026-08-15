@@ -107,8 +107,8 @@ namespace DataAccess.Repositories
             var user = await _userManager.FindByIdAsync(id);
             if (user != null)
             {
-                user.DeletedAt = DateTime.Now;
-                user.DeletedBy = _currentUser?.UserName;
+                //user.DeletedAt = DateTime.Now;
+                //user.DeletedBy = _currentUser?.UserName;
                 user.IsActive = false;
                 await _userManager.UpdateAsync(user);
             }
@@ -119,8 +119,8 @@ namespace DataAccess.Repositories
             var user = await _userManager.FindByIdAsync(id);
             if (user != null)
             {
-                user.DeletedAt = null;
-                user.DeletedBy = null;
+                //user.DeletedAt = null;
+                //user.DeletedBy = null;
                 user.IsActive = true;
                 await _userManager.UpdateAsync(user);
             }

@@ -1,0 +1,48 @@
+﻿@model UserDto
+@{
+    ViewData["Title"] = "تفاصيل المستخدم";
+    Layout = "_AdminLayout";
+    var roles = ViewBag.Roles as List<string> ?? new List<string>();
+}
+
+<div class="form-card">
+    <h4 class="mb-4"><i class="fas fa-user me-2"></i>@Model.UserName</h4>
+    <div class="row">
+        <div class="col-md-6">
+            <dl class="row">
+                <dt class="col-sm-4">اسم المستخدم</dt>
+                <dd class="col-sm-8">@Model.UserName</dd>
+                <dt class="col-sm-4">البريد الإلكتروني</dt>
+                <dd class="col-sm-8">@Model.Email</dd>
+                <dt class="col-sm-4">الحالة</dt>
+                <dd class="col-sm-8">@(Model.IsActive ? "نشط" : "معطل")</dd>
+                <dt class="col-sm-4">تاريخ التسجيل</dt>
+                <dd class="col-sm-8">@Model.CreatedAt.ToString("yyyy/MM/dd")</dd>
+                <dt class="col-sm-4">آخر دخول</dt>
+                <dd class="col-sm-8">@Model.LastLogin?.ToString("yyyy/MM/dd HH:mm")</dd>
+            </dl>
+        </div>
+        <div class="col-md-6">
+            <h5>الأدوار</h5>
+            @if (roles.Any())
+            {
+                <ul>
+                    @foreach (var role in roles)
+                    {
+                        <li><span class="badge bg-primary">@role</span></li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="text-muted">لا توجد أدوار مخصصة</p>
+            }
+        </div>
+    </div>
+    <div class="mt-3">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">تعديل</a>
+        <a asp-action="ManageRoles" asp-route-id="@Model.Id" class="btn btn-info">إدارة الأدوار</a>
+        <a asp-action="ChangePassword" asp-route-id="@Model.Id" class="btn btn-warning">تغيير كلمة المرور</a>
+        <a asp-action="Index" class="btn btn-secondary">رجوع</a>
+    </div>
+</div>

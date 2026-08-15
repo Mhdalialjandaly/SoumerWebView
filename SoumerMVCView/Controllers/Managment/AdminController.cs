@@ -2,6 +2,7 @@
 using DataAccess;
 using DataAccess.Entities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -14,17 +15,23 @@ namespace SoumerMVCView.Controllers.Managment
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<User> _userManager;
         private readonly IBalanceService _balanceService;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ILogger<AdminController> _logger;
         private readonly string[] _allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif" };
         private const long _maxFileSize = 5 * 1024 * 1024; // 5MB
         public AdminController(ApplicationDbContext context,
             IBalanceService balanceService,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+    UserManager<User> userManager,
+            ILogger<AdminController> logger = null)
         {
             _context = context;
             _balanceService = balanceService;
             _webHostEnvironment = webHostEnvironment;
+            _userManager = userManager;
+            _logger = logger;
         }
 
         // ==================== DASHBOARD ====================
@@ -790,39 +797,6 @@ namespace SoumerMVCView.Controllers.Managment
             return View(video);
         }
 
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> EditVideo(int id, CourseVideo video)
-        //{
-        //    if (id != video.Id)
-        //        return NotFound();
-
-        //    if (ModelState.IsValid)
-        //    {
-        //        try
-        //        {
-        //            video.ModifiedAt = DateTime.Now;
-        //            _context.Update(video);
-        //            await _context.SaveChangesAsync();
-        //        }
-        //        catch (DbUpdateConcurrencyException)
-        //        {
-        //            if (!VideoExists(video.Id))
-        //                return NotFound();
-        //            else
-        //                throw;
-        //        }
-
-        //        TempData["SuccessMessage"] = "تم تحديث الفيديو بنجاح";
-        //        return RedirectToAction(nameof(CourseVideos));
-        //    }
-
-        //    ViewBag.Courses = await _context.Courses
-        //        .Where(c => c.DeletedAt == null)
-        //        .ToListAsync();
-        //    return View(video);
-        //}
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteVideo(int id)
@@ -921,6 +895,109 @@ namespace SoumerMVCView.Controllers.Managment
             return RedirectToAction(nameof(TeacherCourses));
         }
 
+        // ==================== إدارة النقاط ====================
+        [HttpGet]
+        public IActionResult PointsManagement()
+        {
+            return View();
+        }
+
+        // بحث عن المستخدمين
+        [HttpGet]
+        public async Task<IActionResult> SearchUsers(string term)
+        {
+            if (string.IsNullOrWhiteSpace(term) || term.Length < 2)
+                return Json(new { success = false, users = new List<object>() });
+
+            var users = await _userManager.Users
+                .Where(u => (u.UserName.Contains(term) || u.Email.Contains(term)))
+                .Select(u => new
+                {
+                    id = u.Id,
+                    name = u.UserName,
+                    email = u.Email
+                })
+                .Take(10)
+                .ToListAsync();
+
+            // جلب الرصيد لكل مستخدم (اختياري)
+            var usersWithBalance = new List<object>();
+            foreach (var user in users)
+            {
+                decimal balance = 0;
+                try { balance = (await _balanceService.GetUserBalance(user.id))?.CurrentBalance ?? 0; } catch { }
+                usersWithBalance.Add(new { user.id, user.name, user.email, balance });
+            }
+
+            return Json(new { success = true, users = usersWithBalance });
+        }
+
+        // إضافة نقاط
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GivePoints(string userId, decimal amount, string description)
+        {
+            if (string.IsNullOrEmpty(userId))
+                return Json(new { success = false, message = "يرجى اختيار مستخدم" });
+
+            if (amount <= 0)
+                return Json(new { success = false, message = "المبلغ يجب أن يكون أكبر من صفر" });
+
+            try
+            {
+                var transaction = await _balanceService.AddPoints(userId, amount, description ?? "نقاط مضافة من الإدارة");
+                if (transaction != null)
+                    return Json(new { success = true, message = $"تم إضافة {amount:N0} نقطة بنجاح" });
+
+                return Json(new { success = false, message = "فشلت عملية إضافة النقاط" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error giving points to user {UserId}", userId);
+                return Json(new { success = false, message = "حدث خطأ: " + ex.Message });
+            }
+        }
+
+        // خصم نقاط (للإدارة)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeductPointsAdmin(string userId, decimal amount, string description)
+        {
+            if (string.IsNullOrEmpty(userId))
+                return Json(new { success = false, message = "يرجى اختيار مستخدم" });
+
+            if (amount <= 0)
+                return Json(new { success = false, message = "المبلغ يجب أن يكون أكبر من صفر" });
+
+            try
+            {
+                var transaction = await _balanceService.DeductPoints(userId, amount, description ?? "خصم نقاط من الإدارة");
+                if (transaction != null)
+                    return Json(new { success = true, message = $"تم خصم {amount:N0} نقطة بنجاح" });
+
+                return Json(new { success = false, message = "الرصيد غير كافي أو حدث خطأ" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deducting points from user {UserId}", userId);
+                return Json(new { success = false, message = "حدث خطأ: " + ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetUserBalance(string userId)
+        {
+            try
+            {
+                var balance = await _balanceService.GetUserBalance(userId);
+                return Json(new { success = true, balance = balance?.CurrentBalance ?? 0 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting balance for user {UserId}", userId);
+                return Json(new { success = false, balance = 0 });
+            }
+        }
         // ==================== HELPER METHODS ====================
         private bool TeacherExists(int id)
         {
