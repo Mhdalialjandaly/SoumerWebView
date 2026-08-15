@@ -51,6 +51,27 @@ namespace SoumerMVCView.Controllers.UsersManagments
             return View(model);
         }
 
+        // البحث عن المستخدمين لتحويل النقاط
+        [HttpGet]
+        public async Task<IActionResult> SearchUsers(string query)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(query) || query.Length < 2)
+                    return Json(new { success = false, users = new List<UserSearchResult>() });
+
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var users = await _balanceService.SearchUsers(query, currentUserId);
+
+                return Json(new { success = true, users = users });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching users with query: {Query}", query);
+                return Json(new { success = false, message = "حدث خطأ في البحث عن المستخدمين" });
+            }
+        }
+
         // إضافة نقاط (للأدمن فقط)
         [Authorize(Roles = "Admin")]
         [HttpPost]
@@ -136,6 +157,77 @@ namespace SoumerMVCView.Controllers.UsersManagments
 
             var balance = await _balanceService.GetUserBalance(userId);
             return Json(new { success = true, balance = balance.CurrentBalance });
+        }
+        [HttpPost]
+        public async Task<IActionResult> RedeemCode(string code)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                    return Json(new { success = false, message = "يرجى تسجيل الدخول أولاً" });
+
+                var result = await _balanceService.RedeemCode(userId, code);
+
+                if (result != null)
+                    return Json(new
+                    {
+                        success = true,
+                        message = $"تم استرداد {result.PointsValue} نقطة بنجاح! 🎉",
+                        pointsValue = result.PointsValue
+                    });
+
+                return Json(new { success = false, message = "حدث خطأ أثناء استرداد الكود" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error redeeming code");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // توليد أكواد (للأدمن فقط)
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        public async Task<IActionResult> GenerateCodes(decimal pointsValue, int numberOfCodes, DateTime? expiryDate)
+        {
+            try
+            {
+                var codes = await _balanceService.GenerateCodes(pointsValue, numberOfCodes, expiryDate);
+
+                if (codes.Any())
+                    return Json(new
+                    {
+                        success = true,
+                        message = $"تم توليد {codes.Count} كود بنجاح",
+                        codes = codes.Select(c => c.Code).ToList()
+                    });
+
+                return Json(new { success = false, message = "حدث خطأ أثناء توليد الأكواد" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating codes");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // عرض الأكواد الصالحة (للأدمن فقط)
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public async Task<IActionResult> GetValidCodes()
+        {
+            var codes = await _balanceService.GetValidCodes();
+            return Json(new { success = true, codes = codes });
+        }
+
+        // عرض الأكواد المستخدمة (للأدمن فقط)
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public async Task<IActionResult> GetUsedCodes()
+        {
+            var codes = await _balanceService.GetUsedCodes();
+            return Json(new { success = true, codes = codes });
         }
     }
 }

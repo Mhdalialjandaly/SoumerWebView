@@ -15,6 +15,7 @@ namespace DataAccess.Entities
         public string Subject { get; set; }
         public string Bio { get; set; }
         public string Image { get; set; }
+        public bool IsActive { get; set; }
         public virtual ICollection<TeacherCourse> TeacherCourses { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }

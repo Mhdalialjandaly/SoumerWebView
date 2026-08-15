@@ -42,34 +42,42 @@ namespace SoumerMVCView.Controllers.Managment
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [ValidateAntiForgeryToken] 
         public async Task<IActionResult> Create(CreateUserDto model)
         {
-            if (!ModelState.IsValid)
-                return View(model);
-
             try
             {
-                // التحقق من عدم وجود اسم مستخدم أو بريد إلكتروني مكرر
-                if (await _userRepository.IsUserNameExist(model.UserName))
-                    ModelState.AddModelError("UserName", "اسم المستخدم موجود مسبقاً");
                 if (await _userRepository.IsEmailExist(model.Email))
-                    ModelState.AddModelError("Email", "البريد الإلكتروني مستخدم بالفعل");
-
-                if (!ModelState.IsValid)
+                {
+                    ModelState.AddModelError("Email", "البريد الإلكتروني موجود بالفعل");
                     return View(model);
+                }
 
-                await _userRepository.Create(model);
-                TempData["SuccessMessage"] = "تم إنشاء المستخدم بنجاح";
-                return RedirectToAction(nameof(Index));
+                // معالجة رفع الصورة
+                if (model.AvatarFile != null && model.AvatarFile.Length > 0)
+                {
+                    var fileName = await SaveAvatarImage(model.AvatarFile);
+                    model.AvatarUrl = fileName;
+                }
+
+                var user = await _userRepository.Create(model);
+
+                if (user != null)
+                {
+                    TempData["SuccessMessage"] = "تم إنشاء المستخدم بنجاح";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                ModelState.AddModelError("", "حدث خطأ أثناء إنشاء المستخدم");
+                return View(model);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating user");
-                ModelState.AddModelError("", "حدث خطأ: " + ex.Message);
+                ModelState.AddModelError("", ex.Message);
                 return View(model);
             }
         }
+
 
         // صفحة تعديل المستخدم
         [HttpGet]
@@ -92,33 +100,82 @@ namespace SoumerMVCView.Controllers.Managment
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, UpdateUserDto model)
+        public async Task<IActionResult> Edit(UpdateUserDto model)
         {
-            if (id != model.Id)
-                return BadRequest();
-
-            if (!ModelState.IsValid)
-                return View(model);
-
             try
             {
-                if (await _userRepository.IsUserNameExist(model.UserName, id))
-                    ModelState.AddModelError("UserName", "اسم المستخدم موجود مسبقاً");
-                if (await _userRepository.IsEmailExist(model.Email, id))
-                    ModelState.AddModelError("Email", "البريد الإلكتروني مستخدم بالفعل");
+                // معالجة رفع الصورة
+                if (model.AvatarFile != null && model.AvatarFile.Length > 0)
+                {
+                    var fileName = await SaveAvatarImage(model.AvatarFile);
+                    model.AvatarUrl = fileName;
+                }
+                else if (string.IsNullOrEmpty(model.AvatarUrl))
+                {
+                    // إذا تم إزالة الصورة
+                    model.AvatarUrl = null;
+                }
 
-                if (!ModelState.IsValid)
-                    return View(model);
+                var result = await _userRepository.Update(model);
 
-                await _userRepository.Update(model);
-                TempData["SuccessMessage"] = "تم تحديث بيانات المستخدم بنجاح";
-                return RedirectToAction(nameof(Index));
+                if (result)
+                {
+                    TempData["SuccessMessage"] = "تم تحديث بيانات المستخدم بنجاح";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                ModelState.AddModelError("", "حدث خطأ أثناء تحديث المستخدم");
+                return View(model);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating user");
-                ModelState.AddModelError("", "حدث خطأ: " + ex.Message);
+                ModelState.AddModelError("", ex.Message);
                 return View(model);
+            }
+        }
+
+        private async Task<string> SaveAvatarImage(IFormFile file)
+        {
+            try
+            {
+                // التحقق من نوع الملف
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+                if (!allowedExtensions.Contains(extension))
+                {
+                    throw new Exception("نوع الملف غير مدعوم. يرجى رفع صورة بصيغة JPG, PNG, أو GIF");
+                }
+
+                // التحقق من حجم الملف (الحد الأقصى 5MB)
+                if (file.Length > 5 * 1024 * 1024)
+                {
+                    throw new Exception("حجم الصورة كبير جداً. الحد الأقصى 5MB");
+                }
+
+                // إنشاء اسم فريد للملف
+                var fileName = $"{Guid.NewGuid()}{extension}";
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "avatars");
+
+                // إنشاء المجلد إذا لم يكن موجوداً
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                // حفظ الملف
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                return $"/uploads/avatars/{fileName}";
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"حدث خطأ أثناء حفظ الصورة: {ex.Message}");
             }
         }
 

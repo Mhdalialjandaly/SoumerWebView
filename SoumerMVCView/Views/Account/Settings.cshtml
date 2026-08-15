@@ -2,48 +2,47 @@
     ViewData["Title"] = "الإعدادات";
 }
 
-<div class="settings-container">
+<div class="settings-container mobile-settings">
     <div class="settings-header">
         <h1>⚙️ الإعدادات</h1>
         <p>قم بتخصيص تجربتك في أكاديمية المعرفة</p>
     </div>
 
-    <div class="settings-content">
-        <div class="settings-sidebar">
-            <div class="settings-nav">
-                <button class="settings-nav-item active" data-tab="general">
-                    <span>🎨</span>
-                    عام
-                </button>
-                <button class="settings-nav-item" data-tab="notifications">
-                    <span>🔔</span>
-                    الإشعارات
-                </button>
-                <button class="settings-nav-item" data-tab="privacy">
-                    <span>🔒</span>
-                    الخصوصية
-                </button>
-                <button class="settings-nav-item" data-tab="appearance">
-                    <span>🎨</span>
-                    المظهر
-                </button>
-                <button class="settings-nav-item" data-tab="language">
-                    <span>🌐</span>
-                    اللغة
-                </button>
-                <button class="settings-nav-item" data-tab="security">
-                    <span>🛡️</span>
-                    الأمان
-                </button>
-            </div>
+    <div class="settings-content mobile-layout">
+        <!-- شريط تنقل أفقي للتبويبات -->
+        <div class="mobile-tabs-nav">
+            <button class="mobile-tab-btn active" data-tab="general">
+                <span>⚙️</span>
+                <span>عام</span>
+            </button>
+            <button class="mobile-tab-btn" data-tab="notifications">
+                <span>🔔</span>
+                <span>الإشعارات</span>
+            </button>
+            <button class="mobile-tab-btn" data-tab="privacy">
+                <span>🔒</span>
+                <span>الخصوصية</span>
+            </button>
+            <button class="mobile-tab-btn" data-tab="appearance">
+                <span>🎨</span>
+                <span>المظهر</span>
+            </button>
+            <button class="mobile-tab-btn" data-tab="language">
+                <span>🌐</span>
+                <span>اللغة</span>
+            </button>
+            <button class="mobile-tab-btn" data-tab="security">
+                <span>🛡️</span>
+                <span>الأمان</span>
+            </button>
         </div>
 
-        <div class="settings-main">
+        <div class="settings-main mobile-content">
             <!-- تبويب عام -->
             <div class="settings-tab active" id="general-tab">
-                <div class="settings-card">
+                <div class="settings-card mobile-card">
                     <h3>الإعدادات العامة</h3>
-                    <div class="setting-item">
+                    <div class="setting-item mobile-setting-item">
                         <div class="setting-info">
                             <label>الوضع الليلي</label>
                             <p>قم بتفعيل الوضع الليلي لتقليل إجهاد العين</p>
@@ -53,7 +52,7 @@
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
-                    <div class="setting-item">
+                    <div class="setting-item mobile-setting-item">
                         <div class="setting-info">
                             <label>تشغيل الصوت تلقائياً</label>
                             <p>تشغيل الصوت في مقاطع الفيديو تلقائياً</p>
@@ -63,7 +62,7 @@
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
-                    <div class="setting-item">
+                    <div class="setting-item mobile-setting-item">
                         <div class="setting-info">
                             <label>حفظ التقدم تلقائياً</label>
                             <p>حفظ تقدمك في الكورسات تلقائياً</p>
@@ -75,26 +74,26 @@
                     </div>
                 </div>
 
-                <div class="settings-card">
+                <div class="settings-card mobile-card">
                     <h3>تفضيلات العرض</h3>
-                    <div class="setting-item">
+                    <div class="setting-item mobile-setting-item">
                         <div class="setting-info">
                             <label>عدد العناصر في الصفحة</label>
                             <p>اختر عدد العناصر التي تظهر في الصفحة الواحدة</p>
                         </div>
-                        <select id="itemsPerPage" class="settings-select">
+                        <select id="itemsPerPage" class="settings-select mobile-select">
                             <option value="12">12 عنصر</option>
                             <option value="24" selected>24 عنصر</option>
                             <option value="48">48 عنصر</option>
                             <option value="96">96 عنصر</option>
                         </select>
                     </div>
-                    <div class="setting-item">
+                    <div class="setting-item mobile-setting-item">
                         <div class="setting-info">
                             <label>ترتيب الكورسات</label>
                             <p>اختر الترتيب الافتراضي للكورسات</p>
                         </div>
-                        <select id="courseOrder" class="settings-select">
+                        <select id="courseOrder" class="settings-select mobile-select">
                             <option value="newest" selected>الأحدث أولاً</option>
                             <option value="oldest">الأقدم أولاً</option>
                             <option value="popular">الأكثر شعبية</option>
@@ -106,9 +105,9 @@
 
             <!-- تبويب الإشعارات -->
             <div class="settings-tab" id="notifications-tab">
-                <div class="settings-card">
+                <div class="settings-card mobile-card">
                     <h3>إشعارات البريد الإلكتروني</h3>
-                    <div class="setting-item">
+                    <div class="setting-item mobile-setting-item">
                         <div class="setting-info">
                             <label>إشعارات الكورسات الجديدة</label>
                             <p>استلم إشعارات عند إضافة كورسات جديدة</p>
@@ -118,7 +117,7 @@
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
-                    <div class="setting-item">
+                    <div class="setting-item mobile-setting-item">
                         <div class="setting-info">
                             <label>تحديثات الكورسات</label>
                             <p>استلم إشعارات عند تحديث الكورسات المسجل فيها</p>
@@ -128,7 +127,7 @@
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
-                    <div class="setting-item">
+                    <div class="setting-item mobile-setting-item">
                         <div class="setting-info">
                             <label>عروض وتخفيضات</label>
                             <p>استلم عروض وتخفيضات حصرية</p>
@@ -140,9 +139,9 @@
                     </div>
                 </div>
 
-                <div class="settings-card">
+                <div class="settings-card mobile-card">
                     <h3>إشعارات التطبيق</h3>
-                    <div class="setting-item">
+                    <div class="setting-item mobile-setting-item">
                         <div class="setting-info">
                             <label>إشعارات المتصفح</label>
                             <p>استلم إشعارات فورية في المتصفح</p>
@@ -152,7 +151,7 @@
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
-                    <div class="setting-item">
+                    <div class="setting-item mobile-setting-item">
                         <div class="setting-info">
                             <label>إشعارات الإنجازات</label>
                             <p>استلم إشعارات عند تحقيق إنجازات جديدة</p>
@@ -167,9 +166,9 @@
 
             <!-- تبويب الخصوصية -->
             <div class="settings-tab" id="privacy-tab">
-                <div class="settings-card">
+                <div class="settings-card mobile-card">
                     <h3>الخصوصية</h3>
-                    <div class="setting-item">
+                    <div class="setting-item mobile-setting-item">
                         <div class="setting-info">
                             <label>إظهار الملف الشخصي للآخرين</label>
                             <p>السماح للآخرين برؤية ملفك الشخصي</p>
@@ -179,7 +178,7 @@
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
-                    <div class="setting-item">
+                    <div class="setting-item mobile-setting-item">
                         <div class="setting-info">
                             <label>إظهار التقدم في الكورسات</label>
                             <p>السماح للآخرين برؤية تقدمك في الكورسات</p>
@@ -189,7 +188,7 @@
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
-                    <div class="setting-item">
+                    <div class="setting-item mobile-setting-item">
                         <div class="setting-info">
                             <label>إظهار الإنجازات</label>
                             <p>السماح للآخرين برؤية إنجازاتك</p>
@@ -201,23 +200,23 @@
                     </div>
                 </div>
 
-                <div class="settings-card danger-zone">
+                <div class="settings-card danger-zone mobile-card">
                     <h3>منطقة الخطر</h3>
-                    <div class="setting-item">
+                    <div class="setting-item mobile-setting-item">
                         <div class="setting-info">
                             <label>تصدير البيانات</label>
                             <p>قم بتصدير جميع بياناتك الشخصية</p>
                         </div>
-                        <button class="danger-btn" onclick="exportData()">
+                        <button class="danger-btn mobile-btn" onclick="exportData()">
                             📥 تصدير البيانات
                         </button>
                     </div>
-                    <div class="setting-item">
+                    <div class="setting-item mobile-setting-item">
                         <div class="setting-info">
                             <label>حذف الحساب</label>
                             <p>حذف حسابك بشكل دائم - هذا الإجراء لا يمكن التراجع عنه</p>
                         </div>
-                        <button class="danger-btn delete" onclick="deleteAccount()">
+                        <button class="danger-btn delete mobile-btn" onclick="deleteAccount()">
                             🗑️ حذف الحساب
                         </button>
                     </div>
@@ -226,9 +225,9 @@
 
             <!-- تبويب المظهر -->
             <div class="settings-tab" id="appearance-tab">
-                <div class="settings-card">
+                <div class="settings-card mobile-card">
                     <h3>الألوان</h3>
-                    <div class="color-themes">
+                    <div class="color-themes mobile-colors">
                         <div class="color-theme" data-color="blue" style="background: linear-gradient(135deg, #2563eb, #1e40af)"></div>
                         <div class="color-theme" data-color="purple" style="background: linear-gradient(135deg, #7c3aed, #5b21b6)"></div>
                         <div class="color-theme" data-color="green" style="background: linear-gradient(135deg, #059669, #047857)"></div>
@@ -238,9 +237,9 @@
                     </div>
                 </div>
 
-                <div class="settings-card">
+                <div class="settings-card mobile-card">
                     <h3>حجم الخط</h3>
-                    <div class="font-size-options">
+                    <div class="font-size-options mobile-font-sizes">
                         <button class="font-size-option" data-size="small">صغير</button>
                         <button class="font-size-option active" data-size="medium">متوسط</button>
                         <button class="font-size-option" data-size="large">كبير</button>
@@ -251,9 +250,9 @@
 
             <!-- تبويب اللغة -->
             <div class="settings-tab" id="language-tab">
-                <div class="settings-card">
+                <div class="settings-card mobile-card">
                     <h3>اختر اللغة</h3>
-                    <div class="language-options">
+                    <div class="language-options mobile-languages">
                         <button class="language-option active" data-lang="ar">
                             <span>🇸🇦</span>
                             العربية
@@ -272,56 +271,56 @@
 
             <!-- تبويب الأمان -->
             <div class="settings-tab" id="security-tab">
-                <div class="settings-card">
+                <div class="settings-card mobile-card">
                     <h3>تغيير كلمة المرور</h3>
-                    <div class="password-form">
+                    <div class="password-form mobile-form">
                         <div class="form-group">
                             <label>كلمة المرور الحالية</label>
-                            <input type="password" class="form-control" id="currentPassword" placeholder="••••••••">
+                            <input type="password" class="form-control mobile-input" id="currentPassword" placeholder="••••••••">
                         </div>
                         <div class="form-group">
                             <label>كلمة المرور الجديدة</label>
-                            <input type="password" class="form-control" id="newPassword" placeholder="••••••••">
+                            <input type="password" class="form-control mobile-input" id="newPassword" placeholder="••••••••">
                         </div>
                         <div class="form-group">
                             <label>تأكيد كلمة المرور الجديدة</label>
-                            <input type="password" class="form-control" id="confirmPassword" placeholder="••••••••">
+                            <input type="password" class="form-control mobile-input" id="confirmPassword" placeholder="••••••••">
                         </div>
-                        <button class="save-settings-btn" onclick="changePassword()">
+                        <button class="save-settings-btn mobile-full-btn" onclick="changePassword()">
                             تغيير كلمة المرور
                         </button>
                     </div>
                 </div>
 
-                <div class="settings-card">
+                <div class="settings-card mobile-card">
                     <h3>جلسات الدخول النشطة</h3>
-                    <div class="sessions-list">
-                        <div class="session-item">
+                    <div class="sessions-list mobile-sessions">
+                        <div class="session-item mobile-session-item">
                             <div class="session-info">
                                 <span class="session-device">💻 Windows - Chrome</span>
                                 <span class="session-location">📍 الرياض، السعودية</span>
                             </div>
                             <span class="session-active">نشط الآن</span>
                         </div>
-                        <div class="session-item">
+                        <div class="session-item mobile-session-item">
                             <div class="session-info">
                                 <span class="session-device">📱 iPhone - Safari</span>
                                 <span class="session-location">📍 جدة، السعودية</span>
                             </div>
-                            <button class="session-logout" onclick="logoutSession(this)">تسجيل خروج</button>
+                            <button class="session-logout mobile-small-btn" onclick="logoutSession(this)">تسجيل خروج</button>
                         </div>
                     </div>
-                    <button class="logout-all-btn" onclick="logoutAllSessions()">
+                    <button class="logout-all-btn mobile-full-btn" onclick="logoutAllSessions()">
                         تسجيل خروج من جميع الأجهزة
                     </button>
                 </div>
             </div>
 
-            <div class="settings-actions">
-                <button class="save-all-btn" onclick="saveAllSettings()">
+            <div class="settings-actions mobile-actions">
+                <button class="save-all-btn mobile-full-btn" onclick="saveAllSettings()">
                     💾 حفظ جميع الإعدادات
                 </button>
-                <button class="reset-btn" onclick="resetSettings()">
+                <button class="reset-btn mobile-full-btn" onclick="resetSettings()">
                     ↩️ إعادة تعيين
                 </button>
             </div>
@@ -329,19 +328,479 @@
     </div>
 </div>
 
+<style>
+    /* تنسيقات خاصة بالهواتف المحمولة */
+    .mobile-settings {
+        width: 100%;
+        min-height: 100vh;
+        background: #f8fafc;
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+        .mobile-settings .settings-header {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white;
+            padding: 20px 15px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+            .mobile-settings .settings-header h1 {
+                margin: 0 0 8px 0;
+                font-size: 24px;
+                font-weight: 700;
+            }
+
+            .mobile-settings .settings-header p {
+                margin: 0;
+                font-size: 14px;
+                opacity: 0.9;
+            }
+
+    .mobile-layout {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-height: calc(100vh - 80px);
+    }
+
+    /* شريط التنقل الأفقي */
+    .mobile-tabs-nav {
+        display: flex;
+        overflow-x: auto;
+        background: white;
+        padding: 10px;
+        gap: 8px;
+        position: sticky;
+        top: 80px;
+        z-index: 90;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+        .mobile-tabs-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+    .mobile-tab-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 70px;
+        padding: 10px 15px;
+        background: #f1f5f9;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 12px;
+        font-weight: 500;
+        color: #475569;
+        white-space: nowrap;
+    }
+
+        .mobile-tab-btn span:first-child {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .mobile-tab-btn.active {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+    .mobile-content {
+        flex: 1;
+        padding: 15px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .mobile-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+        .mobile-card h3 {
+            margin: 0 0 20px 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+    .mobile-setting-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 0;
+        border-bottom: 1px solid #f1f5f9;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+        .mobile-setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-setting-item .setting-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .mobile-setting-item label {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1e293b;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .mobile-setting-item p {
+            font-size: 13px;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+    /* تحسين المفاتيح التبديلية */
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 28px;
+    }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #cbd5e1;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+    input:checked + .toggle-slider {
+        background-color: #2563eb;
+    }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+
+    .mobile-select {
+        width: 120px;
+        padding: 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #f8fafc;
+        font-size: 14px;
+        color: #1e293b;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: left 10px center;
+    }
+
+    .mobile-btn {
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .mobile-full-btn {
+        width: 100%;
+        padding: 14px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 10px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .mobile-colors {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+
+    .color-theme {
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 3px solid transparent;
+    }
+
+        .color-theme.selected {
+            border-color: #1e293b;
+            transform: scale(1.1);
+        }
+
+    .mobile-font-sizes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .font-size-option {
+        flex: 1;
+        min-width: calc(50% - 5px);
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+        .font-size-option.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+    .mobile-languages {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .language-option {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+        .language-option.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .language-option span {
+            font-size: 24px;
+        }
+
+    .mobile-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+    .mobile-input {
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 16px;
+        background: #f8fafc;
+        transition: all 0.3s;
+    }
+
+        .mobile-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+    .mobile-sessions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .mobile-session-item {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .session-info {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .session-device {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .session-location {
+        font-size: 13px;
+        color: #64748b;
+    }
+
+    .session-active {
+        color: #059669;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .mobile-small-btn {
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-size: 13px;
+        border: none;
+        cursor: pointer;
+        background: #fee2e2;
+        color: #dc2626;
+        font-weight: 500;
+    }
+
+    .mobile-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 20px;
+        padding: 0 5px 20px;
+    }
+
+    .save-all-btn {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: white;
+    }
+
+    .reset-btn {
+        background: white;
+        color: #dc2626;
+        border: 2px solid #dc2626 !important;
+    }
+
+    .danger-btn {
+        background: #fee2e2;
+        color: #dc2626;
+        border: none;
+        cursor: pointer;
+    }
+
+        .danger-btn.delete {
+            background: #dc2626;
+            color: white;
+        }
+
+    .danger-zone {
+        border: 2px solid #fee2e2;
+    }
+
+    /* تحسينات للأجهزة اللوحية */
+    @@media (min-width: 768px) {
+        .mobile-content
+
+    {
+        max-width: 768px;
+        margin: 0 auto;
+    }
+
+    .mobile-tabs-nav {
+        justify-content: center;
+    }
+
+    .mobile-tab-btn {
+        min-width: 100px;
+        padding: 12px 20px;
+    }
+
+    }
+
+    /* تحسينات للشاشات المتوسطة */
+    @@media (min-width: 1024px) {
+        .mobile-content
+
+    {
+        max-width: 900px;
+    }
+
+    .mobile-tabs-nav {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    }
+</style>
 
 <script>
     // تبديل التبويبات
-    document.querySelectorAll('.settings-nav-item').forEach(item => {
+    document.querySelectorAll('.mobile-tab-btn').forEach(item => {
         item.addEventListener('click', () => {
             const tabId = item.getAttribute('data-tab');
 
             // تحديث حالة التبويبات
-            document.querySelectorAll('.settings-nav-item').forEach(nav => nav.classList.remove('active'));
+            document.querySelectorAll('.mobile-tab-btn').forEach(nav => nav.classList.remove('active'));
             item.classList.add('active');
 
             document.querySelectorAll('.settings-tab').forEach(tab => tab.classList.remove('active'));
             document.getElementById(`${tabId}-tab`).classList.add('active');
+
+            // التمرير إلى أعلى المحتوى
+            document.querySelector('.mobile-content').scrollIntoView({ behavior: 'smooth' });
         });
     });
 
@@ -401,10 +860,30 @@
         };
 
         console.log('Saving settings:', settings);
-        alert('تم حفظ الإعدادات بنجاح!');
 
-        // هنا يمكن إرسال البيانات إلى الخادم
-        // fetch('/Account/SaveSettings', { method: 'POST', body: JSON.stringify(settings), ... })
+        // رسالة نجاح محسنة للهاتف
+        const successMessage = document.createElement('div');
+        successMessage.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10b981;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideInDown 0.3s ease-out;
+        `;
+        successMessage.textContent = '✅ تم حفظ الإعدادات بنجاح!';
+        document.body.appendChild(successMessage);
+
+        setTimeout(() => {
+            successMessage.remove();
+        }, 3000);
     }
 
     function resetSettings() {
@@ -433,8 +912,28 @@
             return;
         }
 
-        alert('تم تغيير كلمة المرور بنجاح');
-        // هنا يمكن إرسال الطلب إلى الخادم
+        // رسالة نجاح محسنة
+        const successMessage = document.createElement('div');
+        successMessage.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10b981;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+        successMessage.textContent = '✅ تم تغيير كلمة المرور بنجاح';
+        document.body.appendChild(successMessage);
+
+        setTimeout(() => {
+            successMessage.remove();
+        }, 3000);
     }
 
     function exportData() {
@@ -462,4 +961,20 @@
             alert('تم تسجيل الخروج من جميع الأجهزة');
         }
     }
+
+    // إضافة أنيميشن CSS
+    const styleSheet = document.createElement("style");
+    styleSheet.textContent = `
+        @@keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -20px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+    `;
+    document.head.appendChild(styleSheet);
 </script>

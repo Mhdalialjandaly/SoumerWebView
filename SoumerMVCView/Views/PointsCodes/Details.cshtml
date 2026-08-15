@@ -1,0 +1,101 @@
+﻿@model PointsCode
+@{
+    ViewData["Title"] = "تفاصيل الكود";
+    Layout = "_AdminLayout";
+}
+
+<div class="form-card">
+    <h4 class="mb-4"><i class="fas fa-ticket-alt me-2"></i>تفاصيل الكود</h4>
+
+    <div class="row">
+        <div class="col-md-6">
+            <dl class="row">
+                <dt class="col-sm-4">الكود</dt>
+                <dd class="col-sm-8">
+                    <span class="badge bg-primary" style="font-family: monospace; font-size: 1.2rem;">
+                        @Model.Code
+                    </span>
+                </dd>
+
+                <dt class="col-sm-4">القيمة</dt>
+                <dd class="col-sm-8">
+                    <strong class="text-success">@Model.PointsValue.ToString("N0")</strong>
+                    <small class="text-muted">نقطة</small>
+                </dd>
+
+                <dt class="col-sm-4">الحالة</dt>
+                <dd class="col-sm-8">
+                    @if (Model.IsUsed)
+                    {
+                        <span class="badge bg-warning">مستخدم</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">صالحة</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-4">تاريخ الإنشاء</dt>
+                <dd class="col-sm-8">@Model.CreatedAt.ToString("yyyy/MM/dd HH:mm")</dd>
+
+                <dt class="col-sm-4">تاريخ الانتهاء</dt>
+                <dd class="col-sm-8">
+                    @if (Model.ExpiryDate.HasValue)
+                    {
+                        @Model.ExpiryDate.Value.ToString("yyyy/MM/dd")
+                    }
+                    else
+                    {
+                        <span class="text-muted">لا يوجد</span>
+                    }
+                </dd>
+            </dl>
+        </div>
+        <div class="col-md-6">
+            @if (Model.IsUsed)
+            {
+                <div class="alert alert-warning">
+                    <h5><i class="fas fa-user-check me-2"></i>معلومات الاستخدام</h5>
+                    <p class="mb-1"><strong>المستخدم:</strong> @Model.UsedByUser?.UserName</p>
+                    <p class="mb-1"><strong>البريد:</strong> @Model.UsedByUser?.Email</p>
+                    <p class="mb-0"><strong>تاريخ الاستخدام:</strong> @Model.UsedAt?.ToString("yyyy/MM/dd HH:mm")</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">رجوع</a>
+        @if (!Model.IsUsed)
+        {
+            <form asp-action="Delete" method="post" style="display:inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="button" class="btn btn-danger" onclick="confirmDelete(this)">
+                    <i class="fas fa-trash-alt"></i> حذف
+                </button>
+            </form>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(btn) {
+            Swal.fire({
+                title: 'تأكيد الحذف',
+                text: 'هل أنت متأكد من حذف هذا الكود؟',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'حذف',
+                cancelButtonText: 'إلغاء'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    btn.closest('form').submit();
+                }
+            });
+        }
+    </script>
+}

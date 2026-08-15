@@ -50,6 +50,9 @@ namespace DataAccess
           
             CreateMap<CourseVideoDto, CourseVideo>().ReverseMap();          
             CreateMap<CourseVideo, CourseVideoDto>();
+          
+            CreateMap<PointsCodeDto, PointsCode>().ReverseMap();          
+            CreateMap<PointsCode, PointsCodeDto>();
         }
     }
 }

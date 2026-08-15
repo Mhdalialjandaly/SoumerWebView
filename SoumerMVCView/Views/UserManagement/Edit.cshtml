@@ -6,10 +6,40 @@
 
 <div class="form-card">
     <h4 class="mb-4"><i class="fas fa-user-edit me-2"></i>@ViewData["Title"]</h4>
-    <form asp-action="Edit" method="post">
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
         <input asp-for="Id" type="hidden" />
+        <input asp-for="AvatarUrl" type="hidden" />
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <!-- صورة المستخدم -->
+        <div class="mb-4 text-center">
+            <div class="avatar-upload-container">
+                <div class="avatar-preview" id="avatarPreview">
+                    <img src="@(string.IsNullOrEmpty(Model.AvatarUrl) ? "/images/default-avatar.png" : Model.AvatarUrl)"
+                         alt="معاينة الصورة" id="avatarImage" />
+                    <div class="avatar-overlay">
+                        <i class="fas fa-camera"></i>
+                        <span>تغيير الصورة</span>
+                    </div>
+                </div>
+                <input type="file"
+                       asp-for="AvatarFile"
+                       class="form-control d-none"
+                       id="avatarFileInput"
+                       accept="image/*"
+                       onchange="previewImage(this)" />
+                <button type="button" class="btn btn-outline-primary mt-2" onclick="document.getElementById('avatarFileInput').click()">
+                    <i class="fas fa-upload"></i> تغيير الصورة
+                </button>
+                @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                {
+                    <button type="button" class="btn btn-outline-danger mt-2" id="removeAvatarBtn" onclick="removeAvatar()">
+                        <i class="fas fa-trash"></i> إزالة الصورة
+                    </button>
+                }
+            </div>
+        </div>
 
         <div class="row">
             <div class="col-md-6 mb-3">
@@ -18,15 +48,21 @@
                 <span asp-validation-for="UserName" class="text-danger"></span>
             </div>
             <div class="col-md-6 mb-3">
-                <label asp-for="Email" class="form-label fw-bold">البريد الإلكتروني</label>
-                <input asp-for="Email" class="form-control" type="email" required />
-                <span asp-validation-for="Email" class="text-danger"></span>
+                <label asp-for="FullName" class="form-label fw-bold">الاسم الكامل</label>
+                <input asp-for="FullName" class="form-control" />
+                <span asp-validation-for="FullName" class="text-danger"></span>
             </div>
         </div>
 
         <div class="mb-3">
+            <label asp-for="Email" class="form-label fw-bold">البريد الإلكتروني</label>
+            <input asp-for="Email" class="form-control" type="email" required />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
             <label asp-for="Description" class="form-label fw-bold">الوصف</label>
-            <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
         </div>
 
         <div class="mb-3 form-check">
@@ -41,6 +77,89 @@
     </form>
 </div>
 
+<style>
+    .avatar-upload-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .avatar-preview {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        overflow: hidden;
+        position: relative;
+        cursor: pointer;
+        border: 3px solid #e2e8f0;
+        transition: all 0.3s;
+    }
+
+        .avatar-preview:hover {
+            border-color: #667eea;
+        }
+
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .avatar-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        opacity: 0;
+        transition: all 0.3s;
+    }
+
+    .avatar-preview:hover .avatar-overlay {
+        opacity: 1;
+    }
+
+    .avatar-overlay i {
+        font-size: 24px;
+        margin-bottom: 5px;
+    }
+
+    .avatar-overlay span {
+        font-size: 12px;
+    }
+</style>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarImage').src = e.target.result;
+                    document.getElementById('removeAvatarBtn').style.display = 'inline-block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function removeAvatar() {
+            document.getElementById('avatarImage').src = '/images/default-avatar.png';
+            document.getElementById('avatarFileInput').value = '';
+            document.getElementById('removeAvatarBtn').style.display = 'none';
+            // تعيين حقل AvatarUrl فارغ للإشارة إلى إزالة الصورة
+            document.querySelector('input[name="AvatarUrl"]').value = '';
+        }
+
+        document.querySelector('.avatar-preview').addEventListener('click', function() {
+            document.getElementById('avatarFileInput').click();
+        });
+    </script>
 }

@@ -13,6 +13,7 @@ namespace SoumerMVCView.Models
         public int TotalTransactions { get; set; }
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }
+        public List<UserSearchResult> UserSearchResults { get; set; }
     }
 
     public class PointsTransactionViewModel
@@ -20,6 +21,7 @@ namespace SoumerMVCView.Models
         public decimal Amount { get; set; }
         public string Description { get; set; }
         public TransactionType TransactionType { get; set; }
+        public string RelatedUserName { get; set; }
     }
 
     public class TransferPointsViewModel

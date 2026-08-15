@@ -11,7 +11,7 @@ namespace DataAccess.IRepositories
         Task<UserDto> GetByEmail(string email);
         Task<UserDto> GetByUserName(string userName);
         Task<UserDto> Create(CreateUserDto model);
-        Task Update(UpdateUserDto model);
+        Task<bool> Update(UpdateUserDto model);
         Task Delete(string id);
         Task SoftDelete(string id);
         Task Restore(string id);
@@ -20,6 +20,8 @@ namespace DataAccess.IRepositories
         Task UpdatePassword(string userId, string currentPassword, string newPassword);
         Task UpdateLastLogin(string userId);
         Task AssignToRole(string userId, string role);
-        Task<List<string>> GetUserRoles(string userId);
+        Task<List<UserDto>> SearchUsers(string query, int take = 10);
+        Task<bool> IsUserExists(string userId);
+        Task<List<string>> GetUserRoles(string id);
     }
 }

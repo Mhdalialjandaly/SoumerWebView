@@ -1,0 +1,122 @@
+﻿@model MyCoursesViewModel
+
+<div class="container-fluid mt-4" dir="rtl">
+    <!-- بطاقات الإحصائيات (نفسها) -->
+    <div class="stats-grid">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-card-icon">📚</div>
+            <div class="stat-card-content">
+                <div class="stat-card-number">@Model.TotalEnrolled</div>
+                <div class="stat-card-label">كورس مسجل</div>
+            </div>
+        </div>
+        <div class="stat-card stat-card-success">
+            <div class="stat-card-icon">💎</div>
+            <div class="stat-card-content">
+                <div class="stat-card-number">@Model.TotalSpent.ToString("N0")</div>
+                <div class="stat-card-label">نقطة منفقة</div>
+            </div>
+        </div>
+        <div class="stat-card stat-card-info">
+            <div class="stat-card-icon">🎓</div>
+            <div class="stat-card-content">
+                <div class="stat-card-number">@Model.TotalEnrolled</div>
+                <div class="stat-card-label">كورساتي</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قائمة الكورسات المسجلة -->
+    <div class="courses-list-card">
+        <div class="card-header-custom">
+            <div class="header-icon">📖</div>
+            <h5 class="header-title">الكورسات المسجل فيها</h5>
+            <span class="header-badge">@Model.TotalEnrolled كورس</span>
+        </div>
+
+        <div class="card-body-custom">
+            @if (Model.EnrolledCourses != null && Model.EnrolledCourses.Any())
+            {
+                <div class="courses-list">
+                    @foreach (var enrollment in Model.EnrolledCourses)
+                    {
+                        var videosCount = Model.CourseVideosCount.ContainsKey(enrollment.CourseId) ? Model.CourseVideosCount[enrollment.CourseId] : 0;
+                        var videos = Model.CourseVideos.ContainsKey(enrollment.CourseId) ? Model.CourseVideos[enrollment.CourseId] : new List<CourseVideoDto>();
+
+                        <div class="course-item-card">
+                            <div class="course-item-content">
+                                <div class="course-item-icon">📘</div>
+                                <div class="course-item-info">
+                                    <h5 class="course-item-title">@enrollment.Course.Name</h5>
+                                    <div class="course-item-meta">
+                                        <span class="meta-date">📅 تاريخ التسجيل: @enrollment.CreatedAt.ToString("yyyy/MM/dd")</span>
+                                        <span class="meta-price">💎 @enrollment.Course.Price.ToString("N0") نقطة</span>
+                                        <span class="meta-videos">🎬 @videosCount فيديو</span>
+                                    </div>
+                                </div>
+                                <div class="course-item-actions">
+                                    <a asp-controller="Course" asp-action="Details" asp-route-id="@enrollment.CourseId" class="btn-action">
+                                        عرض التفاصيل <span>→</span>
+                                    </a>
+                                    <!-- بدلاً من الزر الذي يستخدم JavaScript، رابط عادي -->
+                                    <a asp-controller="Course" asp-action="CourseVideos" asp-route-courseId="@enrollment.CourseId" class="btn-watch-videos">
+                                        <span>🎬</span> مشاهدة الفيديوهات <span>→</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- معاينة الفيديوهات (كل فيديو أصبح رابطاً لصفحة التشغيل) -->
+                            @if (videos.Any() && videosCount > 0)
+                            {
+                                <div class="course-videos-preview">
+                                    <div class="preview-header">
+                                        <span>📹 أحدث الفيديوهات</span>
+                                    </div>
+                                    <div class="preview-videos">
+                                        @foreach (var video in videos.Take(3))
+                                        {
+                                            <!-- رابط مباشر لصفحة تشغيل الفيديو بدلاً من playVideo() -->
+                                            <a asp-controller="Course" asp-action="PlayVideo" asp-route-videoId="@video.Id" class="preview-video-item">
+                                                <div class="preview-thumbnail">
+                                                    <img src="@GetThumbnailUrl(video)" alt="@video.Title">
+                                                    <div class="play-icon">▶️</div>
+                                                </div>
+                                                <div class="preview-info">
+                                                    <div class="preview-title">@video.Title</div>
+                                                    <div class="preview-duration">@(video.Duration > 0 ? $"{video.Duration / 60}:{video.Duration % 60:D2}" : "")</div>
+                                                </div>
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-courses">
+                    <div class="empty-icon">📚</div>
+                    <p class="empty-title">لم تسجل في أي كورس بعد</p>
+                    <p class="empty-description">ابدأ رحلتك التعليمية الآن</p>
+                    <a asp-controller="Course" asp-action="Index" class="btn-browse-courses">
+                        استعرض الكورسات <span>→</span>
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    // دالة مساعدة للحصول على الصورة المصغرة (بدون JavaScript)
+    string GetThumbnailUrl(CourseVideoDto video)
+    {
+        if (video.Platform == VideoPlatform.YouTube && !string.IsNullOrEmpty(video.VideoId))
+            return $"https://img.youtube.com/vi/{video.VideoId}/default.jpg";
+        if (video.Platform == VideoPlatform.Vimeo && !string.IsNullOrEmpty(video.VideoId))
+            return $"https://vumbnail.com/{video.VideoId}.jpg";
+        return "/images/video-placeholder.jpg";
+    }
+}

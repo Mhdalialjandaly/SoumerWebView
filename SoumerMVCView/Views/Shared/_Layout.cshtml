@@ -2,11 +2,19 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>@ViewData["Title"] - أكاديمية المعرفة</title>
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />   <!-- Font Awesome 6 (Free) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#667eea" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>@ViewData["Title"] - سومر</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="~/images/appicon.png" />
+    <link rel="apple-touch-icon" href="~/images/appicon.png" />
+    <link rel="shortcut icon" href="~/images/appicon.png" />
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
@@ -14,117 +22,80 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-5-theme/1.3.0/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
 </head>
 <body>
 
+    <!-- HEADER -->
     <header class="header">
         <div class="header-container">
-            <div class="logo">
-                <h1>⬟ Soumer</h1>
-                <p>منصة الأساتذة المتميزين</p>
-            </div>
+            <a href="/Home/Index" class="logo">
+                <div class="logo-icon">
+                    <img src="~/images/appicon.png" alt="سومر" />
+                </div>
+                <div class="logo-text">
+                    <h1>سومر</h1>
+                    <p>منصة الأساتذة المتميزين</p>
+                </div>
+            </a>
             <div class="user-actions">
-                @if (User.Identity.IsAuthenticated)
-                {
-                    <div class="user-info">
-                        <button class="icon-btn" id="userMenuBtn" aria-label="قائمة المستخدم">
-                            <span class="user-avatar">
-                                <i class="fa-regular fa-user"></i>
-                            </span>
-                            <span class="user-name">@User.Identity.Name</span>
-                            <span class="dropdown-arrow">
-                                <i class="fa-solid fa-chevron-down"></i>
-                            </span>
-                        </button>
-                        <div id="userDropdown" class="dropdown-menu">
-                            <a asp-controller="Account" asp-action="Profile" class="dropdown-item">
-                                <span><i class="fa-regular fa-id-card"></i></span>
-                                ملفي الشخصي
-                            </a>
-                            <a asp-controller="Account" asp-action="Settings" class="dropdown-item">
-                                <span><i class="fa-regular fa-gear"></i></span>
-                                الإعدادات
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm">
-                                <button type="submit" class="dropdown-item logout-item">
-                                    <span><i class="fa-solid fa-right-from-bracket"></i></span>
-                                    تسجيل خروج
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                  @*   <button class="icon-btn" id="settingsBtn" aria-label="الإعدادات">⚙️</button> *@
-                }
-                else
-                {
-                   @*  <button class="icon-btn" id="settingsBtn" aria-label="الإعدادات">⚙️</button> *@
-                    <button class="icon-btn login-btn" id="loginBtn">👤 دخول</button>
-                }
+                @await Component.InvokeAsync("UserHeader")
             </div>
         </div>
     </header>
 
+    <!-- MAIN CONTENT -->
     <main class="main-container" id="mainContainer">
         @RenderBody()
     </main>
 
+    <!-- FOOTER -->
     <div class="footer">
-        <p>© 2026 DidItDev | جميع الحقوق محفوظة</p>
+        <p>© 2026 سومر | جميع الحقوق محفوظة</p>
     </div>
 
+    <!-- BOTTOM NAVBAR -->
     <div class="bottom-navbar">
         <div class="nav-container">
-            <button class="nav-item active" data-page="home">
-                <div class="nav-icon">⌂</div>
+            <a href="/Home/Index" class="nav-item @(Context.Request.Path == "/Home/Index" || Context.Request.Path == "/" ? "active" : "")" data-page="home">
+                <div class="nav-icon">
+                    <i class="fas fa-house"></i>
+                </div>
                 <div class="nav-label">الرئيسية</div>
-            </button>
-            <button class="nav-item" data-page="mycourses">
-                <div class="nav-icon">☰</div>
+            </a>
+            <a href="/MyCourses/Index" class="nav-item @(Context.Request.Path == "/MyCourses/Index" || Context.Request.Path == "/MyCourses" ? "active" : "")" data-page="mycourses">
+                <div class="nav-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
                 <div class="nav-label">كورساتي</div>
-            </button>
-            <button class="nav-item" data-page="points">
-                <div class="nav-icon">⬟</div>
+            </a>
+            <a href="/Balance/Index" class="nav-item @(Context.Request.Path == "/Balance/Index" ? "active" : "")" data-page="points">
+                <div class="nav-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
                 <div class="nav-label">نقاطي</div>
-            </button>
-            <button class="nav-item" data-page="institutes">
-                <div class="nav-icon">⌂</div>
+            </a>
+            <a href="/Institutes/Index" class="nav-item @(Context.Request.Path == "/Institutes/Index" || Context.Request.Path == "/Institutes" ? "active" : "")" data-page="institutes">
+                <div class="nav-icon">
+                    <i class="fas fa-school"></i>
+                </div>
                 <div class="nav-label">المعاهد</div>
-            </button>
+            </a>
         </div>
     </div>
 
-    <div id="settingsModal" class="modal">
-        <div class="modal-content">
-            <h3>⚙️ الإعدادات</h3>
-            <p>الوضع الليلي قريبًا • تغيير اللغة • الإشعارات</p>
-            <button class="close-modal" id="closeSettingsModal">إغلاق</button>
-        </div>
-    </div>
-
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <h3>🔐 تسجيل الدخول</h3>
-            <p>مرحباً بك! قريباً سيتم تفعيل خاصية الدخول الموحد.</p>
-            <button class="close-modal" id="closeLoginModal">إغلاق</button>
-        </div>
-    </div>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <!-- SCRIPTS -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-    <!-- Select2 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/i18n/ar.min.js"></script>
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- SignalR للإشعارات الفورية -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+    <script src="~/js/site.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

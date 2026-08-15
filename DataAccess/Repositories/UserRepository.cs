@@ -60,8 +60,10 @@ namespace DataAccess.Repositories
             {
                 UserName = model.UserName,
                 Email = model.Email,
+                FullName = model.FullName,
+                AvatarUrl = model.AvatarUrl,
                 Description = model.Description,
-                IsActive = true,
+                IsActive = model.IsActive,
                 CreatedAt = DateTime.Now
             };
 
@@ -73,14 +75,19 @@ namespace DataAccess.Repositories
             return _mapper.Map<UserDto>(user);
         }
 
-        public async Task Update(UpdateUserDto model)
+        public async Task<bool> Update(UpdateUserDto model)
         {
             var user = await _userManager.FindByIdAsync(model.Id);
             if (user == null)
+            {
+                return false;
                 throw new Exception("User not found");
+            }
 
             user.UserName = model.UserName;
             user.Email = model.Email;
+            user.FullName = model.FullName;
+            user.AvatarUrl = model.AvatarUrl;
             user.Description = model.Description;
             user.IsActive = model.IsActive;
             user.ModifiedAt = DateTime.Now;
@@ -88,7 +95,11 @@ namespace DataAccess.Repositories
 
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
+            {
+                return false;
                 throw new Exception(string.Join(", ", result.Errors));
+            }
+            return true;
         }
 
         public async Task Delete(string id)
@@ -181,6 +192,38 @@ namespace DataAccess.Repositories
 
             var roles = await _userManager.GetRolesAsync(user);
             return roles.ToList();
+        }
+        public async Task<List<UserDto>> SearchUsers(string query, int take = 10)
+        {
+            try
+            {
+                var users = await _context.Set<User>()
+                    .Where(u => u.DeletedAt == null)
+                    .Where(u => u.UserName.Contains(query) ||
+                               u.Email.Contains(query) ||
+                               u.FullName.Contains(query))
+                    .Take(take)
+                    .ToListAsync();
+
+                return _mapper.Map<List<UserDto>>(users);
+            }
+            catch (Exception)
+            {
+                return new List<UserDto>();
+            }
+        }
+
+        public async Task<bool> IsUserExists(string userId)
+        {
+            try
+            {
+                return await _context.Set<User>()
+                    .AnyAsync(u => u.Id == userId && u.DeletedAt == null);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

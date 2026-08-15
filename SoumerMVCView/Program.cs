@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using SoumerMVCView.Services.BalanceService;
 using SoumerMVCView.Services.CourseService;
 using SoumerMVCView.Services.TeacherAssignmentService;
+using SoumerMVCView.ViewComponents;
 
 namespace SoumerMVCView
 {
@@ -31,7 +32,7 @@ namespace SoumerMVCView
             builder.Services.AddScoped<IBalanceService, BalanceService>();
             builder.Services.AddScoped<ICourseService, CourseService>();
             builder.Services.AddScoped<ICourseVideoService, CourseVideoService>();
-
+            builder.Services.AddScoped<UserHeaderViewComponent>();
             // ثانياً: تسجيل Identity
             builder.Services.AddIdentity<User, IdentityRole>(options =>
             {
@@ -80,7 +81,7 @@ namespace SoumerMVCView
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+             
                 app.UseHsts();
             }
 

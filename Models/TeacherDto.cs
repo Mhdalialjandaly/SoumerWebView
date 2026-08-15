@@ -13,6 +13,7 @@
         public string DeletedBy { get; set; }
         public string Name { get; set; }
         public string Subject { get; set; }
+        public bool IsActive { get; set; }
         public string Bio { get; set; }
         public string Image { get; set; }
     }

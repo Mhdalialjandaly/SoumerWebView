@@ -19,6 +19,7 @@ namespace DataAccess
         public DbSet<BalanceTransaction> BalanceTransactions { get; set; }
         public DbSet<TeacherGradeAssignment> TeacherGradeAssignments { get; set; }
         public DbSet<CourseVideo> CourseVideos { get; set; }
+        public DbSet<PointsCode> PointsCodes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

@@ -14,6 +14,8 @@ namespace DataAccess.Entities
         public string Description { get; set; }
         public string Password { get; set; }
         public bool IsActive { get; set; }
+        public string FullName { get; set; }
+        public string AvatarUrl { get; set; }
 
         [ForeignKey("Balance")]
         public int? BalanceId { get; set; }

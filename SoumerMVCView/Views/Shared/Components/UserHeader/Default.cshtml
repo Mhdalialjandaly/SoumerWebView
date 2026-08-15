@@ -1,0 +1,68 @@
+﻿@model UserHeaderViewModel
+
+@if (!string.IsNullOrEmpty(Model.UserId))
+{
+    <div class="user-info">
+        <button class="icon-btn" id="userMenuBtn" aria-label="قائمة المستخدم" type="button">
+            <span class="user-avatar">
+                @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                {
+                    <img src="@Model.AvatarUrl" alt="@Model.DisplayName"
+                         onerror="this.onerror=null; this.parentElement.innerHTML='<span class=&quot;avatar-initial&quot;>@Model.Initial</span>';" />
+                }
+                else
+                {
+                    <span class="avatar-initial">@Model.Initial</span>
+                }
+            </span>
+            <span class="user-name">@Model.DisplayName</span>
+            <span class="dropdown-arrow">
+                <i class="fa-solid fa-chevron-down"></i>
+            </span>
+        </button>
+        <div id="userDropdown" class="dropdown-menu">
+            <!-- معلومات المستخدم -->
+            <div class="dropdown-user-info">
+                <div class="dropdown-user-avatar">
+                    @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                    {
+                        <img src="@Model.AvatarUrl" alt="@Model.DisplayName"
+                             onerror="this.onerror=null; this.parentElement.innerHTML='<span class=&quot;avatar-initial&quot;>@Model.Initial</span>';" />
+                    }
+                    else
+                    {
+                        <span class="avatar-initial">@Model.Initial</span>
+                    }
+                </div>
+                <div class="dropdown-user-details">
+                    <strong>@Model.DisplayName</strong>
+                    @if (!string.IsNullOrEmpty(Model.Email))
+                    {
+                        <small>@Model.Email</small>
+                    }
+                </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a asp-controller="Account" asp-action="Profile" class="dropdown-item">
+                <span><i class="fa-regular fa-id-card"></i></span>
+                ملفي الشخصي
+            </a>
+            <a asp-controller="Account" asp-action="Settings" class="dropdown-item">
+                <span><i class="fa-regular fa-gear"></i></span>
+                الإعدادات
+            </a>
+            <div class="dropdown-divider"></div>
+            <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="dropdown-item logout-item">
+                    <span><i class="fa-solid fa-right-from-bracket"></i></span>
+                    تسجيل خروج
+                </button>
+            </form>
+        </div>
+    </div>
+}
+else
+{
+    <button class="icon-btn login-btn" id="loginBtn" type="button">👤 دخول</button>
+}

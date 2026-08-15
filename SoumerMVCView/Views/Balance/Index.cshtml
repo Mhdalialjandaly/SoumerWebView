@@ -5,170 +5,918 @@
 }
 
 <style>
-    .points-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 1rem;
-        padding: 2rem;
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-color: #10b981;
+        --danger-color: #ef4444;
+        --warning-color: #f59e0b;
+        --info-color: #3b82f6;
+        --bg-light: #f8f9fa;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --border-color: #e2e8f0;
+        --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+        --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+        --shadow-lg: 0 8px 32px rgba(0,0,0,0.16);
+        --radius-sm: 0.5rem;
+        --radius-md: 0.75rem;
+        --radius-lg: 1rem;
+        --radius-xl: 1.5rem;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: #f5f7fa;
+    }
+
+    .mobile-points-container {
+        width: 100%;
+        min-height: 100vh;
+        background: #f5f7fa;
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    /* بطاقة الرصيد */
+    .mobile-balance-card {
+        background: var(--primary-gradient);
+        border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+        padding: 30px 20px;
         color: white;
-        margin-bottom: 2rem;
         text-align: center;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
     }
 
-    .points-amount {
-        font-size: 3rem;
-        font-weight: bold;
-        margin: 1rem 0;
-    }
-
-    .transaction-item {
-        background: white;
-        border-radius: 0.5rem;
-        padding: 1rem;
-        margin-bottom: 0.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: transform 0.2s;
-    }
-
-        .transaction-item:hover {
-            transform: translateX(-5px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .mobile-balance-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s infinite;
         }
 
+    @@keyframes shimmer {
+        0% {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+
+        100% {
+            transform: translate(-50%, -50%) rotate(360deg);
+        }
+    }
+
+    .balance-icon {
+        font-size: 48px;
+        margin-bottom: 10px;
+        position: relative;
+        z-index: 1;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    .balance-amount {
+        font-size: 48px;
+        font-weight: 800;
+        margin: 10px 0;
+        position: relative;
+        z-index: 1;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .balance-label {
+        font-size: 16px;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+
+    .balance-update-time {
+        font-size: 12px;
+        opacity: 0.7;
+        margin-top: 10px;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* أزرار سريعة */
+    .quick-actions {
+        display: flex;
+        gap: 10px;
+        padding: 15px;
+        margin-top: -20px;
+        position: relative;
+        z-index: 10;
+    }
+
+    .quick-action-btn {
+        flex: 1;
+        background: white;
+        border: none;
+        border-radius: var(--radius-md);
+        padding: 15px;
+        box-shadow: var(--shadow-sm);
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+    }
+
+        .quick-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .quick-action-btn:active {
+            transform: scale(0.95);
+            box-shadow: var(--shadow-sm);
+        }
+
+    .quick-action-icon {
+        font-size: 24px;
+    }
+
+    .quick-action-text {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    /* نموذج التحويل */
+    .transfer-section {
+        padding: 20px 15px;
+    }
+
+    .transfer-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 25px 20px;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 20px;
+    }
+
+    .transfer-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .transfer-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--primary-gradient);
+            border-radius: 2px;
+        }
+
+    .form-group-mobile {
+        margin-bottom: 20px;
+    }
+
+    .form-label-mobile {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .form-input-mobile {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-md);
+        font-size: 16px;
+        transition: var(--transition);
+        background: #fafbfc;
+        color: var(--text-primary);
+        box-sizing: border-box;
+    }
+
+        .form-input-mobile:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        .form-input-mobile::placeholder {
+            color: #94a3b8;
+        }
+
+        .form-input-mobile:disabled {
+            background: #f1f5f9;
+            cursor: not-allowed;
+        }
+
+    .form-textarea-mobile {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-md);
+        font-size: 16px;
+        transition: var(--transition);
+        background: #fafbfc;
+        color: var(--text-primary);
+        resize: vertical;
+        min-height: 80px;
+        box-sizing: border-box;
+        font-family: inherit;
+    }
+
+        .form-textarea-mobile:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+    /* تحسينات خاصة للبحث عن المستخدمين */
+    .user-search-wrapper {
+        position: relative;
+    }
+
+    .user-search-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 15px;
+        color: #94a3b8;
+        font-size: 18px;
+        pointer-events: none;
+        transition: var(--transition);
+    }
+
+    .form-input-mobile.with-icon {
+        padding-right: 45px;
+        padding-left: 40px;
+    }
+
+    .user-search-input-wrapper:focus-within .search-icon {
+        color: #667eea;
+    }
+
+    .clear-search-btn {
+        position: absolute;
+        left: 10px;
+        background: none;
+        border: none;
+        color: #94a3b8;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 5px;
+        display: none;
+        transition: var(--transition);
+        line-height: 1;
+    }
+
+        .clear-search-btn:hover {
+            color: #ef4444;
+        }
+
+        .clear-search-btn.show {
+            display: block;
+        }
+
+    /* نتائج البحث المحسنة */
+    .user-search-results {
+        margin-top: 8px;
+        max-height: 300px;
+        overflow-y: auto;
+        border-radius: var(--radius-md);
+        background: white;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        border: 1px solid var(--border-color);
+        animation: fadeInDown 0.3s ease-out;
+    }
+
+        .user-search-results::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .user-search-results::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+
+        .user-search-results::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+            .user-search-results::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
+
+    @@keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .user-result-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        cursor: pointer;
+        transition: var(--transition);
+        border-bottom: 1px solid #f1f5f9;
+        position: relative;
+    }
+
+        .user-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .user-result-item:hover {
+            background: #f8fafc;
+        }
+
+        .user-result-item:active {
+            background: #e2e8f0;
+        }
+
+        .user-result-item.selected {
+            background: #eef2ff;
+        }
+
+    .user-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 20px;
+        flex-shrink: 0;
+        position: relative;
+    }
+
+        .user-avatar.has-image {
+            background: none;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+    .user-online-status {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 12px;
+        height: 12px;
+        background: #10b981;
+        border: 2px solid white;
+        border-radius: 50%;
+    }
+
+    .user-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .user-name {
+        font-weight: 600;
+        font-size: 15px;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .user-fullname {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+    }
+
+    .user-email {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .user-check-icon {
+        color: #667eea;
+        font-size: 20px;
+        opacity: 0;
+        transition: var(--transition);
+    }
+
+    .user-result-item.selected .user-check-icon {
+        opacity: 1;
+    }
+
+    /* حالة التحميل */
+    .search-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 20px;
+        color: var(--text-secondary);
+    }
+
+    .search-loading-spinner {
+        width: 20px;
+        height: 20px;
+        border: 3px solid #e2e8f0;
+        border-radius: 50%;
+        border-top-color: #667eea;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* رسالة لا يوجد نتائج */
+    .no-results {
+        text-align: center;
+        padding: 30px 20px;
+        color: var(--text-secondary);
+    }
+
+    .no-results-icon {
+        font-size: 48px;
+        margin-bottom: 10px;
+        opacity: 0.5;
+    }
+
+    /* المستخدم المحدد */
+    .selected-user-badge {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        background: #eef2ff;
+        border-radius: var(--radius-md);
+        margin-top: 10px;
+        animation: fadeInDown 0.3s ease-out;
+        border: 1px solid #c7d2fe;
+    }
+
+        .selected-user-badge .user-avatar {
+            width: 35px;
+            height: 35px;
+            font-size: 16px;
+        }
+
+        .selected-user-badge .user-info {
+            flex: 1;
+        }
+
+        .selected-user-badge .remove-user-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+            transition: var(--transition);
+            line-height: 1;
+        }
+
+            .selected-user-badge .remove-user-btn:hover {
+                transform: scale(1.2);
+            }
+
+    /* زر التحويل */
+    .transfer-btn-mobile {
+        width: 100%;
+        padding: 16px;
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .transfer-btn-mobile:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .transfer-btn-mobile:active {
+            transform: scale(0.98);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .transfer-btn-mobile:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .transfer-btn-mobile::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .transfer-btn-mobile:active::after {
+            width: 300px;
+            height: 300px;
+        }
+
+    /* المعاملات */
+    .transactions-section {
+        padding: 0 15px 20px;
+    }
+
+    .transactions-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .transactions-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .transaction-item-mobile {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px;
+        margin-bottom: 10px;
+        background: #f8fafc;
+        border-radius: var(--radius-md);
+        transition: var(--transition);
+    }
+
+        .transaction-item-mobile:hover {
+            background: #f1f5f9;
+        }
+
+        .transaction-item-mobile:active {
+            transform: scale(0.98);
+        }
+
+    .transaction-info {
+        flex: 1;
+    }
+
+    .transaction-type {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--text-primary);
+    }
+
+    .transaction-date {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+    }
+
+    .transaction-description {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+    }
+
+    .transaction-amount {
+        font-size: 18px;
+        font-weight: 700;
+    }
+
     .transaction-credit {
-        color: #10b981;
-        font-weight: bold;
+        color: var(--success-color);
     }
 
     .transaction-debit {
-        color: #ef4444;
-        font-weight: bold;
+        color: var(--danger-color);
     }
 
-    .transfer-form {
-        background: white;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        margin-top: 2rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    /* حالة فارغة */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
     }
 
-    .btn-transfer {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-state-text {
+        font-size: 16px;
+        color: var(--text-secondary);
+        margin-bottom: 10px;
+    }
+
+    .empty-state-subtext {
+        font-size: 13px;
+        color: #94a3b8;
+    }
+
+    /* تحميل */
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+    }
+
+    /* رسالة نجاح */
+    .success-toast {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--success-color);
         color: white;
-        border: none;
-        padding: 0.5rem 1.5rem;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        transition: transform 0.2s;
+        padding: 16px 24px;
+        border-radius: var(--radius-md);
+        font-size: 15px;
+        font-weight: 600;
+        z-index: 1000;
+        box-shadow: var(--shadow-lg);
+        animation: slideDown 0.3s ease-out;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        max-width: 90%;
+        text-align: center;
     }
 
-        .btn-transfer:hover {
-            transform: scale(1.05);
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -20px);
         }
 
-    .section-title {
-        font-size: 1.25rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
-        padding-right: 0.5rem;
-        border-right: 3px solid #667eea;
+        to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
     }
 
-    .empty-transactions {
-        text-align: center;
-        padding: 2rem;
-        color: #6c757d;
-        background: #f8f9fa;
-        border-radius: 0.5rem;
+    /* تحسينات للشاشات الأكبر */
+    @@media (min-width: 768px) {
+        .mobile-points-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .mobile-balance-card {
+            border-radius: var(--radius-xl);
+            margin: 20px;
+        }
+
+        .transfer-section,
+        .transactions-section {
+            padding: 20px;
+        }
+    }
+
+    @@media (min-width: 1024px) {
+        .mobile-points-container {
+            max-width: 800px;
+        }
     }
 </style>
 
-<div class="container-fluid mt-4" dir="rtl">
-    <div class="row">
-        <div class="col-md-12">
-            <!-- بطاقة الرصيد -->
-            <div class="points-card">
-                <h2>💎 رصيد النقاط</h2>
-                <div class="points-amount">
-                    @Model.CurrentBalance.ToString("N0")
-                </div>
-                <p>نقطة</p>
-                <small>آخر تحديث: @Model.LastUpdateDate.ToString("yyyy/MM/dd HH:mm")</small>
-            </div>
+<div class="mobile-points-container" dir="rtl">
+    <!-- بطاقة الرصيد -->
+    <div class="mobile-balance-card">
+        <div class="balance-icon">💎</div>
+        <h2 style="margin: 0; font-size: 24px; position: relative; z-index: 1;">رصيد النقاط</h2>
+        <div class="balance-amount">
+            @Model.CurrentBalance.ToString("N0")
+        </div>
+        <div class="balance-label">نقطة</div>
+        <div class="balance-update-time">
+            آخر تحديث: @Model.LastUpdateDate.ToString("yyyy/MM/dd HH:mm")
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-8">
-            <!-- المعاملات الأخيرة -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">📋 آخر المعاملات</h5>
-                </div>
-                <div class="card-body">
-                    @if (Model.RecentTransactions != null && Model.RecentTransactions.Any())
-                    {
-                        foreach (var transaction in Model.RecentTransactions.Take(5))
-                        {
-                            <div class="transaction-item">
-                                <div>
-                                    <strong>@(transaction.TransactionType == TransactionType.Credit ? "إضافة نقاط" : "خصم نقاط")</strong>
-                                    <small class="d-block text-muted">@transaction.CreatedAt.ToString("yyyy/MM/dd HH:mm")</small>
-                                    @if (!string.IsNullOrEmpty(transaction.Description))
-                                    {
-                                        <small class="d-block text-muted">@transaction.Description</small>
-                                    }
-                                </div>
-                                <div class="@(transaction.TransactionType == TransactionType.Credit ? "transaction-credit" : "transaction-debit")">
-                                    @(transaction.TransactionType == TransactionType.Credit ? "+" : "-") @transaction.Amount.ToString("N0")
-                                </div>
-                            </div>
-                        }
-
-                        <div class="text-center mt-3">
-                            <a href="/Balance/Transactions" class="btn btn-outline-primary btn-sm">
-                                عرض جميع المعاملات
-                            </a>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="empty-transactions">
-                            <p>لا توجد معاملات حتى الآن</p>
-                            <small>قم بالتسجيل في كورسات أو قم بشراء نقاط لتبدأ</small>
-                        </div>
-                    }
-                </div>
+    <!-- أزرار سريعة -->
+    <div class="quick-actions">
+        <button class="quick-action-btn" onclick="scrollToTransfer()">
+            <span class="quick-action-icon">🔄</span>
+            <span class="quick-action-text">تحويل نقاط</span>
+        </button>
+        <button class="quick-action-btn" onclick="scrollToTransactions()">
+            <span class="quick-action-icon">📋</span>
+            <span class="quick-action-text">المعاملات</span>
+        </button>
+    </div>
+    <!-- قسم استرداد الكود -->
+    <div class="redeem-section" style="padding: 15px;">
+        <div class="redeem-card" style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <div class="redeem-title" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                <span style="font-size: 24px;">🎁</span>
+                <h3 style="margin: 0; font-size: 18px; font-weight: 700;">استرداد كود نقاط</h3>
             </div>
-        </div>
-
-        <div class="col-md-4">
-            <!-- نموذج تحويل النقاط -->
-            <div class="transfer-form">
-                <h5>🔄 تحويل النقاط</h5>
-                <form id="transferForm">
-                    <div class="mb-3">
-                        <label class="form-label">اسم المستخدم المستلم</label>
-                        <input type="text" class="form-control" id="toUserName" placeholder="أدخل اسم المستخدم" required>
-                        <input type="hidden" id="toUserId" />
-                        <div id="userSearchResults" class="mt-1"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">المبلغ</label>
-                        <input type="number" class="form-control" id="amount" min="1" max="@Model.CurrentBalance" required>
-                        <small class="text-muted">الرصيد المتاح: @Model.CurrentBalance.ToString("N0") نقطة</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">الوصف (اختياري)</label>
-                        <textarea class="form-control" id="description" rows="2" placeholder="سبب التحويل..."></textarea>
-                    </div>
-                    <button type="submit" class="btn-transfer w-100">
-                        تحويل النقاط
+            <form id="redeemCodeForm">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text"
+                           id="redeemCodeInput"
+                           placeholder="XXXX-XXXX-XXXX"
+                           style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 16px; text-align: center; text-transform: uppercase;"
+                           maxlength="14"
+                           required>
+                    <button type="submit"
+                            style="padding: 12px 20px; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;">
+                        استرداد
                     </button>
-                </form>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- نموذج التحويل -->
+    <div class="transfer-section" id="transferSection">
+        <div class="transfer-card">
+            <div class="transfer-title">تحويل النقاط</div>
+            <form id="transferForm">
+                <div class="form-group-mobile">
+                    <label class="form-label-mobile">المستخدم المستلم</label>
+
+                    <div class="user-search-wrapper">
+                        <div class="user-search-input-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text"
+                                   class="form-input-mobile with-icon"
+                                   id="toUserName"
+                                   placeholder="اكتب اسم المستخدم أو البريد الإلكتروني..."
+                                   autocomplete="off"
+                                   required>
+                            <button type="button" class="clear-search-btn" id="clearSearchBtn">×</button>
+                        </div>
+
+                        <input type="hidden" id="toUserId" />
+
+                        <!-- نتائج البحث -->
+                        <div id="userSearchResults" class="user-search-results" style="display: none;"></div>
+
+                        <!-- المستخدم المحدد -->
+                        <div id="selectedUserBadge" class="selected-user-badge" style="display: none;">
+                            <div class="user-avatar" id="selectedUserAvatar">م</div>
+                            <div class="user-info">
+                                <div class="user-name" id="selectedUserName"></div>
+                                <div class="user-email" id="selectedUserEmail"></div>
+                            </div>
+                            <button type="button" class="remove-user-btn" id="removeUserBtn" title="إزالة المستخدم">×</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group-mobile">
+                    <label class="form-label-mobile">المبلغ</label>
+                    <input type="number"
+                           class="form-input-mobile"
+                           id="amount"
+                           min="1"
+                           max="@Model.CurrentBalance"
+                           placeholder="0"
+                           required>
+                    <small style="color: #64748b; display: block; margin-top: 5px;">
+                        الرصيد المتاح: @Model.CurrentBalance.ToString("N0") نقطة
+                    </small>
+                </div>
+
+                <div class="form-group-mobile">
+                    <label class="form-label-mobile">الوصف (اختياري)</label>
+                    <textarea class="form-textarea-mobile"
+                              id="description"
+                              placeholder="مثال: شكراً على المساعدة"></textarea>
+                </div>
+
+                <button type="submit" class="transfer-btn-mobile" id="transferBtn">
+                    <span id="transferBtnText">تحويل النقاط</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- المعاملات الأخيرة -->
+    <div class="transactions-section" id="transactionsSection">
+        <div class="transactions-card">
+            <div class="transactions-title">
+                <span>آخر المعاملات</span>
+                @if (Model.RecentTransactions != null && Model.RecentTransactions.Any())
+                {
+                    <a href="/Balance/Transactions" style="font-size: 13px; color: #667eea; text-decoration: none;">
+                        عرض الكل
+                    </a>
+                }
             </div>
+
+            @if (Model.RecentTransactions != null && Model.RecentTransactions.Any())
+            {
+                foreach (var transaction in Model.RecentTransactions.Take(5))
+                {
+                    <div class="transaction-item-mobile">
+                        <div class="transaction-info">
+                            <div class="transaction-type">
+                                @if (transaction.TransactionType == TransactionType.Credit)
+                                {
+                                    <span>📥 إضافة نقاط</span>
+                                }
+                                else
+                                {
+                                    <span>📤 خصم نقاط</span>
+                                }
+                            </div>
+                            <div class="transaction-date">
+                                @transaction.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                            </div>
+                            @if (!string.IsNullOrEmpty(transaction.Description))
+                            {
+                                <div class="transaction-description">
+                                    @transaction.Description
+                                </div>
+                            }
+                        </div>
+                        <div class="transaction-amount @(transaction.TransactionType == TransactionType.Credit ? "transaction-credit" : "transaction-debit")">
+                            @(transaction.TransactionType == TransactionType.Credit ? "+" : "-") @transaction.Amount.ToString("N0")
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <div class="empty-state-text">لا توجد معاملات حتى الآن</div>
+                    <div class="empty-state-subtext">قم بالتسجيل في كورسات أو قم بشراء نقاط لتبدأ</div>
+                </div>
+            }
         </div>
     </div>
 </div>
@@ -176,106 +924,409 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // البحث عن المستخدمين
-        let searchTimeout;
-        $('#toUserName').on('input', function() {
-            clearTimeout(searchTimeout);
-            const query = $(this).val();
+        $(document).ready(function() {
+            let searchTimeout;
+            let selectedUser = null;
+            let isSearching = false;
 
-            if (query.length < 2) {
-                $('#userSearchResults').html('');
-                return;
-            }
+            // البحث عن المستخدمين مع تأخير
+            $('#toUserName').on('input', function() {
+                clearTimeout(searchTimeout);
+                const query = $(this).val().trim();
 
-            searchTimeout = setTimeout(() => {
+                // إظهار/إخفاء زر المسح
+                if (query.length > 0) {
+                    $('#clearSearchBtn').addClass('show');
+                } else {
+                    $('#clearSearchBtn').removeClass('show');
+                }
+
+                // إخفاء المستخدم المحدد عند الكتابة
+                if (selectedUser && query !== selectedUser.name) {
+                    selectedUser = null;
+                    $('#toUserId').val('');
+                    $('#selectedUserBadge').hide();
+                }
+
+                if (query.length < 2) {
+                    $('#userSearchResults').hide();
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    searchUsers(query);
+                }, 500);
+            });
+
+            // زر مسح البحث
+            $('#clearSearchBtn').click(function() {
+                $('#toUserName').val('');
+                $('#toUserId').val('');
+                $('#userSearchResults').hide();
+                $('#selectedUserBadge').hide();
+                selectedUser = null;
+                $(this).removeClass('show');
+                $('#toUserName').focus();
+            });
+
+            // إزالة المستخدم المحدد
+            $(document).on('click', '#removeUserBtn', function() {
+                $('#toUserName').val('');
+                $('#toUserId').val('');
+                $('#userSearchResults').hide();
+                $('#selectedUserBadge').hide();
+                selectedUser = null;
+                $('#clearSearchBtn').removeClass('show');
+                $('#toUserName').focus();
+            });
+
+            // البحث عن المستخدمين
+            function searchUsers(query) {
+                if (isSearching) return;
+
+                isSearching = true;
+
+                // إظهار مؤشر التحميل
+                $('#userSearchResults').html(
+                    '<div class="search-loading">' +
+                    '<div class="search-loading-spinner"></div>' +
+                    '<span>جاري البحث...</span>' +
+                    '</div>'
+                ).show();
+
                 $.ajax({
-                    url: '/User/SearchUsers',
+                    url: '/Balance/SearchUsers',
                     type: 'GET',
                     data: { query: query },
                     success: function(response) {
-                        if (response.success && response.users.length > 0) {
-                            let html = '<div class="list-group">';
-                            response.users.forEach(user => {
-                                html += `
-                                    <a href="#" class="list-group-item list-group-item-action user-result"
-                                       data-id="${user.id}" data-name="${user.userName}">
-                                        ${user.userName} - ${user.email}
-                                    </a>
-                                `;
-                            });
-                            html += '</div>';
-                            $('#userSearchResults').html(html);
-
-                            // ربط حدث النقر على نتائج البحث
-                            $('.user-result').click(function(e) {
-                                e.preventDefault();
-                                $('#toUserId').val($(this).data('id'));
-                                $('#toUserName').val($(this).data('name'));
-                                $('#userSearchResults').html('');
-                            });
+                        if (response.success && response.users && response.users.length > 0) {
+                            displayUserResults(response.users);
                         } else {
-                            $('#userSearchResults').html('<div class="alert alert-info">لا يوجد مستخدمين</div>');
+                            $('#userSearchResults').html(
+                                '<div class="no-results">' +
+                                '<div class="no-results-icon">🔍</div>' +
+                                '<div>لا يوجد مستخدمين مطابقين</div>' +
+                                '<small style="color: #94a3b8;">حاول بكلمات مختلفة</small>' +
+                                '</div>'
+                            ).show();
                         }
+                    },
+                    error: function() {
+                        $('#userSearchResults').html(
+                            '<div class="no-results">' +
+                            '<div class="no-results-icon">⚠️</div>' +
+                            '<div>حدث خطأ في البحث</div>' +
+                            '<small style="color: #94a3b8;">يرجى المحاولة مرة أخرى</small>' +
+                            '</div>'
+                        ).show();
+                    },
+                    complete: function() {
+                        isSearching = false;
                     }
                 });
-            }, 500);
-        });
-
-        // تحويل النقاط
-        $('#transferForm').submit(function(e) {
-            e.preventDefault();
-
-            const toUserId = $('#toUserId').val();
-            const amount = $('#amount').val();
-            const description = $('#description').val();
-
-            if (!toUserId) {
-                Swal.fire('خطأ', 'يرجى اختيار مستخدم مستلم', 'error');
-                return;
             }
 
-            if (!amount || amount <= 0) {
-                Swal.fire('خطأ', 'يرجى إدخال مبلغ صحيح', 'error');
-                return;
-            }
+            // عرض نتائج البحث
+            function displayUserResults(users) {
+                let html = '';
+                users.forEach(user => {
+                    const initial = (user.fullName || user.userName).charAt(0).toUpperCase();
+                    const avatarHtml = user.avatarUrl
+                        ? `<div class="user-avatar has-image"><img src="${user.avatarUrl}" alt="${user.userName}" onerror="this.parentElement.classList.remove('has-image'); this.parentElement.textContent='${initial}'"><span class="user-online-status"></span></div>`
+                        : `<div class="user-avatar">${initial}<span class="user-online-status"></span></div>`;
 
-            const maxAmount = @Model.CurrentBalance;
-            if (amount > maxAmount) {
-                Swal.fire('خطأ', `الرصيد غير كافي. الرصيد المتاح: ${maxAmount} نقطة`, 'error');
-                return;
-            }
+                    const fullNameHtml = user.fullName
+                        ? `<div class="user-fullname">${user.fullName}</div>`
+                        : '';
 
-            Swal.fire({
-                title: 'تأكيد التحويل',
-                text: `هل أنت متأكد من تحويل ${amount} نقطة للمستخدم ${$('#toUserName').val()}؟`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'نعم، قم بالتحويل',
-                cancelButtonText: 'إلغاء'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: '/Balance/TransferPoints',
-                        type: 'POST',
-                        data: {
-                            toUserId: toUserId,
-                            amount: amount,
-                            description: description
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                Swal.fire('تم', response.message, 'success')
-                                    .then(() => location.reload());
-                            } else {
-                                Swal.fire('خطأ', response.message, 'error');
-                            }
-                        },
-                        error: function() {
-                            Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
+                    html += `
+                        <div class="user-result-item"
+                             data-id="${user.id}"
+                             data-name="${user.userName}"
+                             data-email="${user.email}"
+                             data-fullname="${user.fullName || ''}"
+                             data-avatar="${user.avatarUrl || ''}">
+                            ${avatarHtml}
+                            <div class="user-info">
+                                <div class="user-name">
+                                    ${user.userName}
+                                </div>
+                                ${fullNameHtml}
+                                <div class="user-email">${user.email}</div>
+                            </div>
+                            <span class="user-check-icon">✓</span>
+                        </div>
+                    `;
+                });
+
+                $('#userSearchResults').html(html).show();
+
+                // ربط حدث النقر على نتائج البحث
+                $('.user-result-item').click(function() {
+                    const userId = $(this).data('id');
+                    const userName = $(this).data('name');
+                    const email = $(this).data('email');
+                    const fullName = $(this).data('fullname');
+                    const avatarUrl = $(this).data('avatar');
+
+                    selectUser(userId, userName, email, fullName, avatarUrl, $(this));
+                });
+
+                // دعم التنقل بلوحة المفاتيح
+                let currentIndex = -1;
+                const $items = $('.user-result-item');
+
+                $('#toUserName').off('keydown').on('keydown', function(e) {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                        e.preventDefault();
+
+                        if (e.key === 'ArrowDown') {
+                            currentIndex = Math.min(currentIndex + 1, $items.length - 1);
+                        } else if (e.key === 'ArrowUp') {
+                            currentIndex = Math.max(currentIndex - 1, 0);
                         }
-                    });
+
+                        $items.removeClass('selected');
+                        $items.eq(currentIndex).addClass('selected');
+                        $items.eq(currentIndex)[0].scrollIntoView({ block: 'nearest' });
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (currentIndex >= 0 && currentIndex < $items.length) {
+                            $items.eq(currentIndex).click();
+                        }
+                    } else if (e.key === 'Escape') {
+                        $('#userSearchResults').hide();
+                    }
+                });
+            }
+
+            // اختيار مستخدم
+            function selectUser(userId, userName, email, fullName, avatarUrl, $element) {
+                selectedUser = {
+                    id: userId,
+                    name: userName,
+                    email: email,
+                    fullName: fullName,
+                    avatarUrl: avatarUrl
+                };
+
+                $('#toUserId').val(userId);
+                $('#toUserName').val(userName);
+                $('#userSearchResults').hide();
+                $('#clearSearchBtn').addClass('show');
+
+                // تحديث شارة المستخدم المحدد
+                const initial = (fullName || userName).charAt(0).toUpperCase();
+
+                if (avatarUrl) {
+                    $('#selectedUserAvatar').html(`<img src="${avatarUrl}" alt="${fullName || userName}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`);
+                } else {
+                    $('#selectedUserAvatar').text(initial);
+                }
+
+                $('#selectedUserName').text(fullName || userName);
+                $('#selectedUserEmail').text(email);
+                $('#selectedUserBadge').show();
+
+                // إظهار رسالة تأكيد
+                showToast(`تم اختيار: ${fullName || userName}`, 'success');
+            }
+
+            // إغلاق نتائج البحث عند النقر خارج الصندوق
+            $(document).click(function(e) {
+                if (!$(e.target).closest('.user-search-wrapper').length) {
+                    $('#userSearchResults').hide();
                 }
             });
+
+            // تحويل النقاط
+            $('#transferForm').submit(function(e) {
+                e.preventDefault();
+
+                const toUserId = $('#toUserId').val();
+                const toUserName = selectedUser ? (selectedUser.fullName || selectedUser.name) : $('#toUserName').val();
+                const amount = parseFloat($('#amount').val());
+                const description = $('#description').val().trim();
+
+                // التحقق من صحة البيانات
+                if (!toUserId) {
+                    showToast('يرجى اختيار مستخدم مستلم', 'error');
+                    $('#toUserName').focus();
+                    return;
+                }
+
+                if (!amount || amount <= 0) {
+                    showToast('يرجى إدخال مبلغ صحيح', 'error');
+                    $('#amount').focus();
+                    return;
+                }
+
+                const maxAmount = @Model.CurrentBalance;
+                if (amount > maxAmount) {
+                    showToast(`الرصيد غير كافي. الرصيد المتاح: ${maxAmount} نقطة`, 'error');
+                    $('#amount').focus();
+                    return;
+                }
+
+                // تأكيد التحويل
+                Swal.fire({
+                    title: 'تأكيد التحويل',
+                    html: `
+                        <div style="text-align: right;">
+                            <p style="margin-bottom: 10px;">هل أنت متأكد من تحويل النقاط؟</p>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                                <p style="margin: 5px 0;"><strong>المستلم:</strong> ${toUserName}</p>
+                                <p style="margin: 5px 0;"><strong>المبلغ:</strong> ${amount} نقطة</p>
+                                ${description ? `<p style="margin: 5px 0;"><strong>الوصف:</strong> ${description}</p>` : ''}
+                            </div>
+                        </div>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'نعم، قم بالتحويل',
+                    cancelButtonText: 'إلغاء',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        performTransfer(toUserId, amount, description);
+                    }
+                });
+            });
+
+            // تنفيذ التحويل
+            function performTransfer(toUserId, amount, description) {
+                const transferBtn = $('#transferBtn');
+                const transferBtnText = $('#transferBtnText');
+                transferBtn.prop('disabled', true);
+                transferBtnText.html('<span class="loading-spinner"></span> جاري التحويل...');
+
+                $.ajax({
+                    url: '/Balance/TransferPoints',
+                    type: 'POST',
+                    data: {
+                        toUserId: toUserId,
+                        amount: amount,
+                        description: description
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                title: 'تم التحويل بنجاح! 🎉',
+                                text: response.message,
+                                icon: 'success',
+                                confirmButtonText: 'حسناً'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            showToast(response.message, 'error');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        let errorMessage = 'حدث خطأ في الاتصال بالخادم';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        showToast(errorMessage, 'error');
+                    },
+                    complete: function() {
+                        transferBtn.prop('disabled', false);
+                        transferBtnText.text('تحويل النقاط');
+                    }
+                });
+            }
+
+            // إظهار رسالة تنبيه
+            function showToast(message, type = 'success') {
+                // إزالة الرسائل السابقة
+                $('.success-toast').remove();
+
+                const toast = $('<div>')
+                    .addClass('success-toast')
+                    .css('background', type === 'error' ? '#ef4444' : '#10b981')
+                    .html(`
+                        <span>${type === 'error' ? '⚠️' : '✅'}</span>
+                        <span>${message}</span>
+                    `);
+
+                $('body').append(toast);
+
+                setTimeout(() => {
+                    toast.fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                }, 3000);
+            }
+
+            // التمرير إلى نموذج التحويل
+            window.scrollToTransfer = function() {
+                document.getElementById('transferSection').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            };
+
+            // التمرير إلى المعاملات
+            window.scrollToTransactions = function() {
+                document.getElementById('transactionsSection').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            };
+
+            // منع إدخال قيم سالبة في حقل المبلغ
+            $('#amount').on('input', function() {
+                if (parseFloat($(this).val()) < 0) {
+                    $(this).val('');
+                }
+            });
+        });
+
+                // استرداد الكود
+        $('#redeemCodeForm').submit(function(e) {
+            e.preventDefault();
+
+            const code = $('#redeemCodeInput').val().trim();
+
+            if (!code) {
+                showToast('يرجى إدخال الكود', 'error');
+                return;
+            }
+
+            $.ajax({
+                url: '/Balance/RedeemCode',
+                type: 'POST',
+                data: { code: code },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            title: 'تم الاسترداد بنجاح! 🎉',
+                            text: response.message,
+                            icon: 'success',
+                            confirmButtonText: 'حسناً'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        showToast(response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = 'حدث خطأ في استرداد الكود';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    showToast(errorMessage, 'error');
+                }
+            });
+        });
+
+        // تنسيق الكود أثناء الكتابة
+        $('#redeemCodeInput').on('input', function() {
+            let value = $(this).val().toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (value.length > 4) value = value.substring(0, 4) + '-' + value.substring(4);
+            if (value.length > 9) value = value.substring(0, 9) + '-' + value.substring(9);
+            $(this).val(value);
         });
     </script>
 }
