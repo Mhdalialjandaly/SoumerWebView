@@ -44,12 +44,18 @@
             </div>
             <div class="dropdown-divider"></div>
             <a asp-controller="Account" asp-action="Profile" class="dropdown-item">
-                <span><i class="fa-regular fa-id-card"></i></span>
-                ملفي الشخصي
+                <span>
+                    <i class="fa-regular fa-id-card">
+                        ملفي الشخصي
+                    </i>
+                </span>
             </a>
             <a asp-controller="Account" asp-action="Settings" class="dropdown-item">
-                <span><i class="fa-regular fa-gear"></i></span>
-                الإعدادات
+                <span>
+                    <i class="fa-regular fa-gear">
+                        الإعدادات
+                    </i>
+                </span>
             </a>
             <div class="dropdown-divider"></div>
             <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm">
