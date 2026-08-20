@@ -711,3 +711,77 @@ function initModals() {
 }
 
 
+// ==========================================
+// إصلاح مشكلة Permissions API - Illegal invocation
+// ==========================================
+(function () {
+    'use strict';
+
+    // حفظ الدالة الأصلية
+    if (navigator.permissions && navigator.permissions.query) {
+        const originalQuery = navigator.permissions.query;
+
+        // إنشاء نسخة آمنة من الدالة
+        const safeQuery = function (permissionDesc) {
+            try {
+                // استخدام Reflect.apply لضمان السياق الصحيح
+                return Reflect.apply(originalQuery, navigator.permissions, [permissionDesc]);
+            } catch (error) {
+                // إذا فشل، أرجع Promise آمنة
+                console.warn('Permissions API fallback:', error);
+                return Promise.resolve({ state: 'granted', onchange: null });
+            }
+        };
+
+        // استبدال الدالة الأصلية بالنسخة الآمنة
+        try {
+            Object.defineProperty(navigator.permissions, 'query', {
+                value: safeQuery,
+                writable: true,
+                configurable: true
+            });
+        } catch (e) {
+            navigator.permissions.query = safeQuery;
+        }
+    }
+
+    // إصلاح مشاكل مشابهة في APIs أخرى
+    // Fullscreen API
+    if (Element.prototype.requestFullscreen) {
+        const originalFullscreen = Element.prototype.requestFullscreen;
+        Element.prototype.requestFullscreen = function () {
+            try {
+                return Reflect.apply(originalFullscreen, this, []);
+            } catch (error) {
+                return Promise.resolve();
+            }
+        };
+    }
+
+    // Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        const originalWriteText = navigator.clipboard.writeText;
+        navigator.clipboard.writeText = function (text) {
+            try {
+                return Reflect.apply(originalWriteText, navigator.clipboard, [text]);
+            } catch (error) {
+                return Promise.reject(error);
+            }
+        };
+    }
+
+    // Notification API
+    if (window.Notification && Notification.requestPermission) {
+        const originalRequestPermission = Notification.requestPermission;
+        Notification.requestPermission = function () {
+            try {
+                return Reflect.apply(originalRequestPermission, Notification, []);
+            } catch (error) {
+                return Promise.resolve('granted');
+            }
+        };
+    }
+
+    console.log('Permissions API fixed successfully');
+})();
+

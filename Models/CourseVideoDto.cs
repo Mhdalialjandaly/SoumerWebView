@@ -19,5 +19,7 @@ namespace Models
         public bool IsPublished { get; set; }
         public DateTime? PublishDate { get; set; }
         public DateTime CreatedAt { get; set; }
+
+        public List<CourseVideoDto> RelatedVideos { get; set; }
     }
 }

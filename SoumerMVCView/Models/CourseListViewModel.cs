@@ -29,5 +29,6 @@ namespace SoumerMVCView.Models
         // إضافة هذه الخصائص الجديدة
         public Dictionary<int, List<CourseVideoDto>> CourseVideos { get; set; }
         public Dictionary<int, int> CourseVideosCount { get; set; }
+        public int TotalVideos { get; set; }
     }
 }

@@ -3,107 +3,128 @@
     ViewData["Title"] = "الرئيسية";
 }
 
-<div class="home-page">
-    <!-- Hero Section -->
-    <div class="hero-section-enhanced">
-        <div class="hero-content">
-            <h1 class="hero-title">📚 منصة سومر التعليمية</h1>
-            <p class="hero-subtitle">تعلم مع أفضل الأساتذة</p>
-            <div class="hero-buttons">
-                <button class="hero-btn-primary" onclick="document.getElementById('gradesSection').scrollIntoView({behavior: 'smooth'})">
-                    استعرض الأساتذة
-                    <span>↓</span>
-                </button>
-            </div>
-        </div>
-        <div class="hero-decoration"></div>
-    </div>
 
-    <!-- Featured Teachers Section -->
-    <div class="featured-section-enhanced">
-        <div class="section-header">
-            <h2 class="section-title-enhanced">
-                <span class="title-icon">🌟</span>
-                أساتذة مميزون
-            </h2>
+<div class="home-page">
+    <!-- ==========================================
+         السلايدر العلوي - 50% من الشاشة
+         ========================================== -->
+    <div class="hero-slider">
+        <div class="hero-slider-header">
+            <h1>
+                <span>🏆</span>
+                أفضل الأساتذة
+            </h1>
+            <span class="badge">مميزون</span>
         </div>
-        <div class="horizontal-scroll-enhanced" id="featuredTeachers">
+
+        <div class="hero-slider-container" id="heroSliderContainer">
             @if (Model.FeaturedTeachers != null && Model.FeaturedTeachers.Any())
             {
-                @foreach (var teacher in Model.FeaturedTeachers)
+                var teacherIndex = 0;
+                @foreach (var teacher in Model.FeaturedTeachers.Take(6))
                 {
-                    <div class="teacher-card-enhanced" data-teacher-id="@teacher.Id">
-                        <div class="teacher-card-image">
+                    <div class="hero-slide @(teacherIndex == 0 ? "active" : "")" data-teacher-id="@teacher.Id">
+                        <div class="hero-slide-bg">
                             <img src="@(string.IsNullOrEmpty(teacher.Image) ? "/images/default-avatar.png" : teacher.Image)" alt="@teacher.Name">
                         </div>
-                        <div class="teacher-card-info">
-                            <h3 class="teacher-name-enhanced">@teacher.Name</h3>
-                            <div class="teacher-subject-enhanced">@teacher.Subject</div>
-                            <p class="teacher-bio-enhanced">@(string.IsNullOrEmpty(teacher.Bio) ? "لا يوجد وصف" : teacher.Bio)</p>
+                        <div class="hero-slide-content">
+                            <div class="hero-teacher-avatar">
+                                <img src="@(string.IsNullOrEmpty(teacher.Image) ? "/images/default-avatar.png" : teacher.Image)" alt="@teacher.Name">
+                            </div>
+                            <h2 class="hero-slide-title">@teacher.Name</h2>
+                            <p class="hero-slide-subtitle">@teacher.Subject</p>
+                            <span class="hero-slide-badge">
+                                <i class="fas fa-star"></i>
+                                أستاذ متميز
+                            </span>
                         </div>
                     </div>
+                    teacherIndex++;
                 }
             }
             else
             {
-                <div class="empty-state-enhanced">لا يوجد أساتذة مميزون حالياً</div>
+                <div class="hero-slide active">
+                    <div class="hero-slide-content">
+                        <div class="hero-teacher-avatar" style="background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-graduation-cap" style="font-size: 3rem; color: #fff;"></i>
+                        </div>
+                        <h2 class="hero-slide-title">منصة سومر</h2>
+                        <p class="hero-slide-subtitle">تعلم مع أفضل الأساتذة</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- مؤشرات السلايدر -->
+        <div class="hero-slider-indicators" id="heroSliderIndicators">
+            @if (Model.FeaturedTeachers != null && Model.FeaturedTeachers.Any())
+            {
+                var indicatorIndex = 0;
+                @foreach (var teacher in Model.FeaturedTeachers.Take(6))
+                {
+                    <div class="hero-slider-indicator @(indicatorIndex == 0 ? "active" : "")" data-slide="@indicatorIndex"></div>
+                    indicatorIndex++;
+                }
             }
         </div>
     </div>
 
-    <!-- Grades Teachers Section -->
-    <div id="gradesSection" class="grades-section-enhanced">
-        <div class="section-header">
-            <h2 class="section-title-enhanced">
-                <span class="title-icon">📖</span>
-                الأساتذة حسب الصفوف
-            </h2>
+    <!-- ==========================================
+         قسم المراحل الدراسية
+         ========================================== -->
+    <div class="grades-section" id="gradesSection">
+        <div class="grades-header"> 
+            <span class="grades-count">
+                @(Model.GradesTeachers?.Count ?? 0) مرحلة
+            </span>
+            <span class="grades-count">
+                @(Model.GradesTeachers?.SelectMany(e=>e.Teachers).Count() ?? 0) استاذ
+            </span>
         </div>
 
-        <div id="gradesContainer">
+        <div class="grades-grid" id="gradesGrid">
             @if (Model.GradesTeachers != null && Model.GradesTeachers.Any())
             {
-                foreach (var grade in Model.GradesTeachers)
+                @foreach (var grade in Model.GradesTeachers)
                 {
-                    <div class="grade-section-enhanced">
-                        <div class="grade-header-enhanced">
-                            <div class="grade-info">
-                                <span class="grade-number-enhanced">الصف @grade.Grade</span>
-                                <span class="grade-desc-enhanced">@grade.GradeLevel</span>
-                            </div>
-                            <span class="grade-badge">
-                                @grade.Teachers.Count أستاذ
-                            </span>
+                    <div class="grade-card grade-@grade.Grade" data-grade="@grade.Grade" onclick="showGradeTeachers(@grade.Grade)">
+                        <div class="grade-icon">
+                            <i class="fas fa-book-open"></i>
                         </div>
-                        <div class="horizontal-scroll-enhanced">
-                            @if (grade.Teachers != null && grade.Teachers.Any())
-                            {
-                                @foreach (var teacher in grade.Teachers)
-                                {
-                                    <div class="teacher-card-enhanced" data-teacher-id="@teacher.Id">
-                                        <div class="teacher-card-image">
-                                            <img src="@(string.IsNullOrEmpty(teacher.Image) ? "/images/default-avatar.png" : teacher.Image)" alt="@teacher.Name">
-                                        </div>
-                                        <div class="teacher-card-info">
-                                            <h3 class="teacher-name-enhanced">@teacher.Name</h3>
-                                            <div class="teacher-subject-enhanced">@teacher.Subject</div>
-                                            <p class="teacher-bio-enhanced">@(string.IsNullOrEmpty(teacher.Bio) ? "لا يوجد وصف" : teacher.Bio)</p>
-                                        </div>
-                                    </div>
-                                }
-                            }
-                            else
-                            {
-                                <div class="empty-state-enhanced">لا يوجد أساتذة في هذا الصف حالياً</div>
-                            }
-                        </div>
+                        <div class="grade-number">الصف @grade.Grade</div>
+                        <div class="grade-level">@grade.GradeLevel</div>
+                        <span class="grade-teachers-count">
+                            <i class="fas fa-user-graduate"></i>
+                            @grade.Teachers.Count أستاذ
+                        </span>
                     </div>
                 }
             }
             else
             {
-                <div class="empty-state-enhanced">لا توجد بيانات للصفوف حالياً</div>
+                <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #9496a5;">
+                    لا توجد مراحل دراسية حالياً
+                </div>
             }
+        </div>
+    </div>
+</div>
+
+<!-- مودال عرض أساتذة المرحلة -->
+<div class="teachers-modal-overlay" id="teachersModalOverlay">
+    <div class="teachers-modal">
+        <div class="teachers-modal-header">
+            <h3 class="teachers-modal-title" id="modalTitle">
+                <span>👨‍🏫</span>
+                أساتذة المرحلة
+            </h3>
+            <button class="teachers-modal-close" onclick="closeTeachersModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="teachers-list" id="teachersList">
+            <!-- سيتم ملؤها بواسطة JavaScript -->
         </div>
     </div>
 </div>
@@ -111,34 +132,133 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Teacher Card Handlers
-        function attachTeacherCardEvents() {
-            document.querySelectorAll('.teacher-card-enhanced').forEach(card => {
-                card.removeEventListener('click', handleTeacherClick);
-                card.addEventListener('click', handleTeacherClick);
-            });
+        // ==========================================
+        // السلايدر التلقائي للأساتذة
+        // ==========================================
+        const heroSlides = document.querySelectorAll('.hero-slide');
+        const heroIndicators = document.querySelectorAll('.hero-slider-indicator');
+        let currentHeroSlide = 0;
+        let heroSlideInterval;
+
+        function showHeroSlide(index) {
+            if (heroSlides.length === 0) return;
+
+            heroSlides.forEach(slide => slide.classList.remove('active'));
+            heroIndicators.forEach(indicator => indicator.classList.remove('active'));
+
+            heroSlides[index].classList.add('active');
+            if (heroIndicators[index]) {
+                heroIndicators[index].classList.add('active');
+            }
+            currentHeroSlide = index;
         }
 
-        async function handleTeacherClick(e) {
-            e.stopPropagation();
-            const teacherId = this.getAttribute('data-teacher-id');
+        function nextHeroSlide() {
+            if (heroSlides.length === 0) return;
+            const next = (currentHeroSlide + 1) % heroSlides.length;
+            showHeroSlide(next);
+        }
 
-            if (!teacherId) {
-                console.warn('No teacher ID found');
-                return;
+        function startHeroSlideshow() {
+            if (heroSlides.length > 1) {
+                heroSlideInterval = setInterval(nextHeroSlide, 4000);
             }
+        }
+
+        function stopHeroSlideshow() {
+            clearInterval(heroSlideInterval);
+        }
+
+        // النقر على المؤشرات
+        heroIndicators.forEach(indicator => {
+            indicator.addEventListener('click', function() {
+                const index = parseInt(this.dataset.slide);
+                showHeroSlide(index);
+                stopHeroSlideshow();
+                startHeroSlideshow();
+            });
+        });
+
+        // النقر على السلايد لعرض كورسات المعلم
+        heroSlides.forEach(slide => {
+            slide.addEventListener('click', function() {
+                const teacherId = this.dataset.teacherId;
+                if (teacherId) {
+                    showTeacherCourses(parseInt(teacherId));
+                }
+            });
+        });
+
+        // ==========================================
+        // عرض أساتذة المرحلة
+        // ==========================================
+        function showGradeTeachers(gradeNumber) {
+            const gradeData = @Html.Raw(Json.Serialize(Model.GradesTeachers));
+            const grade = gradeData.find(g => g.grade === gradeNumber);
+
+            if (grade && grade.teachers && grade.teachers.length > 0) {
+                document.getElementById('modalTitle').innerHTML = `
+                    <span>👨‍🏫</span>
+                    أساتذة الصف ${grade.grade}
+                `;
+
+                const teachersList = document.getElementById('teachersList');
+                teachersList.innerHTML = grade.teachers.map(teacher => `
+                    <div class="teacher-list-item" onclick="showTeacherCourses(${teacher.id})">
+                        <div class="teacher-list-avatar">
+                            <img src="${teacher.image || '/images/default-avatar.png'}" alt="${teacher.name}">
+                        </div>
+                        <div class="teacher-list-info">
+                            <div class="teacher-list-name">${teacher.name}</div>
+                            <div class="teacher-list-subject">${teacher.subject || 'مادة غير محددة'}</div>
+                        </div>
+                        <i class="fas fa-chevron-left teacher-list-arrow"></i>
+                    </div>
+                `).join('');
+
+                document.getElementById('teachersModalOverlay').classList.add('show');
+                stopHeroSlideshow();
+            } else {
+                Swal.fire({
+                    title: 'لا يوجد أساتذة',
+                    text: 'لا يوجد أساتذة مسجلون في هذه المرحلة حالياً',
+                    icon: 'info',
+                    confirmButtonText: 'حسناً',
+                    confirmButtonColor: '#210057'
+                });
+            }
+        }
+
+        function closeTeachersModal() {
+            document.getElementById('teachersModalOverlay').classList.remove('show');
+            startHeroSlideshow();
+        }
+
+        // إغلاق المودال عند النقر خارجه
+        document.getElementById('teachersModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTeachersModal();
+            }
+        });
+
+        // ==========================================
+        // عرض كورسات المعلم
+        // ==========================================
+        async function showTeacherCourses(teacherId) {
+            closeTeachersModal();
 
             try {
                 const response = await fetch(`/Home/GetTeacherCourses?id=${teacherId}`);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const teacher = await response.json();
-                showTeacherCourses(teacher);
+                displayTeacherCourses(teacher);
             } catch (error) {
                 console.error('Error fetching teacher courses:', error);
                 Swal.fire('خطأ', 'حدث خطأ في تحميل بيانات المعلم', 'error');
             }
         }
-        function showTeacherCourses(teacher) {
+
+        function displayTeacherCourses(teacher) {
             const courses = teacher.teacherCourses || teacher.courses || [];
             const mainContainer = document.querySelector('.main-container');
 
@@ -150,173 +270,154 @@
             const hasCourses = courses && courses.length > 0;
 
             const coursesHTML = `
-                <div class="courses-page-enhanced" style="animation: fadeInUp 0.3s ease;">
-                    <button class="back-home-btn-enhanced" onclick="location.reload()" style="
+                <div style="animation: fadeInUp 0.3s ease;">
+                    <button onclick="location.reload()" style="
                         display: inline-flex;
                         align-items: center;
-                        gap: 0.5rem;
-                        padding: 0.6rem 1.2rem;
+                        gap: 8px;
+                        padding: 10px 20px;
                         background: transparent;
-                        border: 1.5px solid #cbd5e1;
+                        border: 2px solid #e8eaf0;
                         border-radius: 30px;
                         cursor: pointer;
                         font-size: 0.85rem;
                         font-weight: 600;
-                        color: #64748b;
-                        margin-bottom: 1.5rem;
+                        color: #9496a5;
+                        margin-bottom: 20px;
                         transition: all 0.2s;
+                        font-family: 'Tajawal', sans-serif;
                     ">
-                        ← العودة للرئيسية
+                        <i class="fas fa-arrow-right"></i>
+                        العودة للرئيسية
                     </button>
 
-                    <div class="teacher-profile-card" style="
-                        background: white;
+                    <div style="
+                        background: #fff;
                         border-radius: 24px;
-                        padding: 2rem;
+                        padding: 24px;
                         text-align: center;
-                        margin-bottom: 2rem;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                        margin-bottom: 20px;
+                        box-shadow: 0 4px 12px rgba(33, 0, 87, 0.08);
                     ">
-                        <div class="teacher-profile-image" style="
-                            width: 120px;
-                            height: 120px;
-                            margin: 0 auto 1rem;
+                        <div style="
+                            width: 100px;
+                            height: 100px;
+                            margin: 0 auto 16px;
                             border-radius: 50%;
                             overflow: hidden;
-                            border: 3px solid #2563eb;
+                            border: 3px solid #210057;
                         ">
                             <img src="${teacher.image || '/images/default-avatar.png'}"
                                  alt="${escapeHtml(teacher.name)}"
                                  style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
-                        <div class="teacher-profile-info">
-                            <h1 class="teacher-profile-name" style="
-                                font-size: 1.5rem;
-                                font-weight: 700;
-                                margin-bottom: 0.5rem;
-                                color: #1e293b;
-                            ">${escapeHtml(teacher.name)}</h1>
-                            <div class="teacher-profile-subject" style="
-                                font-size: 0.85rem;
-                                color: #2563eb;
-                                font-weight: 600;
-                                margin-bottom: 0.5rem;
-                            ">${escapeHtml(teacher.subject || 'مادة غير محددة')}</div>
-                            <p class="teacher-profile-bio" style="
-                                font-size: 0.85rem;
-                                color: #64748b;
-                                line-height: 1.5;
-                            ">${escapeHtml(teacher.bio || 'لا يوجد وصف')}</p>
-                        </div>
+                        <h1 style="
+                            font-size: 1.3rem;
+                            font-weight: 800;
+                            margin-bottom: 8px;
+                            color: #333;
+                        ">${escapeHtml(teacher.name)}</h1>
+                        <div style="
+                            font-size: 0.85rem;
+                            color: #210057;
+                            font-weight: 600;
+                            margin-bottom: 8px;
+                        ">${escapeHtml(teacher.subject || 'مادة غير محددة')}</div>
+                        <p style="
+                            font-size: 0.85rem;
+                            color: #9496a5;
+                            line-height: 1.5;
+                        ">${escapeHtml(teacher.bio || 'لا يوجد وصف')}</p>
                     </div>
 
-                    <div class="courses-grid" style="margin-top: 1rem;">
-                        <h2 class="courses-grid-title" style="
-                            font-size: 1.2rem;
-                            font-weight: 700;
-                            margin-bottom: 1rem;
-                            padding-right: 1rem;
-                            border-right: 3px solid #f97316;
-                        ">📘 كورسات ${escapeHtml(teacher.name)}</h2>
-                        <div class="courses-grid-container" style="
-                            display: flex;
-                            flex-wrap: wrap;
-                            gap: 1rem;
-                            justify-content: flex-start;
-                        ">
-                            ${hasCourses ? courses.map(course => `
-                                <div class="course-card-enhanced" style="
-                                    background: white;
-                                    border-radius: 16px;
-                                    padding: 1.5rem;
-                                    text-align: center;
-                                    width: calc(25% - 0.75rem);
-                                    min-width: 240px;
-                                    flex: 1;
-                                    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-                                    transition: all 0.2s;
+                    <h2 style="
+                        font-size: 1.1rem;
+                        font-weight: 800;
+                        margin-bottom: 16px;
+                        padding-right: 12px;
+                        border-right: 3px solid #210057;
+                        color: #333;
+                    ">📘 كورسات ${escapeHtml(teacher.name)}</h2>
+
+                    <div style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 12px;
+                    ">
+                        ${hasCourses ? courses.map(course => `
+                            <div style="
+                                background: #fff;
+                                border-radius: 16px;
+                                padding: 20px;
+                                box-shadow: 0 2px 8px rgba(33, 0, 87, 0.08);
+                                transition: all 0.2s;
+                            ">
+                                <div style="font-size: 2rem; margin-bottom: 8px;">📖</div>
+                                <h3 style="
+                                    font-size: 1rem;
+                                    font-weight: 700;
+                                    margin-bottom: 8px;
+                                    color: #333;
+                                ">${escapeHtml(course.name)}</h3>
+                                <p style="
+                                    font-size: 0.8rem;
+                                    color: #9496a5;
+                                    margin-bottom: 12px;
+                                    line-height: 1.4;
+                                ">${escapeHtml(course.description ? (course.description.length > 80 ? course.description.substring(0, 80) + '...' : course.description) : 'لا يوجد وصف')}</p>
+                                <div style="
+                                    margin-bottom: 12px;
+                                    padding: 12px;
+                                    background: #f8f9fc;
+                                    border-radius: 12px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: space-between;
                                 ">
-                                    <div class="course-card-icon" style="font-size: 2rem; margin-bottom: 0.5rem;">📖</div>
-                                    <h3 class="course-card-title" style="
-                                        font-size: 1rem;
-                                        font-weight: 600;
-                                        margin-bottom: 0.5rem;
-                                        color: #1e293b;
-                                        min-height: 50px;
-                                    ">${escapeHtml(course.name)}</h3>
-                                    <p class="course-card-description" style="
-                                        font-size: 0.7rem;
-                                        color: #64748b;
-                                        margin-bottom: 1rem;
-                                        line-height: 1.4;
-                                        min-height: 60px;
-                                    ">${escapeHtml(course.description ? (course.description.length > 80 ? course.description.substring(0, 80) + '...' : course.description) : 'لا يوجد وصف')}</p>
-                                    <div class="course-card-price" style="
-                                        margin-bottom: 1rem;
-                                        padding: 0.5rem;
-                                        background: #f3f4f6;
-                                        border-radius: 12px;
-                                    ">
-                                        <span style="font-size: 0.7rem; color: #64748b;">السعر: </span>
-                                        <span style="font-size: 1.2rem; font-weight: 700; color: #2563eb;">${course.price ? course.price.toLocaleString() : '0'}</span>
-                                        <span style="font-size: 0.7rem; color: #64748b;"> نقطة</span>
-                                    </div>
-                                    <button class="enroll-btn-enhanced"
-                                            onclick="enrollInCourse('${teacher.id}', '${course.id}')"
-                                            style="
-                                                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                                                color: white;
-                                                border: none;
-                                                padding: 0.6rem 1rem;
-                                                border-radius: 10px;
-                                                cursor: pointer;
-                                                font-weight: 600;
-                                                font-size: 0.8rem;
-                                                display: inline-flex;
-                                                align-items: center;
-                                                gap: 0.5rem;
-                                                transition: all 0.2s;
-                                                width: 100%;
-                                                justify-content: center;
-                                            ">
-                                        تسجيل الآن
-                                        <span>→</span>
-                                    </button>
+                                    <span style="font-size: 0.8rem; color: #9496a5;">السعر:</span>
+                                    <span style="font-size: 1.2rem; font-weight: 800; color: #210057;">
+                                        ${course.price ? course.price.toLocaleString() : '0'} نقطة
+                                    </span>
                                 </div>
-                            `).join('') : `
-                                <div class="empty-state-enhanced" style="
-                                    text-align: center;
-                                    padding: 3rem;
-                                    background: #f8fafc;
-                                    border-radius: 16px;
+                                <button onclick="enrollInCourse('${teacher.id}', '${course.id}')"
+                                        style="
+                                    background: #210057;
+                                    color: #fff;
+                                    border: none;
+                                    padding: 12px;
+                                    border-radius: 12px;
+                                    cursor: pointer;
+                                    font-weight: 700;
+                                    font-size: 0.9rem;
                                     width: 100%;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    gap: 8px;
+                                    transition: all 0.2s;
+                                    font-family: 'Tajawal', sans-serif;
                                 ">
-                                    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📚</div>
-                                    <p style="color: #475569; margin-bottom: 0.5rem;">لا توجد كورسات متاحة حالياً</p>
-                                    <small style="color: #94a3b8;">سيتم إضافة كورسات جديدة قريباً</small>
-                                </div>
-                            `}
-                        </div>
+                                    تسجيل الآن
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                            </div>
+                        `).join('') : `
+                            <div style="
+                                text-align: center;
+                                padding: 40px;
+                                background: #f8f9fc;
+                                border-radius: 16px;
+                            ">
+                                <div style="font-size: 3rem; margin-bottom: 16px; opacity: 0.5;">📚</div>
+                                <p style="color: #333; margin-bottom: 8px;">لا توجد كورسات متاحة حالياً</p>
+                                <small style="color: #9496a5;">سيتم إضافة كورسات جديدة قريباً</small>
+                            </div>
+                        `}
                     </div>
                 </div>
             `;
 
             mainContainer.innerHTML = coursesHTML;
-
-            // إضافة تأثيرات hover للبطاقات
-            const style = document.createElement('style');
-            style.textContent = `
-                .course-card-enhanced:hover {
-                    transform: translateY(-4px);
-                    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-                }
-                .enroll-btn-enhanced:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-                }
-            `;
-            document.head.appendChild(style);
-
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -326,9 +427,12 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        // ==========================================
+        // التسجيل في كورس
+        // ==========================================
         async function enrollInCourse(teacherId, courseId) {
             try {
-                // عرض مؤشر تحميل
                 Swal.fire({
                     title: 'جاري التحقق...',
                     text: 'يتم التحقق من الرصيد وإتمام التسجيل',
@@ -338,7 +442,6 @@
                     }
                 });
 
-                // إرسال طلب التسجيل إلى الخادم
                 const response = await fetch(`/Course/Enroll?courseId=${courseId}`, {
                     method: 'POST',
                     headers: {
@@ -348,107 +451,32 @@
                 });
 
                 const data = await response.json();
-
-                // إغلاق مؤشر التحميل
                 Swal.close();
 
                 if (data.success) {
-                    // نجاح التسجيل - عرض رسالة مع تفاصيل الخصم
                     Swal.fire({
                         title: '🎉 تم التسجيل بنجاح!',
-                        html: `
-                            <div style="text-align: center;">
-                                <div style="font-size: 3rem; margin-bottom: 1rem;">✨</div>
-                                <p style="font-size: 1rem; margin-bottom: 0.5rem; color: #10b981;">${data.message}</p>
-                                ${data.coursePrice ? `
-                                    <div style="background: #f3f4f6; padding: 0.75rem; border-radius: 12px; margin: 1rem 0;">
-                                        <p style="margin: 0; font-size: 0.85rem;">تم خصم <strong style="color: #2563eb;">${data.coursePrice.toLocaleString()} نقطة</strong> من رصيدك</p>
-                                    </div>
-                                ` : ''}
-                                <p style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;">🎓 يمكنك الآن البدء في التعلم</p>
-                            </div>
-                        `,
+                        text: data.message,
                         icon: 'success',
                         confirmButtonText: 'عرض كورساتي',
-                        confirmButtonColor: '#10b981',
+                        confirmButtonColor: '#210057',
                         showCancelButton: true,
                         cancelButtonText: 'البقاء هنا',
-                        cancelButtonColor: '#64748b'
+                        cancelButtonColor: '#9496a5'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            // إذا اختار المستخدم عرض كورساتي
                             window.location.href = '/Course/MyCourses';
                         } else {
-                            // تحديث الصفحة لعرض الرصيد الجديد
                             location.reload();
                         }
                     });
                 } else {
-                    // فشل التسجيل - تحليل نوع الخطأ من الرسالة
-                    let errorIcon = 'error';
-                    let errorTitle = '❌ خطأ في التسجيل';
-                    let errorMessage = data.message;
-                    let showBalanceOption = false;
-
-                    // التحقق من نوع الخطأ بناءً على الرسالة
-                    if (data.message && (
-                        data.message.includes('رصيد') ||
-                        data.message.includes('نقطة') ||
-                        data.message.includes('كافي') ||
-                        data.message.includes('balance') ||
-                        data.message.toLowerCase().includes('insufficient')
-                    )) {
-                        errorIcon = 'warning';
-                        errorTitle = '⚠️ رصيد غير كافٍ';
-                        errorMessage = `
-                            <div style="text-align: center;">
-                                <div style="font-size: 3rem; margin-bottom: 1rem;">💰</div>
-                                <p style="font-size: 1rem; margin-bottom: 0.5rem; color: #dc2626;">${data.message}</p>
-                                <div style="background: #fef3c7; padding: 0.75rem; border-radius: 12px; margin: 1rem 0;">
-                                    <p style="margin: 0; font-size: 0.85rem; color: #92400e;">💡 يمكنك شحن الرصيد من خلال صفحة الرصيد</p>
-                                </div>
-                            </div>
-                        `;
-                        showBalanceOption = true;
-                    } else if (data.message && data.message.includes('مسجل')) {
-                        errorIcon = 'info';
-                        errorTitle = 'ℹ️ مسجل مسبقاً';
-                        errorMessage = `
-                            <div style="text-align: center;">
-                                <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
-                                <p style="font-size: 1rem; margin-bottom: 0.5rem;">${data.message}</p>
-                                <p style="font-size: 0.85rem; color: #64748b;">يمكنك عرض كورساتك المسجل فيها من خلال صفحة كورساتي</p>
-                            </div>
-                        `;
-                    } else if (data.message && data.message.includes('الدخول') || data.message.includes('تسجيل الدخول')) {
-                        errorIcon = 'warning';
-                        errorTitle = '🔐 يرجى تسجيل الدخول';
-                        errorMessage = `
-                            <div style="text-align: center;">
-                                <div style="font-size: 3rem; margin-bottom: 1rem;">🔐</div>
-                                <p style="font-size: 1rem; margin-bottom: 0.5rem;">${data.message}</p>
-                                <p style="font-size: 0.85rem; color: #64748b;">يرجى تسجيل الدخول أولاً للتسجيل في الكورسات</p>
-                            </div>
-                        `;
-                    }
-
                     Swal.fire({
-                        title: errorTitle,
-                        html: errorMessage,
-                        icon: errorIcon,
-                        confirmButtonText: showBalanceOption ? 'شحن الرصيد' : 'حسناً',
-                        confirmButtonColor: showBalanceOption ? '#10b981' : '#ef4444',
-                        showCancelButton: showBalanceOption,
-                        cancelButtonText: 'إلغاء',
-                        cancelButtonColor: '#64748b'
-                    }).then((result) => {
-                        if (result.isConfirmed && showBalanceOption) {
-                            // توجيه المستخدم لصفحة شحن الرصيد
-                            window.location.href = '/Balance/Index';
-                        } else if (result.isConfirmed && errorIcon === 'info') {
-                            // توجيه المستخدم لصفحة كورساتي
-                            window.location.href = '/Course/MyCourses';
-                        }
+                        title: 'خطأ',
+                        text: data.message,
+                        icon: 'error',
+                        confirmButtonText: 'حسناً',
+                        confirmButtonColor: '#210057'
                     });
                 }
             } catch (error) {
@@ -456,23 +484,28 @@
                 Swal.close();
                 Swal.fire({
                     title: 'خطأ في الاتصال',
-                    html: `
-                        <div style="text-align: center;">
-                            <div style="font-size: 3rem; margin-bottom: 1rem;">🌐</div>
-                            <p style="font-size: 1rem; margin-bottom: 0.5rem;">حدث خطأ في الاتصال بالخادم</p>
-                            <p style="font-size: 0.85rem; color: #64748b;">يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى</p>
-                        </div>
-                    `,
+                    text: 'حدث خطأ في الاتصال بالخادم',
                     icon: 'error',
                     confirmButtonText: 'حسناً',
-                    confirmButtonColor: '#ef4444'
+                    confirmButtonColor: '#210057'
                 });
             }
         }
 
-        // Initialize
+        // ==========================================
+        // تهيئة الصفحة
+        // ==========================================
         document.addEventListener('DOMContentLoaded', function() {
-            attachTeacherCardEvents();
+            startHeroSlideshow();
+
+            // إيقاف السلايدر عند مغادرة الصفحة
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    stopHeroSlideshow();
+                } else {
+                    startHeroSlideshow();
+                }
+            });
         });
     </script>
 }

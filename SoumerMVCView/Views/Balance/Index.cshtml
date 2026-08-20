@@ -1,17 +1,14 @@
 ﻿@model BalanceViewModel
 @{
     ViewData["Title"] = "نقاطي";
-    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="mobile-points-container" dir="rtl">
     <!-- بطاقة الرصيد -->
     <div class="mobile-balance-card">
         <div class="balance-icon">💎</div>
-        <h2 style="margin: 0; font-size: 24px; position: relative; z-index: 1;">رصيد النقاط</h2>
-        <div class="balance-amount">
-            @Model.CurrentBalance.ToString("N0")
-        </div>
+        <h2>رصيد النقاط</h2>
+        <div class="balance-amount">@Model.CurrentBalance.ToString("N0")</div>
         <div class="balance-label">نقطة</div>
         <div class="balance-update-time">
             آخر تحديث: @Model.LastUpdateDate.ToString("yyyy/MM/dd HH:mm")
@@ -29,37 +26,36 @@
             <span class="quick-action-text">المعاملات</span>
         </button>
     </div>
+
     <!-- قسم استرداد الكود -->
-    <div class="redeem-section" style="padding: 15px;">
-        <div class="redeem-card" style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-            <div class="redeem-title" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                <span style="font-size: 24px;">🎁</span>
-                <h2 style="margin: 0; font-size: 18px; font-weight: 700;">استرداد كود نقاط</h2>
+    <div class="redeem-section">
+        <div class="redeem-card">
+            <div class="redeem-title">
+                <span>🎁</span>
+                <h2>استرداد كود نقاط</h2>
             </div>
-            <form id="redeemCodeForm">
-                <div style="display: flex; gap: 10px;">
-                    <input type="text"
-                           id="redeemCodeInput"
-                           placeholder="XXXX-XXXX-XXXX"
-                           style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 16px; text-align: center; text-transform: uppercase;"
-                           maxlength="14"
-                           required>
-                    <button type="submit"
-                            style="padding: 12px 20px; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;">
-                        استرداد
-                    </button>
-                </div>
+            <form id="redeemCodeForm" class="redeem-form">
+                <input type="text"
+                       id="redeemCodeInput"
+                       class="redeem-input"
+                       placeholder="XXXX-XXXX-XXXX"
+                       maxlength="14"
+                       required>
+                <button type="submit" class="redeem-btn">استرداد</button>
             </form>
         </div>
     </div>
+
     <!-- نموذج التحويل -->
     <div class="transfer-section" id="transferSection">
         <div class="transfer-card">
-            <div class="transfer-title">تحويل النقاط</div>
+            <div class="transfer-title">
+                <span>🔄</span>
+                تحويل النقاط
+            </div>
             <form id="transferForm">
                 <div class="form-group-mobile">
                     <label class="form-label-mobile">المستخدم المستلم</label>
-
                     <div class="user-search-wrapper">
                         <div class="user-search-input-wrapper">
                             <span class="search-icon">🔍</span>
@@ -71,13 +67,8 @@
                                    required>
                             <button type="button" class="clear-search-btn" id="clearSearchBtn">×</button>
                         </div>
-
                         <input type="hidden" id="toUserId" />
-
-                        <!-- نتائج البحث -->
                         <div id="userSearchResults" class="user-search-results" style="display: none;"></div>
-
-                        <!-- المستخدم المحدد -->
                         <div id="selectedUserBadge" class="selected-user-badge" style="display: none;">
                             <div class="user-avatar" id="selectedUserAvatar">م</div>
                             <div class="user-info">
@@ -98,7 +89,7 @@
                            max="@Model.CurrentBalance"
                            placeholder="0"
                            required>
-                    <small style="color: #64748b; display: block; margin-top: 5px;">
+                    <small style="color: #9496a5; display: block; margin-top: 5px; font-size: 0.75rem;">
                         الرصيد المتاح: @Model.CurrentBalance.ToString("N0") نقطة
                     </small>
                 </div>
@@ -121,12 +112,10 @@
     <div class="transactions-section" id="transactionsSection">
         <div class="transactions-card">
             <div class="transactions-title">
-                <span>آخر المعاملات</span>
+                <span>📋 آخر المعاملات</span>
                 @if (Model.RecentTransactions != null && Model.RecentTransactions.Any())
                 {
-                    <a href="/Balance/Transactions" style="font-size: 13px; color: #667eea; text-decoration: none;">
-                        عرض الكل
-                    </a>
+                    <a href="/Balance/Transactions">عرض الكل</a>
                 }
             </div>
 
@@ -173,7 +162,6 @@
         </div>
     </div>
 </div>
-
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>

@@ -1,0 +1,103 @@
+﻿@model CourseVideoDto
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<div class="video-watch-page">
+    <!-- رأس الصفحة -->
+    <div class="video-watch-header">
+        <a href="/MyCourses/Index" class="back-btn">
+            <i class="fa-solid fa-arrow-right"></i>
+        </a>
+        <div class="video-watch-header-info">
+            <div class="video-watch-course-name">@Model.CourseName</div>
+            <h1 class="video-watch-title">@Model.Title</h1>
+        </div>
+    </div>
+
+    <div class="video-watch-content">
+        <!-- المشغل والمعلومات -->
+        <div class="video-watch-main">
+            <!-- مشغل الفيديو -->
+            <div class="video-player-wrapper">
+                @if (!string.IsNullOrEmpty(Model.EmbedUrl))
+                {
+                    <iframe src="@Model.EmbedUrl"
+                            title="@Model.Title"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
+                    </iframe>
+                }
+                else
+                {
+                    <div style="color: #fff; text-align: center; padding: 40px;">
+                        <i class="fa-solid fa-video-slash" style="font-size: 3rem; margin-bottom: 16px;"></i>
+                        <p>رابط الفيديو غير متوفر</p>
+                    </div>
+                }
+            </div>
+
+            <!-- معلومات الفيديو -->
+            <div class="video-details-card">
+                <h2 class="video-details-title">@Model.Title</h2>
+                <div class="video-details-meta">
+                    <span class="video-meta-item">
+                        <i class="fa-regular fa-clock"></i>
+                        @(Model.Duration > 0 ? $"{Model.Duration} دقيقة" : "المدة غير محددة")
+                    </span>
+                    <span class="video-meta-item">
+                        <i class="fa-regular fa-calendar"></i>
+                        @Model.CreatedAt.ToString("yyyy/MM/dd")
+                    </span>
+                    @if (Model.IsFree)
+                    {
+                        <span class="video-meta-item" style="color: #10b981;">
+                            <i class="fa-solid fa-gift"></i>
+                            فيديو مجاني
+                        </span>
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <p class="video-details-description">@Model.Description</p>
+                }
+            </div>
+        </div>
+
+        <!-- قائمة الفيديوهات -->
+        @if (Model.RelatedVideos != null && Model.RelatedVideos.Any())
+        {
+            <div class="video-playlist">
+                <div class="video-playlist-header">
+                    <i class="fa-solid fa-list"></i>
+                    فيديوهات الكورس
+                </div>
+                @foreach (var video in Model.RelatedVideos)
+                {
+                    <a href="@Url.Action("WatchVideo", "MyCourses", new { videoId = video.Id })"
+                       class="video-playlist-item @(video.Id == Model.Id ? "active" : "")"
+                       style="text-decoration: none; display: flex;">
+                        <div class="video-playlist-thumbnail">
+                            <i class="fa-solid fa-play"></i>
+                        </div>
+                        <div class="video-playlist-info">
+                            <div class="video-playlist-title">@video.Title</div>
+                            <div class="video-playlist-duration">
+                                @(video.Duration > 0 ? $"{video.Duration} دقيقة" : "")
+                            </div>
+                        </div>
+                        @if (video.Id == Model.Id)
+                        {
+                            <div class="video-playing-indicator">
+                                <i class="fa-solid fa-volume-high"></i>
+                            </div>
+                        }
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</div>

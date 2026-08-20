@@ -1,153 +1,151 @@
 ﻿@model CourseDetailViewModel
 
-<div class="container-fluid mt-4" dir="rtl">
-    <div class="row">
-        <div class="col-lg-8">
-            <!-- بطاقة تفاصيل الكورس الرئيسية -->
-            <div class="course-detail-card-enhanced">
-                <div class="course-header">
-                    <div class="course-badge">📚 كورس تعليمي</div>
-                    <h1 class="course-title">@Model.Course.Name</h1>
-                    <p class="course-description">@Model.Course.Description</p>
-                </div>
+<div class="course-detail-page">
+    <div>
+        <!-- بطاقة تفاصيل الكورس الرئيسية -->
+        <div class="course-detail-card-enhanced">
+            <div class="course-header">
+                <div class="course-badge">📚 كورس تعليمي</div>
+                <h1 class="course-title">@Model.Course.Name</h1>
+                <p class="course-description">@Model.Course.Description</p>
+            </div>
 
-                <div class="course-meta-grid">
-                    <div class="meta-item">
-                        <div class="meta-icon">💰</div>
-                        <div class="meta-content">
-                            <div class="meta-label">سعر الكورس</div>
-                            <div class="meta-value">@Model.Course.Price.ToString("N0") <span class="meta-unit">نقطة</span></div>
-                        </div>
-                    </div>
-                    <div class="meta-item">
-                        <div class="meta-icon">📅</div>
-                        <div class="meta-content">
-                            <div class="meta-label">تاريخ الإضافة</div>
-                            <div class="meta-value">@Model.Course.CreatedAt.ToString("yyyy/MM/dd")</div>
-                        </div>
+            <div class="course-meta-grid">
+                <div class="meta-item">
+                    <div class="meta-icon">💰</div>
+                    <div class="meta-content">
+                        <div class="meta-label">سعر الكورس</div>
+                        <div class="meta-value">@Model.Course.Price.ToString("N0") <span class="meta-unit">نقطة</span></div>
                     </div>
                 </div>
-
-                <div class="course-action-section">
-                    @if (Model.IsEnrolled)
-                    {
-                        <div class="enrolled-status-card">
-                            <div class="status-icon">✅</div>
-                            <div class="status-content">
-                                <div class="status-title">أنت مسجل في هذا الكورس</div>
-                                <div class="status-message">يمكنك البدء في التعلم الآن</div>
-                            </div>
-                            <button class="btn-unenroll" onclick="unenrollFromCourse()">
-                                إلغاء التسجيل
-                                <span>←</span>
-                            </button>
-                        </div>
-                    }
-                    else if (Model.CanEnroll)
-                    {
-                        <div class="enroll-action-card">
-                            <div class="enroll-info">
-                                <div class="enroll-price-badge">
-                                    <span class="price-icon">💎</span>
-                                    <span class="price-amount">@Model.Course.Price.ToString("N0")</span>
-                                    <span class="price-unit">نقطة</span>
-                                </div>
-                                <div class="enroll-message">
-                                    قم بالتسجيل الآن وابدأ رحلتك التعليمية
-                                </div>
-                            </div>
-                            <button class="btn-enroll-primary" onclick="enrollInCourse()">
-                                تسجيل الآن
-                                <span>→</span>
-                            </button>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="warning-card">
-                            <div class="warning-icon">⚠️</div>
-                            <div class="warning-content">
-                                <div class="warning-title">لا يمكنك التسجيل في هذا الكورس</div>
-                                <div class="warning-message">@Model.EnrollmentMessage</div>
-                            </div>
-                            @if (Model.UserBalance < Model.Course.Price)
-                            {
-                                <a href="/Balance/Index" class="warning-action-btn">
-                                    شحن الرصيد
-                                    <span>→</span>
-                                </a>
-                            }
-                        </div>
-                    }
+                <div class="meta-item">
+                    <div class="meta-icon">📅</div>
+                    <div class="meta-content">
+                        <div class="meta-label">تاريخ الإضافة</div>
+                        <div class="meta-value">@Model.Course.CreatedAt.ToString("yyyy/MM/dd")</div>
+                    </div>
                 </div>
             </div>
 
-            <!-- معلومات إضافية عن الكورس -->
-            <div class="course-info-card">
-                <div class="info-card-header">
-                    <div class="header-icon">ℹ️</div>
-                    <h3 class="header-title">معلومات الكورس</h3>
-                </div>
-                <div class="info-card-content">
-                    <div class="info-row">
-                        <div class="info-label">المستوى:</div>
-                        <div class="info-value">مبتدئ - متقدم</div>
+            <div class="course-action-section">
+                @if (Model.IsEnrolled)
+                {
+                    <div class="enrolled-status-card">
+                        <div class="status-icon">✅</div>
+                        <div class="status-content">
+                            <div class="status-title">أنت مسجل في هذا الكورس</div>
+                            <div class="status-message">يمكنك البدء في التعلم الآن</div>
+                        </div>
+                        <button class="btn-unenroll" onclick="unenrollFromCourse()">
+                            إلغاء التسجيل
+                            <span>←</span>
+                        </button>
                     </div>
-                    <div class="info-row">
-                        <div class="info-label">المدة:</div>
-                        <div class="info-value">يحدد لاحقاً</div>
+                }
+                else if (Model.CanEnroll)
+                {
+                    <div class="enroll-action-card">
+                        <div class="enroll-info">
+                            <div class="enroll-price-badge">
+                                <span class="price-icon">💎</span>
+                                <span class="price-amount">@Model.Course.Price.ToString("N0")</span>
+                                <span class="price-unit">نقطة</span>
+                            </div>
+                            <div class="enroll-message">
+                                قم بالتسجيل الآن وابدأ رحلتك التعليمية
+                            </div>
+                        </div>
+                        <button class="btn-enroll-primary" onclick="enrollInCourse()">
+                            تسجيل الآن
+                            <span>→</span>
+                        </button>
                     </div>
-                    <div class="info-row">
-                        <div class="info-label">الشهادة:</div>
-                        <div class="info-value">شهادة إتمام عند الانتهاء</div>
+                }
+                else
+                {
+                    <div class="warning-card">
+                        <div class="warning-icon">⚠️</div>
+                        <div class="warning-content">
+                            <div class="warning-title">لا يمكنك التسجيل في هذا الكورس</div>
+                            <div class="warning-message">@Model.EnrollmentMessage</div>
+                        </div>
+                        @if (Model.UserBalance < Model.Course.Price)
+                        {
+                            <a href="/Balance/Index" class="warning-action-btn">
+                                شحن الرصيد
+                                <span>→</span>
+                            </a>
+                        }
                     </div>
-                </div>
+                }
             </div>
         </div>
 
-        <div class="col-lg-4">
-            <!-- بطاقة الرصيد -->
-            <div class="balance-summary-card">
-                <div class="balance-summary-header">
-                    <div class="header-icon">💎</div>
-                    <h3 class="header-title">رصيدك الحالي</h3>
+        <!-- معلومات إضافية عن الكورس -->
+        <div class="course-info-card">
+            <div class="info-card-header">
+                <div class="header-icon">ℹ️</div>
+                <h3 class="header-title">معلومات الكورس</h3>
+            </div>
+            <div class="info-card-content">
+                <div class="info-row">
+                    <div class="info-label">المستوى:</div>
+                    <div class="info-value">مبتدئ - متقدم</div>
                 </div>
-                <div class="balance-summary-content">
-                    <div class="balance-amount-large">
-                        @Model.UserBalance.ToString("N0")
-                        <span class="balance-unit">نقطة</span>
-                    </div>
-                    <div class="balance-progress">
-                        <div class="progress-bar-wrapper">
-                            <div class="progress-fill" style="width: @(Math.Min(100, (Model.UserBalance / (Model.Course.Price * 2) * 100)))%"></div>
-                        </div>
-                        <div class="progress-labels">
-                            <span>الرصيد الحالي</span>
-                            <span>@(Model.Course.Price) نقطة لتسجيل الكورس</span>
-                        </div>
-                    </div>
+                <div class="info-row">
+                    <div class="info-label">المدة:</div>
+                    <div class="info-value">يحدد لاحقاً</div>
                 </div>
-                <div class="balance-summary-footer">
-                    <a href="/Balance/Index" class="balance-action-link">
-                        إدارة الرصيد
-                        <span>→</span>
-                    </a>
+                <div class="info-row">
+                    <div class="info-label">الشهادة:</div>
+                    <div class="info-value">شهادة إتمام عند الانتهاء</div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- كورسات مقترحة -->
-            <div class="suggested-courses-card">
-                <div class="suggested-header">
-                    <div class="header-icon">🌟</div>
-                    <h3 class="header-title">كورسات قد تعجبك</h3>
+    <div>
+        <!-- بطاقة الرصيد -->
+        <div class="balance-summary-card">
+            <div class="balance-summary-header">
+                <div class="header-icon">💎</div>
+                <h3 class="header-title">رصيدك الحالي</h3>
+            </div>
+            <div class="balance-summary-content">
+                <div class="balance-amount-large">
+                    @Model.UserBalance.ToString("N0")
+                    <span class="balance-unit">نقطة</span>
                 </div>
-                <div class="suggested-content">
-                    <div class="suggested-item">
-                        <div class="suggested-icon">📖</div>
-                        <div class="suggested-info">
-                            <div class="suggested-title">كورسات مقترحة قريباً</div>
-                            <div class="suggested-desc">سيتم إضافة كورسات جديدة قريباً</div>
-                        </div>
+                <div class="balance-progress">
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-fill" style="width: @(Math.Min(100, (Model.UserBalance / (Model.Course.Price * 2) * 100)))%"></div>
+                    </div>
+                    <div class="progress-labels">
+                        <span>الرصيد الحالي</span>
+                        <span>@(Model.Course.Price) نقطة لتسجيل الكورس</span>
+                    </div>
+                </div>
+            </div>
+            <div class="balance-summary-footer">
+                <a href="/Balance/Index" class="balance-action-link">
+                    إدارة الرصيد
+                    <span>→</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- كورسات مقترحة -->
+        <div class="suggested-courses-card">
+            <div class="suggested-header">
+                <div class="header-icon">🌟</div>
+                <h3 class="header-title">كورسات قد تعجبك</h3>
+            </div>
+            <div class="suggested-content">
+                <div class="suggested-item">
+                    <div class="suggested-icon">📖</div>
+                    <div class="suggested-info">
+                        <div class="suggested-title">كورسات مقترحة قريباً</div>
+                        <div class="suggested-desc">سيتم إضافة كورسات جديدة قريباً</div>
                     </div>
                 </div>
             </div>

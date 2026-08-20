@@ -1,5 +1,341 @@
 ﻿@model UserHeaderViewModel
 
+<style>
+    /* ==========================================
+           تنسيقات مكون UserHeader
+           ========================================== */
+    .user-info {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .icon-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        color: #fff;
+        padding: 6px 12px;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Tajawal', 'Cairo', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 600;
+        -webkit-tap-highlight-color: transparent;
+        white-space: nowrap;
+        min-width: 44px;
+        height: 44px;
+        justify-content: center;
+    }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .icon-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.95);
+        }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        flex-shrink: 0;
+    }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .avatar-initial {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #fff;
+        text-transform: uppercase;
+    }
+
+    .user-name {
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.8rem;
+    }
+
+    .dropdown-arrow {
+        font-size: 0.6rem;
+        transition: transform 0.3s ease;
+        opacity: 0.8;
+    }
+
+        .dropdown-arrow.rotate {
+            transform: rotate(180deg);
+        }
+
+    /* ==========================================
+           القائمة المنسدلة
+           ========================================== */
+    .dropdown-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(33, 0, 87, 0.15);
+        min-width: 240px;
+        padding: 8px;
+        display: none;
+        z-index: 1100;
+        animation: dropdownIn 0.3s ease;
+        border: 1px solid #e8eaf0;
+    }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+    @@keyframes dropdownIn {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    .dropdown-user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: #f8f9fc;
+        border-radius: 12px;
+        margin-bottom: 8px;
+    }
+
+    .dropdown-user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #210057;
+        border: 2px solid #210057;
+        flex-shrink: 0;
+    }
+
+        .dropdown-user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .dropdown-user-avatar .avatar-initial {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+    .dropdown-user-details {
+        flex: 1;
+        min-width: 0;
+    }
+
+        .dropdown-user-details strong {
+            display: block;
+            font-size: 0.9rem;
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .dropdown-user-details small {
+            display: block;
+            font-size: 0.7rem;
+            color: #9496a5;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+    .dropdown-divider {
+        height: 1px;
+        background: #e8eaf0;
+        margin: 8px 0;
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        color: #333;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: right;
+        font-family: 'Tajawal', 'Cairo', sans-serif;
+    }
+
+        .dropdown-item:hover {
+            background: #f0ebf8;
+            color: #210057;
+        }
+
+        .dropdown-item:active {
+            transform: scale(0.98);
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+            color: #9496a5;
+            font-size: 0.9rem;
+            transition: color 0.2s ease;
+        }
+
+        .dropdown-item:hover i {
+            color: #210057;
+        }
+
+    .logout-item {
+        color: #dc2626;
+    }
+
+        .logout-item:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .logout-item i {
+            color: #dc2626;
+        }
+
+        .logout-item:hover i {
+            color: #dc2626;
+        }
+
+    /* ==========================================
+           زر تسجيل الدخول
+           ========================================== */
+    .login-btn {
+        background: #fff;
+        color: #210057;
+        border: 2px solid #fff;
+        padding: 8px 16px;
+        border-radius: 30px;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        font-family: 'Tajawal', 'Cairo', sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        height: 40px;
+        white-space: nowrap;
+    }
+
+        .login-btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .login-btn:active {
+            transform: scale(0.95);
+        }
+
+    /* ==========================================
+           استجابة للشاشات الصغيرة
+           ========================================== */
+    @@media (max-width: 360px) {
+        .user-name
+
+    {
+        display: none;
+    }
+
+    .icon-btn {
+        padding: 6px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+    }
+
+    .user-avatar {
+        width: 28px;
+        height: 28px;
+    }
+
+    .dropdown-arrow {
+        display: none;
+    }
+
+    .dropdown-menu {
+        min-width: 200px;
+        left: auto;
+        right: 0;
+    }
+
+    }
+
+    @@media (min-width: 361px) and (max-width: 480px) {
+        .user-name
+
+    {
+        max-width: 60px;
+        font-size: 0.75rem;
+    }
+
+    .icon-btn {
+        padding: 5px 10px;
+        height: 40px;
+    }
+
+    .user-avatar {
+        width: 28px;
+        height: 28px;
+    }
+
+    .dropdown-menu {
+        min-width: 220px;
+    }
+
+    }
+</style>
+
 @if (!string.IsNullOrEmpty(Model.UserId))
 {
     <div class="user-info">
@@ -16,7 +352,7 @@
                 }
             </span>
             <span class="user-name">@Model.DisplayName</span>
-            <span class="dropdown-arrow">
+            <span class="dropdown-arrow" id="dropdownArrow">
                 <i class="fa-solid fa-chevron-down"></i>
             </span>
         </button>
@@ -44,31 +380,72 @@
             </div>
             <div class="dropdown-divider"></div>
             <a asp-controller="Account" asp-action="Profile" class="dropdown-item">
-                <span>
-                    <i class="fa-regular fa-id-card">
-                        ملفي الشخصي
-                    </i>
-                </span>
+                <i class="fa-regular fa-id-card"></i>
+                <span>ملفي الشخصي</span>
             </a>
             <a asp-controller="Account" asp-action="Settings" class="dropdown-item">
-                <span>
-                    <i class="fa-regular fa-gear">
-                        الإعدادات
-                    </i>
-                </span>
+                <i class="fa-regular fa-gear"></i>
+                <span>الإعدادات</span>
             </a>
             <div class="dropdown-divider"></div>
             <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="dropdown-item logout-item">
-                    <span><i class="fa-solid fa-right-from-bracket"></i></span>
-                    تسجيل خروج
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>تسجيل خروج</span>
                 </button>
             </form>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userMenuBtn = document.getElementById('userMenuBtn');
+            const userDropdown = document.getElementById('userDropdown');
+            const dropdownArrow = document.getElementById('dropdownArrow');
+            let isDropdownOpen = false;
+
+            // فتح/إغلاق القائمة المنسدلة
+            userMenuBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                isDropdownOpen = !isDropdownOpen;
+                userDropdown.classList.toggle('show', isDropdownOpen);
+                dropdownArrow.classList.toggle('rotate', isDropdownOpen);
+            });
+
+            // إغلاق القائمة عند النقر خارجها
+            document.addEventListener('click', function(e) {
+                if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                    isDropdownOpen = false;
+                    userDropdown.classList.remove('show');
+                    dropdownArrow.classList.remove('rotate');
+                }
+            });
+
+            // إغلاق القائمة عند الضغط على Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && isDropdownOpen) {
+                    isDropdownOpen = false;
+                    userDropdown.classList.remove('show');
+                    dropdownArrow.classList.remove('rotate');
+                }
+            });
+
+            // إغلاق القائمة عند تغيير حجم الشاشة
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768 && isDropdownOpen) {
+                    isDropdownOpen = false;
+                    userDropdown.classList.remove('show');
+                    dropdownArrow.classList.remove('rotate');
+                }
+            });
+        });
+    </script>
 }
 else
 {
-    <button class="icon-btn login-btn" id="loginBtn" type="button">👤 دخول</button>
+    <button class="icon-btn login-btn" id="loginBtn" type="button" onclick="window.location.href='/Account/Login'">
+        <i class="fa-solid fa-right-to-bracket"></i>
+        <span>دخول</span>
+    </button>
 }
