@@ -36,7 +36,8 @@
                         <th>#</th>
                         <th>الاسم</th>
                         <th>الوصف</th>
-                        <th>السعر (نقطة)</th>
+                        <th>السعر</th>
+                        <th>العرض</th>
                         <th>تاريخ الإضافة</th>
                         <th>الإجراءات</th>
                     </tr>
@@ -46,22 +47,64 @@
                     {
                         <tr>
                             <td>@course.Id</td>
-                            <td>
-                                <strong>@course.Name</strong>
-                            </td>
+                            <td><strong>@course.Name</strong></td>
                             <td>
                                 @(course.Description?.Length > 60 ? course.Description.Substring(0, 60) + "..." : course.Description)
                             </td>
                             <td>
-                                <span class="badge badge-status" style="background: #d1fae5; color: #059669;">
-                                    @course.Price.ToString("N0") نقطة
-                                </span>
+                                @if (course.HasActiveDiscount)
+                                {
+                                    <div style="display:flex; flex-direction:column; gap:4px;">
+                                        <span style="text-decoration: line-through; color:#9496a5; font-size:0.85rem;">
+                                            @course.Price.ToString("N0") نقطة
+                                        </span>
+                                        <span class="badge" style="background:#d1fae5; color:#059669; font-weight:700;">
+                                            @course.EffectivePrice.ToString("N0") نقطة
+                                        </span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="badge" style="background:#d1fae5; color:#059669;">
+                                        @course.Price.ToString("N0") نقطة
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                @if (course.HasActiveDiscount)
+                                {
+                                    <div class="d-flex flex-column gap-1">
+                                        <span class="badge" style="background:#fef3c7; color:#b45309;">
+                                            🔥 خصم @course.DiscountPercent%
+                                        </span>
+                                        <small style="color:#9496a5;">
+                                            ينتهي @course.DiscountEndDate?.ToString("yyyy/MM/dd HH:mm")
+                                        </small>
+                                    </div>
+                                }
+                                else if (course.DiscountEndDate.HasValue && course.DiscountEndDate.Value <= DateTime.Now)
+                                {
+                                    <small style="color:#dc2626;">انتهى العرض</small>
+                                }
+                                else
+                                {
+                                    <small style="color:#9496a5;">لا يوجد عرض</small>
+                                }
                             </td>
                             <td>@course.CreatedAt.ToString("yyyy/MM/dd")</td>
                             <td>
-                                <button class="btn-action btn-view" onclick="viewCourse(@course.Id)" title="عرض التفاصيل">
+                                <button class="btn-action btn-view" onclick="viewCourse(@course.Id)" title="عرض">
                                     <i class="fas fa-eye"></i>
                                 </button>
+
+                                <!-- ✅ زر إدارة العرض -->
+                                <button class="btn-action"
+                                        onclick="openDiscountModal(@course.Id)"
+                                        title="@(course.HasActiveDiscount ? "تعديل العرض" : "إضافة عرض")"
+                                        style="background:#fef3c7; color:#b45309;">
+                                    <i class="fas fa-fire"></i>
+                                </button>
+
                                 <a href="/Admin/EditCourse/@course.Id" class="btn-action btn-edit" title="تعديل">
                                     <i class="fas fa-edit"></i>
                                 </a>
@@ -81,7 +124,9 @@
     </div>
 </div>
 
-<!-- Course Details Modal -->
+<!-- ==========================================
+     مودال تفاصيل الكورس
+     ========================================== -->
 <div class="modal fade" id="courseDetailsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -89,8 +134,140 @@
                 <h5 class="modal-title">تفاصيل الكورس</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="courseDetailsContent">
-                <!-- Content loaded via AJAX -->
+            <div class="modal-body" id="courseDetailsContent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     مودال إدارة العرض/الخصم
+     ========================================== -->
+<div class="modal fade" id="discountModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; overflow: hidden;">
+
+            <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none;">
+                <h5 class="modal-title" id="discountModalTitle">
+                    <i class="fas fa-fire"></i>
+                    إدارة عرض الكورس
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body" style="padding: 24px;">
+
+                <!-- تحميل -->
+                <div id="discountLoading" class="text-center py-4" style="display: none;">
+                    <div class="spinner-border text-warning" role="status"></div>
+                    <p class="mt-2" style="color: #9496a5; font-size: 0.85rem;">جارٍ تحميل بيانات العرض...</p>
+                </div>
+
+                <!-- النموذج -->
+                <div id="discountForm" style="display: none;">
+
+                    <!-- معلومات الكورس -->
+                    <div style="background: #f8f9fc; border-radius: 12px; padding: 14px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="color: #9496a5; font-size: 0.8rem;">اسم الكورس</span>
+                            <strong id="discountCourseName" style="color: #333; font-size: 0.9rem;"></strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #9496a5; font-size: 0.8rem;">السعر الأصلي</span>
+                            <strong id="discountOriginalPrice" style="color: #210057; font-size: 1rem;">0 نقطة</strong>
+                        </div>
+                    </div>
+
+                    <!-- تنبيه العرض النشط -->
+                    <div id="discountActiveAlert"
+                         style="display: none; background: #d1fae5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; color: #059669; font-size: 0.85rem; font-weight: 700;">
+                            <i class="fas fa-check-circle"></i>
+                            <span>عرض نشط حالياً</span>
+                        </div>
+                        <div style="margin-top: 6px; font-size: 0.8rem; color: #047857;">
+                            السعر الحالي: <strong id="discountCurrentEffective"></strong>
+                            • ينتهي: <strong id="discountCurrentEnd"></strong>
+                        </div>
+                    </div>
+
+                    <!-- حقل سعر العرض -->
+                    <div class="mb-3">
+                        <label for="discountPriceInput" style="font-weight: 700; font-size: 0.85rem; color: #333; margin-bottom: 6px; display: block;">
+                            سعر العرض (نقطة) <span style="color: #dc2626;">*</span>
+                        </label>
+                        <input type="number"
+                               id="discountPriceInput"
+                               class="form-control"
+                               min="1"
+                               step="1"
+                               placeholder="مثال: 1000"
+                               style="border-radius: 10px; padding: 10px 14px; border: 2px solid #e8eaf0; font-size: 0.95rem;" />
+                        <small style="color: #9496a5; font-size: 0.75rem;">
+                            يجب أن يكون أقل من السعر الأصلي
+                        </small>
+                    </div>
+
+                    <!-- معاينة الخصم -->
+                    <div id="discountPreview"
+                         style="display: none; background: #fffbeb; border: 1px dashed #fcd34d; border-radius: 10px; padding: 12px; margin-bottom: 16px; text-align: center;">
+                        <div style="font-size: 0.8rem; color: #b45309; font-weight: 700; margin-bottom: 4px;">
+                            🔥 سيتم عرض الخصم بنسبة <span id="previewPercent">0%</span>
+                        </div>
+                        <div style="font-size: 0.9rem; color: #333;">
+                            <span style="text-decoration: line-through; color: #9496a5; margin-left: 8px;"
+                                  id="previewOriginal"></span>
+                            <strong style="color: #059669; font-size: 1.1rem;" id="previewNew"></strong>
+                        </div>
+                    </div>
+
+                    <!-- حقل تاريخ الانتهاء -->
+                    <div class="mb-3">
+                        <label for="discountEndDateInput" style="font-weight: 700; font-size: 0.85rem; color: #333; margin-bottom: 6px; display: block;">
+                            تاريخ ووقت انتهاء العرض <span style="color: #dc2626;">*</span>
+                        </label>
+                        <input type="datetime-local"
+                               id="discountEndDateInput"
+                               class="form-control"
+                               style="border-radius: 10px; padding: 10px 14px; border: 2px solid #e8eaf0; font-size: 0.95rem;" />
+                        <small style="color: #9496a5; font-size: 0.75rem;">
+                            بعد هذا التاريخ يعود السعر الأصلي تلقائياً
+                        </small>
+                    </div>
+
+                    <!-- أزرار سريعة للتاريخ -->
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px;">
+                        <button type="button" class="btn btn-sm" onclick="quickEndDate(1)" style="background: #f0ebf8; color: #210057; border-radius: 20px; font-size: 0.75rem; padding: 4px 12px; border: none;">يوم</button>
+                        <button type="button" class="btn btn-sm" onclick="quickEndDate(3)" style="background: #f0ebf8; color: #210057; border-radius: 20px; font-size: 0.75rem; padding: 4px 12px; border: none;">3 أيام</button>
+                        <button type="button" class="btn btn-sm" onclick="quickEndDate(7)" style="background: #f0ebf8; color: #210057; border-radius: 20px; font-size: 0.75rem; padding: 4px 12px; border: none;">أسبوع</button>
+                        <button type="button" class="btn btn-sm" onclick="quickEndDate(30)" style="background: #f0ebf8; color: #210057; border-radius: 20px; font-size: 0.75rem; padding: 4px 12px; border: none;">شهر</button>
+                    </div>
+
+                    <!-- رسالة الخطأ -->
+                    <div id="discountError"
+                         style="display: none; background: #fee2e2; border: 1px solid #fecaca; color: #dc2626; border-radius: 10px; padding: 10px 14px; font-size: 0.8rem; margin-bottom: 14px;">
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer" style="border-top: 1px solid #e8eaf0; padding: 14px 24px;">
+                <button type="button" id="discountRemoveBtn"
+                        class="btn"
+                        style="display: none; background: #fee2e2; color: #dc2626; border: none; border-radius: 10px; font-weight: 700; padding: 8px 16px;">
+                    <i class="fas fa-trash"></i>
+                    إزالة العرض
+                </button>
+                <div style="flex: 1;"></div>
+                <button type="button" class="btn" data-bs-dismiss="modal"
+                        style="background: #f8f9fc; color: #333; border: none; border-radius: 10px; font-weight: 600; padding: 8px 16px;">
+                    إلغاء
+                </button>
+                <button type="button" id="discountSaveBtn"
+                        class="btn"
+                        style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none; border-radius: 10px; font-weight: 700; padding: 8px 20px;">
+                    <i class="fas fa-save"></i>
+                    <span>حفظ العرض</span>
+                </button>
             </div>
         </div>
     </div>
@@ -98,73 +275,417 @@
 
 @section Scripts {
     <script>
-        function viewCourse(id) {
-            $.get(`/Admin/GetCourseDetails?id=${id}`, function(response) {
-                if (response.success) {
-                    const course = response.course;
+        // ==========================================
+        // متغيرات المودال
+        // ==========================================
+        let currentDiscountCourseId = null;
+        let currentOriginalPrice = 0;
 
-                    let teachersHtml = '';
-                    if (course.teachers && course.teachers.length > 0) {
-                        teachersHtml = course.teachers.map(t =>
-                            `<span class="badge bg-primary me-1">👨‍🏫 ${t.name}</span>`
-                        ).join('');
-                    } else {
-                        teachersHtml = '<p class="text-muted">لا يوجد أساتذة مرتبطين</p>';
+        const discountModalEl = document.getElementById('discountModal');
+        const discountModal = new bootstrap.Modal(discountModalEl);
+
+        // ==========================================
+        // فتح المودال
+        // ==========================================
+        function openDiscountModal(courseId) {
+            currentDiscountCourseId = courseId;
+
+            // إعادة تعيين
+            document.getElementById('discountLoading').style.display = 'block';
+            document.getElementById('discountForm').style.display = 'none';
+            document.getElementById('discountError').style.display = 'none';
+            document.getElementById('discountActiveAlert').style.display = 'none';
+            document.getElementById('discountPreview').style.display = 'none';
+            document.getElementById('discountRemoveBtn').style.display = 'none';
+            document.getElementById('discountPriceInput').value = '';
+            document.getElementById('discountEndDateInput').value = '';
+
+            discountModal.show();
+
+            // جلب البيانات
+            fetch(`/Admin/GetCourseDiscount?id=${courseId}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) {
+                        Swal.fire('خطأ', data.message || 'فشل تحميل البيانات', 'error');
+                        discountModal.hide();
+                        return;
                     }
 
-                    let videosHtml = '';
-                    if (course.videos && course.videos.length > 0) {
+                    const c = data.course;
+                    currentOriginalPrice = c.price;
+
+                    document.getElementById('discountCourseName').textContent = c.name;
+                    document.getElementById('discountOriginalPrice').textContent =
+                        Number(c.price).toLocaleString() + ' نقطة';
+
+                    // ملء الحقول إن كان هناك عرض سابق
+                    if (c.discountPrice) {
+                        document.getElementById('discountPriceInput').value = c.discountPrice;
+                    }
+
+                    if (c.discountEndDate) {
+                        // تنسيق datetime-local: yyyy-MM-ddTHH:mm
+                        const dt = new Date(c.discountEndDate);
+                        const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000)
+                            .toISOString()
+                            .slice(0, 16);
+                        document.getElementById('discountEndDateInput').value = local;
+                    }
+
+                    // تنبيه العرض النشط
+                    if (c.hasActiveDiscount) {
+                        document.getElementById('discountActiveAlert').style.display = 'block';
+                        document.getElementById('discountCurrentEffective').textContent =
+                            Number(c.discountPrice).toLocaleString() + ' نقطة';
+                        document.getElementById('discountCurrentEnd').textContent =
+                            new Date(c.discountEndDate).toLocaleString('ar-EG', {
+                                day: 'numeric', month: 'short', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit'
+                            });
+                        document.getElementById('discountRemoveBtn').style.display = 'inline-flex';
+                    } else if (c.isExpired) {
+                        document.getElementById('discountActiveAlert').style.display = 'block';
+                        document.getElementById('discountActiveAlert').style.background = '#fee2e2';
+                        document.getElementById('discountActiveAlert').style.borderColor = '#fecaca';
+                        document.getElementById('discountActiveAlert').innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 8px; color: #dc2626; font-size: 0.85rem; font-weight: 700;">
+                                <i class="fas fa-clock"></i>
+                                <span>آخر عرض انتهى في ${new Date(c.discountEndDate).toLocaleString('ar-EG')}</span>
+                            </div>
+                        `;
+                        document.getElementById('discountRemoveBtn').style.display = 'inline-flex';
+                    }
+
+                    // المعاينة الأولية إذا كان هناك سعر
+                    if (c.discountPrice) updatePreview();
+
+                    document.getElementById('discountLoading').style.display = 'none';
+                    document.getElementById('discountForm').style.display = 'block';
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire('خطأ', 'تعذر الاتصال بالخادم', 'error');
+                    discountModal.hide();
+                });
+        }
+
+        // ==========================================
+        // معاينة الخصم الفورية
+        // ==========================================
+        document.getElementById('discountPriceInput').addEventListener('input', updatePreview);
+
+        function updatePreview() {
+            const priceInput = document.getElementById('discountPriceInput');
+            const preview = document.getElementById('discountPreview');
+            const value = parseFloat(priceInput.value);
+
+            if (!value || value <= 0 || value >= currentOriginalPrice) {
+                preview.style.display = 'none';
+                return;
+            }
+
+            const discount = currentOriginalPrice - value;
+            const percent = Math.round(discount / currentOriginalPrice * 100);
+
+            document.getElementById('previewPercent').textContent = percent + '%';
+            document.getElementById('previewOriginal').textContent =
+                Number(currentOriginalPrice).toLocaleString() + ' نقطة';
+            document.getElementById('previewNew').textContent =
+                Number(value).toLocaleString() + ' نقطة';
+            preview.style.display = 'block';
+        }
+
+        // ==========================================
+        // أزرار التاريخ السريعة
+        // ==========================================
+        function quickEndDate(days) {
+            const d = new Date();
+            d.setDate(d.getDate() + days);
+            d.setHours(23, 59, 0, 0);
+
+            const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+                .toISOString()
+                .slice(0, 16);
+
+            document.getElementById('discountEndDateInput').value = local;
+        }
+
+        // ==========================================
+        // حفظ العرض
+        // ==========================================
+        document.getElementById('discountSaveBtn').addEventListener('click', async function () {
+            const btn = this;
+            const priceVal = parseFloat(document.getElementById('discountPriceInput').value);
+            const endDateVal = document.getElementById('discountEndDateInput').value;
+            const errorBox = document.getElementById('discountError');
+
+            errorBox.style.display = 'none';
+
+            // تحقق
+            if (!priceVal || priceVal <= 0) {
+                showError('يجب إدخال سعر عرض صالح أكبر من صفر');
+                return;
+            }
+            if (priceVal >= currentOriginalPrice) {
+                showError('سعر العرض يجب أن يكون أقل من السعر الأصلي');
+                return;
+            }
+            if (!endDateVal) {
+                showError('يجب تحديد تاريخ ووقت انتهاء العرض');
+                return;
+            }
+            if (new Date(endDateVal) <= new Date()) {
+                showError('تاريخ انتهاء العرض يجب أن يكون في المستقبل');
+                return;
+            }
+
+            // تعطيل الزر
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جارٍ الحفظ...';
+
+            try {
+                const formData = new FormData();
+                formData.append('courseId', currentDiscountCourseId);
+                formData.append('discountPrice', priceVal);
+                formData.append('discountEndDate', endDateVal);
+                formData.append('__RequestVerificationToken',
+                    document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                const response = await fetch('/Admin/SaveCourseDiscount', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    discountModal.hide();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'تم',
+                        text: data.message,
+                        confirmButtonColor: '#210057'
+                    }).then(() => location.reload());
+                } else {
+                    showError(data.message || 'فشل حفظ العرض');
+                }
+            } catch (err) {
+                console.error(err);
+                showError('حدث خطأ في الاتصال بالخادم');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> <span>حفظ العرض</span>';
+            }
+        });
+
+        // ==========================================
+        // إزالة العرض
+        // ==========================================
+        document.getElementById('discountRemoveBtn').addEventListener('click', async function () {
+            const confirmed = await Swal.fire({
+                icon: 'warning',
+                title: 'إزالة العرض',
+                text: 'هل أنت متأكد من إزالة العرض؟ سيعود الكورس إلى سعره الأصلي فوراً.',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، أزل العرض',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#9496a5'
+            });
+
+            if (!confirmed.isConfirmed) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('courseId', currentDiscountCourseId);
+                formData.append('__RequestVerificationToken',
+                    document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                const response = await fetch('/Admin/RemoveCourseDiscount', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    discountModal.hide();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'تم',
+                        text: data.message,
+                        confirmButtonColor: '#210057'
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire('خطأ', data.message || 'فشل إزالة العرض', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
+            }
+        });
+
+        // ==========================================
+        // عرض رسالة خطأ داخل المودال
+        // ==========================================
+        function showError(msg) {
+            const box = document.getElementById('discountError');
+            box.textContent = msg;
+            box.style.display = 'block';
+        }
+
+        // ==========================================
+        // دالة عرض تفاصيل الكورس (الموجودة أصلاً)
+        // ==========================================           
+        function viewCourse(id) {
+            // مؤشر تحميل
+            Swal.fire({
+                title: 'جارٍ التحميل...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            $.ajax({
+                url: `/Admin/GetCourseDetails?id=${id}`,
+                type: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    Swal.close();
+
+                    if (!response || !response.success) {
+                        Swal.fire('خطأ', (response && response.message) || 'تعذر تحميل البيانات', 'error');
+                        return;
+                    }
+
+                    const c = response.course;
+
+                    // ==========================================
+                    // القيم الآمنة
+                    // ==========================================
+                    const price = Number(c.price ?? 0);
+                    const effectivePrice = Number(c.effectivePrice ?? price);
+                    const hasDiscount = c.hasActiveDiscount === true;
+                    const discountPercent = Number(c.discountPercent ?? 0);
+
+                    // ==========================================
+                    // السعر
+                    // ==========================================
+                    let priceHtml = `
+                        <span class="badge" style="background:#d1fae5; color:#059669; font-size:1rem;">
+                            ${price.toLocaleString('ar-EG')} نقطة
+                        </span>`;
+
+                    if (hasDiscount) {
+                        const endDateStr = c.discountEndDate
+                            ? new Date(c.discountEndDate).toLocaleString('ar-EG', {
+                                day: 'numeric', month: 'short', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit'
+                              })
+                            : '—';
+
+                        priceHtml = `
+                            <div style="text-align:center;">
+                                <div style="text-decoration:line-through; color:#9496a5;">
+                                    ${price.toLocaleString('ar-EG')} نقطة
+                                </div>
+                                <div class="badge" style="background:#d1fae5; color:#059669; font-size:1.1rem; margin-top:4px;">
+                                    ${effectivePrice.toLocaleString('ar-EG')} نقطة
+                                </div>
+                                <div class="badge" style="background:#fef3c7; color:#b45309; margin-top:8px; display:inline-block;">
+                                    🔥 خصم ${discountPercent}% — ينتهي ${endDateStr}
+                                </div>
+                            </div>`;
+                    }
+
+                    // ==========================================
+                    // الأساتذة
+                    // ==========================================
+                    let teachersHtml = '<p class="text-muted">لا يوجد أساتذة مرتبطون</p>';
+                    if (c.teachers && c.teachers.length > 0) {
+                        teachersHtml = c.teachers.map(t => `
+                            <div style="display:flex; align-items:center; gap:10px; padding:8px; background:#f8f9fc; border-radius:10px; margin-bottom:6px;">
+                                <img src="${t.image || '/images/default-avatar.png'}"
+                                     style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid #210057;"
+                                     alt="${t.name || ''}" />
+                                <div style="flex:1; min-width:0;">
+                                    <div style="font-weight:700; font-size:0.85rem;">${t.name || ''}</div>
+                                    <div style="font-size:0.72rem; color:#9496a5;">${t.subject || 'مادة غير محددة'}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+
+                    // ==========================================
+                    // الفيديوهات
+                    // ==========================================
+                    let videosHtml = '<p class="text-muted">لا توجد فيديوهات مضافة</p>';
+                    if (c.videos && c.videos.length > 0) {
                         videosHtml = `
-                            <table class="table table-sm">
+                            <table class="table table-sm" style="font-size:0.85rem;">
                                 <thead>
                                     <tr>
                                         <th>#</th>
                                         <th>العنوان</th>
-                                        <th>الترتيب</th>
-                                        <th>مجاني</th>
+                                        <th>المدة</th>
+                                        <th>نوع</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${course.videos.map(v => `
+                                    ${c.videos.map(v => `
                                         <tr>
                                             <td>${v.id}</td>
-                                            <td>${v.title}</td>
-                                            <td>${v.order}</td>
-                                            <td>${v.isFree ? '✅ نعم' : '❌ لا'}</td>
+                                            <td>${v.title || ''}</td>
+                                            <td>${v.duration > 0 ? Math.floor(v.duration / 60) + ':' + (v.duration % 60).toString().padStart(2, '0') : '—'}</td>
+                                            <td>${v.isFree ? '🎁 مجاني' : '💎 مدفوع'}</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
-                            </table>
-                        `;
-                    } else {
-                        videosHtml = '<p class="text-muted">لا توجد فيديوهات مضافة</p>';
+                            </table>`;
                     }
+
+                    // ==========================================
+                    // المحتوى الكامل
+                    // ==========================================
+                    const createdAt = c.createdAt
+                        ? new Date(c.createdAt).toLocaleDateString('ar-EG')
+                        : '—';
 
                     $('#courseDetailsContent').html(`
                         <div class="text-center mb-4">
-                            <div style="font-size: 4rem;">📚</div>
+                            <div style="font-size:4rem;">📚</div>
                         </div>
-                        <h4 class="text-center">${course.name}</h4>
-                        <div class="text-center mb-3">
-                            <span class="badge badge-status" style="background: #d1fae5; color: #059669; font-size: 1rem;">
-                                ${course.price.toLocaleString()} نقطة
-                            </span>
-                        </div>
+                        <h4 class="text-center mb-1">${c.name || ''}</h4>
+                        <div class="text-center mb-3">${priceHtml}</div>
                         <hr>
+
                         <div class="mb-3">
-                            <strong>الوصف:</strong>
-                            <p>${course.description || 'لا يوجد وصف'}</p>
+                            <strong><i class="fas fa-info-circle"></i> الوصف:</strong>
+                            <p style="margin-top:6px; color:#555; line-height:1.6;">${c.description || 'لا يوجد وصف'}</p>
                         </div>
+
                         <div class="mb-3">
-                            <strong>الأساتذة المرتبطون:</strong>
+                            <strong><i class="fas fa-calendar"></i> تاريخ الإنشاء:</strong>
+                            <span style="color:#666;">${createdAt}</span>
+                        </div>
+
+                        <div class="mb-3">
+                            <strong><i class="fas fa-chalkboard-teacher"></i> الأساتذة (${(c.teachers || []).length}):</strong>
                             <div class="mt-2">${teachersHtml}</div>
                         </div>
+
                         <div class="mb-3">
-                            <strong>الفيديوهات:</strong>
+                            <strong><i class="fas fa-video"></i> الفيديوهات (${(c.videos || []).length}):</strong>
                             <div class="mt-2">${videosHtml}</div>
                         </div>
                     `);
+
                     $('#courseDetailsModal').modal('show');
+                },
+                error: function (xhr) {
+                    Swal.close();
+                    console.error('GetCourseDetails error:', xhr);
+                    Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
                 }
             });
         }

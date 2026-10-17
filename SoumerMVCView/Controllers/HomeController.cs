@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 using SoumerMVCView.Models;
+using SoumerMVCView.Services.CourseService;
 using SoumerMVCView.Services.TeacherAssignmentService;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace SoumerMVCView.Controllers
 {
@@ -15,26 +17,48 @@ namespace SoumerMVCView.Controllers
         private readonly ITeacherRepository _teacherRepository;
         private readonly ITeacherAssignmentService _assignmentService;
         private readonly ITeacherCourseRepository _teacherCourseRepository;
+        private readonly ICourseService _courseService;
 
         public HomeController(
             ILogger<HomeController> logger,
             ITeacherRepository teacherRepository,
             ITeacherAssignmentService assignmentService,
-            ITeacherCourseRepository teacherCourseRepository)
+            ITeacherCourseRepository teacherCourseRepository,
+            ICourseService courseService)
         {
             _logger = logger;
             _teacherRepository = teacherRepository;
             _assignmentService = assignmentService;
             _teacherCourseRepository = teacherCourseRepository;
+            _courseService = courseService;
         }
 
         public async Task<IActionResult> Index()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var model = new HomeViewModel
             {
                 FeaturedTeachers = await GetFeaturedTeachers(),
                 GradesTeachers = await _assignmentService.GetOrganizedGradesTeachers()
             };
+
+            // جلب الكورسات المشترك بها المستخدم الحالي
+            if (!string.IsNullOrEmpty(userId))
+            {
+                try
+                {
+                    var enrollments = await _courseService.GetUserEnrolledCourses(userId);
+                    model.EnrolledCourseIds = enrollments
+                        .Select(e => e.CourseId)
+                        .Distinct()
+                        .ToHashSet();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to load enrolled courses for user {UserId}", userId);
+                }
+            }
+
             return View(model);
         }
 
@@ -148,23 +172,69 @@ namespace SoumerMVCView.Controllers
             {
                 var teacher = await _teacherRepository.GetById(id);
                 if (teacher == null)
-                {
                     return Json(new { success = false, message = "الأستاذ غير موجود" });
-                }
 
                 var teacherCourses = await _teacherCourseRepository.GetTeacherCoursesWithDetails(id);
 
-                var coursesForTeacher = teacherCourses
-                    .Select(tc => new
+                // ✅ جلب كورسات المستخدم المشترك بها
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var enrolledIds = new HashSet<int>();
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    try
                     {
-                        id = tc.CourseId,
-                        name = tc.Course?.Name ?? "",
-                        description = tc.Course?.Description ?? "",
-                        price = tc.Course?.Price ?? 0
+                        var enrollments = await _courseService.GetUserEnrolledCourses(userId);
+                        enrolledIds = enrollments.Select(e => e.CourseId).Distinct().ToHashSet();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to load enrollments for user {UserId}", userId);
+                    }
+                }
+
+                var coursesForTeacher = teacherCourses
+                    .Where(tc => tc.Course != null)
+                    .Select(tc =>
+                    {
+                        var course = tc.Course;
+
+                        bool hasActiveDiscount =
+                            course.DiscountPrice.HasValue
+                            && course.DiscountPrice.Value > 0
+                            && course.DiscountPrice.Value < course.Price
+                            && course.DiscountEndDate.HasValue
+                            && course.DiscountEndDate.Value > DateTime.Now;
+
+                        decimal effectivePrice = hasActiveDiscount
+                            ? course.DiscountPrice.Value
+                            : course.Price;
+
+                        decimal discountAmount = hasActiveDiscount
+                            ? course.Price - course.DiscountPrice.Value
+                            : 0;
+
+                        int discountPercent = hasActiveDiscount && course.Price > 0
+                            ? (int)Math.Round((course.Price - course.DiscountPrice.Value) / course.Price * 100)
+                            : 0;
+
+                        return new
+                        {
+                            id = course.Id,
+                            name = course.Name ?? "",
+                            description = course.Description ?? "",
+                            price = course.Price,
+                            discountPrice = course.DiscountPrice,
+                            discountEndDate = course.DiscountEndDate,
+                            hasActiveDiscount = hasActiveDiscount,
+                            effectivePrice = effectivePrice,
+                            discountAmount = discountAmount,
+                            discountPercent = discountPercent,
+                            isEnrolled = enrolledIds.Contains(course.Id)   // ← جديد
+                        };
                     })
                     .ToList();
 
-                var result = new
+                return Json(new
                 {
                     success = true,
                     id = teacher.Id,
@@ -174,9 +244,7 @@ namespace SoumerMVCView.Controllers
                     image = teacher.Image,
                     courses = coursesForTeacher,
                     teacherCourses = coursesForTeacher
-                };
-
-                return Json(result);
+                });
             }
             catch (Exception ex)
             {

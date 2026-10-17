@@ -1,0 +1,509 @@
+﻿@model PointsCodesReportViewModel
+@{
+    ViewData["Title"] = "تقرير أكواد النقاط";
+    Layout = "_AdminLayout";
+
+    // أقصى قيمة للرسم البياني (لحساب ارتفاع الأعمدة)
+    var maxDaily = Model.DailyUsage.Any()
+        ? Model.DailyUsage.Max(d => d.Count)
+        : 1;
+    if (maxDaily == 0) maxDaily = 1;
+}
+
+<!-- ==========================================
+     رأس الصفحة + أزرار الإجراءات
+     ========================================== -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h4 class="mb-1"><i class="fas fa-chart-line text-primary me-2"></i>تقرير أكواد النقاط</h4>
+        <p class="text-muted mb-0 small">نظرة شاملة على جميع الأكواد والاستخدامات والإحصائيات</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-right"></i> رجوع
+        </a>
+        <a asp-action="Report" asp-route-status="@Model.Status"
+           asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+           asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")"
+           asp-route-searchCode="@Model.SearchCode"
+           asp-route-export="true"
+           class="btn btn-success" onclick="return exportReport(event)">
+            <i class="fas fa-file-excel"></i> تصدير CSV
+        </a>
+    </div>
+</div>
+
+<!-- ==========================================
+     بطاقات الإحصائيات الرئيسية
+     ========================================== -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                <i class="fas fa-ticket-alt"></i>
+            </div>
+            <div class="stat-value">@Model.TotalCodes</div>
+            <div class="stat-label">إجمالي الأكواد</div>
+            <small class="text-muted">@Model.TotalPointsValue.ToString("N0") نقطة</small>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value text-success">@Model.ValidCodes</div>
+            <div class="stat-label">أكواد صالحة</div>
+            <small class="text-muted">@Model.ValidPointsValue.ToString("N0") نقطة</small>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon bg-info bg-opacity-10 text-info">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-value text-info">@Model.UsedCodes</div>
+            <div class="stat-label">أكواد مستخدمة</div>
+            <small class="text-muted">@Model.UsedPointsValue.ToString("N0") نقطة</small>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-value text-danger">@Model.ExpiredCodes</div>
+            <div class="stat-label">أكواد منتهية</div>
+            <small class="text-muted">@Model.ExpiredPointsValue.ToString("N0") نقطة</small>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     صف: آخر 30 يوم + أعلى المستخدمين
+     ========================================== -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="table-card h-100">
+            <div class="table-card-header">
+                <h5 class="table-card-title">
+                    <i class="fas fa-chart-bar text-primary me-2"></i>
+                    الاستخدام اليومي (آخر 30 يوماً)
+                </h5>
+            </div>
+
+            @if (Model.DailyUsage.Any())
+            {
+                <div class="usage-chart">
+                    @foreach (var d in Model.DailyUsage)
+                    {
+                        var height = (int)((double)d.Count / maxDaily * 100);
+                        if (height < 5) height = 5;
+                        <div class="usage-bar-wrapper" title="@d.Date.ToString("yyyy/MM/dd") — @d.Count كود — @d.Points.ToString("N0") نقطة">
+                            <div class="usage-bar" style="height: @height%;"></div>
+                            <span class="usage-bar-label">@d.Count</span>
+                        </div>
+                    }
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <small class="text-muted">
+                        من: @Model.DailyUsage.First().Date.ToString("yyyy/MM/dd")
+                    </small>
+                    <small class="text-muted">
+                        إلى: @Model.DailyUsage.Last().Date.ToString("yyyy/MM/dd")
+                    </small>
+                </div>
+            }
+            else
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-chart-bar fa-2x mb-2 d-block opacity-25"></i>
+                    لا يوجد استخدام في آخر 30 يوماً
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="table-card h-100">
+            <div class="table-card-header">
+                <h5 class="table-card-title">
+                    <i class="fas fa-trophy text-warning me-2"></i>
+                    أعلى 5 مستخدمين
+                </h5>
+            </div>
+
+            @if (Model.TopUsers.Any())
+            {
+                <div class="top-users-list">
+                    @for (int i = 0; i < Model.TopUsers.Count; i++)
+                    {
+                        var u = Model.TopUsers[i];
+                        var rank = i + 1;
+                        var rankClass = rank == 1 ? "gold" : rank == 2 ? "silver" : rank == 3 ? "bronze" : "normal";
+                        <div class="top-user-item">
+                            <div class="top-user-rank @rankClass">@rank</div>
+                            <div class="top-user-body">
+                                <div class="top-user-name">@u.UserName</div>
+                                <div class="top-user-stats">
+                                    <span><i class="fas fa-ticket-alt"></i> @u.CodesCount كود</span>
+                                    <span><i class="fas fa-coins"></i> @u.TotalPoints.ToString("N0") نقطة</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-user-slash fa-2x mb-2 d-block opacity-25"></i>
+                    لم يستخدم أحد الأكواد بعد
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     الفلاتر
+     ========================================== -->
+<div class="table-card mb-4">
+    <form method="get" asp-action="Report" class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label fw-bold">الحالة</label>
+            <select name="status" class="form-select">
+                <option value="all" selected="@(Model.Status == "all" ? "selected" : null)">الكل</option>
+                <option value="valid" selected="@(Model.Status == "valid" ? "selected" : null)">صالحة</option>
+                <option value="used" selected="@(Model.Status == "used" ? "selected" : null)">مستخدمة</option>
+                <option value="expired" selected="@(Model.Status == "expired" ? "selected" : null)">منتهية</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-bold">من تاريخ</label>
+            <input type="date" name="fromDate" class="form-control"
+                   value="@Model.FromDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-bold">إلى تاريخ</label>
+            <input type="date" name="toDate" class="form-control"
+                   value="@Model.ToDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-bold">بحث بالكود</label>
+            <input type="text" name="searchCode" class="form-control"
+                   placeholder="مثال: A1B2-C3D4..."
+                   value="@Model.SearchCode" />
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn-primary-admin flex-grow-1">
+                <i class="fas fa-filter"></i> تطبيق
+            </button>
+            <a asp-action="Report" class="btn btn-outline-secondary" title="إعادة تعيين">
+                <i class="fas fa-times"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- ==========================================
+     جدول الأكواد
+     ========================================== -->
+<div class="table-card">
+    <div class="table-card-header">
+        <h5 class="table-card-title">
+            <i class="fas fa-list me-2"></i>
+            الأكواد (@Model.Codes.Count)
+        </h5>
+    </div>
+
+    @if (Model.Codes.Any())
+    {
+        <div class="table-responsive">
+            <table class="table datatable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الكود</th>
+                        <th>القيمة</th>
+                        <th>الحالة</th>
+                        <th>المستخدم</th>
+                        <th>تاريخ الإنشاء</th>
+                        <th>تاريخ الانتهاء</th>
+                        <th>تاريخ الاستخدام</th>
+                        <th>أنشأه</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var index = 1;
+                    }
+                    @foreach (var code in Model.Codes)
+                    {
+                        <tr>
+                            <td>@(index++)</td>
+                            <td>
+                                <span class="badge bg-light text-dark border" style="font-family: monospace; font-size: 0.9rem;">
+                                    @code.Code
+                                </span>
+                            </td>
+                            <td>
+                                <strong class="text-success">@code.PointsValue.ToString("N0")</strong>
+                                <small class="text-muted">نقطة</small>
+                            </td>
+                            <td>
+                                @if (code.IsUsed)
+                                {
+                                    <span class="badge bg-info text-white">
+                                        <i class="fas fa-check"></i> مستخدم
+                                    </span>
+                                }
+                                else if (code.IsExpired)
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-clock"></i> منتهي
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle"></i> صالح
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(code.UsedByUserName))
+                                {
+                                    <span class="d-flex align-items-center gap-1">
+                                        <i class="fas fa-user-circle text-muted"></i>
+                                        @code.UsedByUserName
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                            </td>
+                            <td>
+                                <small>@code.CreatedAt.ToString("yyyy/MM/dd HH:mm")</small>
+                            </td>
+                            <td>
+                                @if (code.ExpiryDate.HasValue)
+                                {
+                                    var isExpired = code.ExpiryDate.Value < DateTime.Now;
+                                    <small class="@(isExpired ? "text-danger" : "text-muted")">
+                                        @code.ExpiryDate.Value.ToString("yyyy/MM/dd")
+                                    </small>
+                                }
+                                else
+                                {
+                                    <small class="text-muted">لا ينتهي</small>
+                                }
+                            </td>
+                            <td>
+                                @if (code.UsedAt.HasValue)
+                                {
+                                    <small>@code.UsedAt.Value.ToString("yyyy/MM/dd HH:mm")</small>
+                                }
+                                else
+                                {
+                                    <small class="text-muted">—</small>
+                                }
+                            </td>
+                            <td>
+                                <small class="text-muted">@(code.CreatedBy ?? "—")</small>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-inbox fa-3x mb-3 d-block opacity-25"></i>
+            <p class="mb-0">لا توجد أكواد مطابقة للفلاتر</p>
+        </div>
+    }
+</div>
+
+<style>
+    /* ==========================================
+           الرسم البياني للاستخدام اليومي
+           ========================================== */
+    .usage-chart {
+        display: flex;
+        align-items: flex-end;
+        gap: 4px;
+        height: 180px;
+        padding: 10px 0;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .usage-bar-wrapper {
+        flex: 1;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        position: relative;
+        cursor: help;
+    }
+
+    .usage-bar {
+        width: 100%;
+        min-height: 4px;
+        background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+        border-radius: 4px 4px 0 0;
+        transition: all 0.3s;
+    }
+
+    .usage-bar-wrapper:hover .usage-bar {
+        opacity: 0.8;
+        transform: scaleY(1.05);
+        transform-origin: bottom;
+    }
+
+    .usage-bar-label {
+        position: absolute;
+        top: -18px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: #64748b;
+        display: none;
+    }
+
+    .usage-bar-wrapper:hover .usage-bar-label {
+        display: block;
+    }
+
+    /* ==========================================
+           قائمة أعلى المستخدمين
+           ========================================== */
+    .top-users-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .top-user-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        background: #f8fafc;
+        transition: all 0.2s;
+    }
+
+        .top-user-item:hover {
+            background: #f1f5f9;
+            transform: translateX(-3px);
+        }
+
+    .top-user-rank {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 0.95rem;
+        color: white;
+        flex-shrink: 0;
+    }
+
+        .top-user-rank.gold {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            box-shadow: 0 3px 10px rgba(245, 158, 11, 0.4);
+        }
+
+        .top-user-rank.silver {
+            background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+        }
+
+        .top-user-rank.bronze {
+            background: linear-gradient(135deg, #cd7f32, #a0522d);
+        }
+
+        .top-user-rank.normal {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+
+    .top-user-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .top-user-name {
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .top-user-stats {
+        display: flex;
+        gap: 12px;
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 2px;
+    }
+
+        .top-user-stats i {
+            font-size: 0.7rem;
+            margin-left: 2px;
+        }
+
+    /* ==========================================
+           استجابة
+           ========================================== */
+    @@media (max-width: 768px) {
+        .usage-chart
+
+    {
+        height: 120px;
+        gap: 2px;
+    }
+
+    .top-user-stats {
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    }
+</style>
+
+@section Scripts {
+    <script>
+        // تصدير CSV من نفس الفلاتر
+        function exportReport(e) {
+            // نبني الرابط يدوياً مع الفلاتر الحالية
+            const params = new URLSearchParams();
+            params.append('status', '@Model.Status');
+            @if (Model.FromDate.HasValue)
+            {
+                    <text>params.append('fromDate', '@Model.FromDate.Value.ToString("yyyy-MM-dd")');</text>
+            }
+            @if (Model.ToDate.HasValue)
+            {
+                    <text>params.append('toDate', '@Model.ToDate.Value.ToString("yyyy-MM-dd")');</text>
+            }
+            @if (!string.IsNullOrEmpty(Model.SearchCode))
+            {
+                    <text>params.append('searchCode', '@Model.SearchCode');</text>
+            }
+            params.append('export', 'true');
+
+            window.location.href = '@Url.Action("Report", "PointsCodes")?' + params.toString();
+            e.preventDefault();
+            return false;
+        }
+    </script>
+}

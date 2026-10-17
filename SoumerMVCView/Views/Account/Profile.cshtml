@@ -8,6 +8,8 @@
     initial = initial.Length > 0 ? initial.Substring(0, 1).ToUpper() : "؟";
 }
 
+@Html.AntiForgeryToken()
+
 <div class="profile-page">
 
     <!-- ==========================================
@@ -215,7 +217,7 @@
 </div>
 
 <!-- ==========================================
-     مودال تغيير الصورة
+     مودال تغيير الصورة - رفع من الهاتف
      ========================================== -->
 <div class="modal-overlay" id="avatarModal">
     <div class="modal-sheet">
@@ -226,18 +228,167 @@
             </button>
         </div>
 
-        <div class="avatar-options">
-            <button class="avatar-option" type="button" data-avatar="👨‍🏫">👨‍🏫</button>
-            <button class="avatar-option" type="button" data-avatar="👩‍🏫">👩‍🏫</button>
-            <button class="avatar-option" type="button" data-avatar="👨‍🎓">👨‍🎓</button>
-            <button class="avatar-option" type="button" data-avatar="👩‍🎓">👩‍🎓</button>
-            <button class="avatar-option" type="button" data-avatar="📚">📚</button>
-            <button class="avatar-option" type="button" data-avatar="🎓">🎓</button>
+        <!-- معاينة الصورة الحالية / الجديدة -->
+        <div class="avatar-upload-preview">
+            <div class="avatar-preview-circle" id="avatarPreviewCircle">
+                <img id="avatarPreviewImg"
+                     src="@(string.IsNullOrEmpty(user?.AvatarUrl) ? "" : user.AvatarUrl)"
+                     alt="معاينة"
+                     style="@(string.IsNullOrEmpty(user?.AvatarUrl) ? "display:none;" : "")" />
+                <span id="avatarPreviewInitial"
+                      class="avatar-initial"
+                      style="@(string.IsNullOrEmpty(user?.AvatarUrl) ? "" : "display:none;")">@initial</span>
+            </div>
+            <p class="avatar-upload-hint">اختر صورة واضحة لوجهك أو شعارك</p>
         </div>
+
+        <!-- زر اختيار الصورة -->
+        <label for="avatarFileInput" class="avatar-upload-btn">
+            <i class="fas fa-camera"></i>
+            <span>اختر صورة من الهاتف</span>
+            <input type="file"
+                   id="avatarFileInput"
+                   accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                   style="display: none;" />
+        </label>
+
+        <p class="avatar-upload-note">
+            <i class="fas fa-info-circle"></i>
+            الصيغ المدعومة: JPG, PNG, GIF, WEBP — الحد الأقصى 5MB
+        </p>
+
+        <!-- أزرار -->
+        <div class="avatar-modal-actions">
+            <button type="button" class="btn btn-ghost" id="cancelAvatarBtn">
+                إلغاء
+            </button>
+            <button type="button" class="btn btn-primary" id="saveAvatarBtn" style="display:none;">
+                <i class="fas fa-check"></i>
+                حفظ الصورة
+            </button>
+        </div>
+
+        <!-- إزالة الصورة -->
+        @if (!string.IsNullOrEmpty(user?.AvatarUrl))
+        {
+            <button type="button" class="avatar-remove-btn" id="removeAvatarBtn">
+                <i class="fas fa-trash"></i>
+                إزالة الصورة الحالية
+            </button>
+        }
     </div>
 </div>
 
 <style>
+    /* ==========================================
+           تنسيقات رفع الصورة
+           ========================================== */
+    .avatar-upload-preview {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .avatar-preview-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--primary-soft);
+        border: 3px solid var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow-md);
+    }
+
+        .avatar-preview-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .avatar-upload-hint {
+        font-size: 0.75rem;
+        color: var(--icon-color);
+        margin: 0;
+    }
+
+    .avatar-upload-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 14px;
+        border-radius: var(--radius-lg);
+        background: var(--primary-soft);
+        color: var(--primary-color);
+        border: 2px dashed var(--primary-color);
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: inherit;
+    }
+
+        .avatar-upload-btn:hover {
+            background: var(--primary-color);
+            color: var(--white);
+            border-style: solid;
+        }
+
+        .avatar-upload-btn i {
+            font-size: 1.1rem;
+        }
+
+    .avatar-upload-note {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.7rem;
+        color: var(--icon-color);
+        margin: var(--spacing-sm) 0 0;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .avatar-modal-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+        margin-top: var(--spacing-lg);
+    }
+
+        .avatar-modal-actions .btn {
+            flex: 1;
+        }
+
+    .avatar-remove-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+        margin-top: var(--spacing-sm);
+        padding: 10px;
+        border-radius: var(--radius-md);
+        background: transparent;
+        color: #dc2626;
+        border: 2px solid #fecaca;
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: inherit;
+    }
+
+        .avatar-remove-btn:hover {
+            background: #fee2e2;
+            border-color: #dc2626;
+        }
+
     /* ==========================================
            تنسيقات خاصة بالصفحة - تعتمد على متغيرات site.css
            ========================================== */
@@ -807,31 +958,6 @@
             color: #dc2626;
         }
 
-    .avatar-options {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--spacing-sm);
-    }
-
-    .avatar-option {
-        aspect-ratio: 1;
-        border-radius: var(--radius-lg);
-        background: var(--light-bg);
-        border: 2px solid var(--border-color);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-        .avatar-option:hover {
-            border-color: var(--primary-color);
-            background: var(--primary-soft);
-            transform: scale(1.05);
-        }
-
     @@keyframes slideUp {
         from {
             transform: translateY(100%);
@@ -886,10 +1012,11 @@
     }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     (function () {
         // ==========================================
-        // عناصر
+        // عناصر المعلومات الشخصية
         // ==========================================
         const editInfoBtn = document.getElementById('editInfoBtn');
         const editProfileBtn = document.getElementById('editProfileBtn');
@@ -898,15 +1025,14 @@
         const fields = ['username', 'fullName', 'email', 'phone', 'description'];
         let originalValues = {};
 
-        // ==========================================
-        // تعديل المعلومات
-        // ==========================================
         function editSection() {
             originalValues = {};
             fields.forEach(f => {
                 const valueEl = document.getElementById(f + 'Value');
-                if (valueEl) originalValues[f] = valueEl.innerText;
-                valueEl.style.display = 'none';
+                if (valueEl) {
+                    originalValues[f] = valueEl.innerText;
+                    valueEl.style.display = 'none';
+                }
                 const inputEl = document.getElementById(f + 'Input');
                 if (inputEl) inputEl.style.display = 'block';
             });
@@ -933,6 +1059,8 @@
             personalEditActions.style.display = 'none';
             editInfoBtn.style.display = 'inline-flex';
         }
+
+        window.cancelEdit = cancelEdit;
 
         // ==========================================
         // حفظ المعلومات
@@ -1011,42 +1139,204 @@
         };
 
         // ==========================================
-        // المودال
-        // ==========================================
-        const avatarModal = document.getElementById('avatarModal');
-        const changeAvatarBtn = document.getElementById('changeAvatarBtn');
-        const closeAvatarModal = document.getElementById('closeAvatarModal');
-
-        changeAvatarBtn?.addEventListener('click', () => avatarModal.classList.add('show'));
-        closeAvatarModal?.addEventListener('click', () => avatarModal.classList.remove('show'));
-        avatarModal?.addEventListener('click', e => {
-            if (e.target === avatarModal) avatarModal.classList.remove('show');
-        });
-
-        // اختيار صورة
-        document.querySelectorAll('.avatar-option').forEach(opt => {
-            opt.addEventListener('click', () => {
-                const avatar = opt.getAttribute('data-avatar');
-                const avatarEl = document.getElementById('profileAvatar');
-                const img = document.getElementById('profileAvatarImg');
-                const initial = document.getElementById('profileAvatarInitial');
-
-                if (img) img.style.display = 'none';
-                if (initial) {
-                    initial.textContent = avatar;
-                    initial.style.display = 'flex';
-                }
-                avatarModal.classList.remove('show');
-            });
-        });
-
-        // ==========================================
-        // ربط الأزرار
+        // ربط أزرار التعديل
         // ==========================================
         editInfoBtn?.addEventListener('click', editSection);
         editProfileBtn?.addEventListener('click', editSection);
 
-        // إتاحة الإلغاء عبر window (تُستدعى من onclick)
-        window.cancelEdit = cancelEdit;
+        // ==========================================
+        // مودال رفع الصورة
+        // ==========================================
+        const avatarModal = document.getElementById('avatarModal');
+        const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+        const closeAvatarModalBtn = document.getElementById('closeAvatarModal');
+        const cancelAvatarBtn = document.getElementById('cancelAvatarBtn');
+        const avatarFileInput = document.getElementById('avatarFileInput');
+        const avatarPreviewImg = document.getElementById('avatarPreviewImg');
+        const avatarPreviewInitial = document.getElementById('avatarPreviewInitial');
+        const saveAvatarBtn = document.getElementById('saveAvatarBtn');
+        const removeAvatarBtn = document.getElementById('removeAvatarBtn');
+
+        let selectedAvatarFile = null;
+
+        function openAvatarModal() {
+            avatarModal.classList.add('show');
+            // إعادة تعيين الحالة كل مرة
+            selectedAvatarFile = null;
+            avatarFileInput.value = '';
+            if (saveAvatarBtn) saveAvatarBtn.style.display = 'none';
+        }
+
+        function closeAvatarModalFn() {
+            avatarModal.classList.remove('show');
+            selectedAvatarFile = null;
+            avatarFileInput.value = '';
+        }
+
+        changeAvatarBtn?.addEventListener('click', openAvatarModal);
+        closeAvatarModalBtn?.addEventListener('click', closeAvatarModalFn);
+        cancelAvatarBtn?.addEventListener('click', closeAvatarModalFn);
+        avatarModal?.addEventListener('click', e => {
+            if (e.target === avatarModal) closeAvatarModalFn();
+        });
+
+        // ==========================================
+        // اختيار ملف من الهاتف → معاينة فورية
+        // ==========================================
+        avatarFileInput?.addEventListener('change', function () {
+            const file = this.files?.[0];
+            if (!file) return;
+
+            const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowed.includes(file.type)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'خطأ',
+                    text: 'صيغة الصورة غير مدعومة. اختر JPG أو PNG أو GIF أو WEBP',
+                    confirmButtonColor: '#210057'
+                });
+                this.value = '';
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'خطأ',
+                    text: 'حجم الصورة يتجاوز 5 ميجابايت',
+                    confirmButtonColor: '#210057'
+                });
+                this.value = '';
+                return;
+            }
+
+            selectedAvatarFile = file;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                if (avatarPreviewImg) {
+                    avatarPreviewImg.src = e.target.result;
+                    avatarPreviewImg.style.display = 'block';
+                }
+                if (avatarPreviewInitial) {
+                    avatarPreviewInitial.style.display = 'none';
+                }
+                if (saveAvatarBtn) saveAvatarBtn.style.display = 'inline-flex';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // ==========================================
+        // حفظ الصورة
+        // ==========================================
+        saveAvatarBtn?.addEventListener('click', async function () {
+            if (!selectedAvatarFile) return;
+
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> جارٍ الرفع...';
+
+            try {
+                const formData = new FormData();
+                formData.append('avatarFile', selectedAvatarFile);
+                formData.append('__RequestVerificationToken',
+                    document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                const response = await fetch('/Account/UploadAvatar', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    closeAvatarModalFn();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'تم',
+                        text: data.message,
+                        confirmButtonColor: '#210057',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'خطأ',
+                        text: data.message || 'فشل رفع الصورة',
+                        confirmButtonColor: '#210057'
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'خطأ',
+                    text: 'حدث خطأ في الاتصال بالخادم',
+                    confirmButtonColor: '#210057'
+                });
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check"></i> حفظ الصورة';
+            }
+        });
+
+        // ==========================================
+        // إزالة الصورة
+        // ==========================================
+        removeAvatarBtn?.addEventListener('click', async function () {
+            const confirmed = await Swal.fire({
+                icon: 'warning',
+                title: 'إزالة الصورة',
+                text: 'هل تريد إزالة صورتك الشخصية؟',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، إزالة',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#9496a5'
+            });
+
+            if (!confirmed.isConfirmed) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('__RequestVerificationToken',
+                    document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                const response = await fetch('/Account/RemoveAvatar', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    closeAvatarModalFn();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'تم',
+                        text: data.message,
+                        confirmButtonColor: '#210057',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'خطأ',
+                        text: data.message || 'فشل إزالة الصورة',
+                        confirmButtonColor: '#210057'
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'خطأ',
+                    text: 'حدث خطأ في الاتصال بالخادم',
+                    confirmButtonColor: '#210057'
+                });
+            }
+        });
     })();
 </script>

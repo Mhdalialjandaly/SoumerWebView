@@ -11,6 +11,9 @@ namespace SoumerMVCView.Controllers.Account
     [AllowAnonymous]
     public class AccountController : Controller
     {
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly string[] _allowedImageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+        private const long _maxAvatarSize = 5 * 1024 * 1024; // 5MB
         private readonly SignInManager<User> _signInManager;
         private readonly UserManager<User> _userManager;
         private readonly IUserRepository _userRepository;
@@ -20,12 +23,14 @@ namespace SoumerMVCView.Controllers.Account
             SignInManager<User> signInManager,
             UserManager<User> userManager,
             ILogger<AccountController> logger,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            IWebHostEnvironment webHostEnvironment)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _logger = logger;
             _userRepository = userRepository;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         [HttpGet]
@@ -90,12 +95,15 @@ namespace SoumerMVCView.Controllers.Account
                     user.LastLogin = DateTime.Now;
                     await _userManager.UpdateAsync(user);
 
+                    if (await _userManager.IsInRoleAsync(user, "Admin"))
+                        return RedirectToAction("Index", "Admin");
+
                     // التوجيه إلى الصفحة المطلوبة أو الرئيسية
                     if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
                     {
                         return Redirect(model.ReturnUrl);
                     }
-
+                    
                     return RedirectToAction("Index", "Home");
                 }
 
@@ -283,6 +291,109 @@ namespace SoumerMVCView.Controllers.Account
         public IActionResult AccessDenied()
         {
             return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadAvatar(IFormFile avatarFile)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                    return Json(new { success = false, message = "المستخدم غير موجود" });
+
+                if (avatarFile == null || avatarFile.Length == 0)
+                    return Json(new { success = false, message = "لم يتم اختيار صورة" });
+
+                // التحقق من الصيغة
+                var ext = Path.GetExtension(avatarFile.FileName).ToLowerInvariant();
+                if (!_allowedImageExtensions.Contains(ext))
+                    return Json(new { success = false, message = "صيغة الصورة غير مدعومة (jpg, png, gif, webp فقط)" });
+
+                // التحقق من الحجم
+                if (avatarFile.Length > _maxAvatarSize)
+                    return Json(new { success = false, message = "حجم الصورة يتجاوز 5 ميجابايت" });
+
+                // حذف الصورة القديمة إن وجدت
+                if (!string.IsNullOrEmpty(user.AvatarUrl) && user.AvatarUrl.StartsWith("/uploads/avatars/"))
+                {
+                    var oldPath = Path.Combine(_webHostEnvironment.WebRootPath, user.AvatarUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(oldPath))
+                    {
+                        try { System.IO.File.Delete(oldPath); } catch { /* تجاهل */ }
+                    }
+                }
+
+                // إنشاء المجلد إن لم يوجد
+                var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "avatars");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                // اسم ملف فريد
+                var fileName = $"{Guid.NewGuid()}{ext}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await avatarFile.CopyToAsync(stream);
+                }
+
+                // تحديث المستخدم
+                user.AvatarUrl = $"/uploads/avatars/{fileName}";
+                user.ModifiedAt = DateTime.Now;
+                var result = await _userManager.UpdateAsync(user);
+
+                if (!result.Succeeded)
+                    return Json(new { success = false, message = "فشل تحديث الحساب" });
+
+                return Json(new
+                {
+                    success = true,
+                    message = "تم تحديث الصورة بنجاح",
+                    avatarUrl = user.AvatarUrl
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading avatar");
+                return Json(new { success = false, message = "حدث خطأ أثناء رفع الصورة" });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveAvatar()
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                    return Json(new { success = false, message = "المستخدم غير موجود" });
+
+                if (!string.IsNullOrEmpty(user.AvatarUrl) && user.AvatarUrl.StartsWith("/uploads/avatars/"))
+                {
+                    var oldPath = Path.Combine(_webHostEnvironment.WebRootPath, user.AvatarUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(oldPath))
+                    {
+                        try { System.IO.File.Delete(oldPath); } catch { /* تجاهل */ }
+                    }
+                }
+
+                user.AvatarUrl = null;
+                user.ModifiedAt = DateTime.Now;
+                var result = await _userManager.UpdateAsync(user);
+
+                if (!result.Succeeded)
+                    return Json(new { success = false, message = "فشل تحديث الحساب" });
+
+                return Json(new { success = true, message = "تمت إزالة الصورة" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing avatar");
+                return Json(new { success = false, message = "حدث خطأ" });
+            }
         }
     }
 }

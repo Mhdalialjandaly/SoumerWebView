@@ -6,5 +6,6 @@ namespace SoumerMVCView.Models
     {
         public List<TeacherDto> FeaturedTeachers { get; set; }
         public List<GradeTeachersDto> GradesTeachers { get; set; }
+        public HashSet<int> EnrolledCourseIds { get; set; } = new();
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Core.Enums;
+using DataAccess.IRepositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
@@ -12,6 +13,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
     [Authorize]
     public class CourseController : Controller
     {
+        private readonly ITeacherCourseRepository _teacherCourseRepository;
         private readonly ICourseService _courseService;
         private readonly IBalanceService _balanceService;
         private readonly ICourseVideoService _courseVideoService;
@@ -20,6 +22,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
         public CourseController(
             ICourseService courseService,
             IBalanceService balanceService,
+            ITeacherCourseRepository teacherCourseRepository,
             ILogger<CourseController> logger,
             ICourseVideoService courseVideoService)
         {
@@ -27,6 +30,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
             _balanceService = balanceService;
             _logger = logger;
             _courseVideoService = courseVideoService;
+            _teacherCourseRepository = teacherCourseRepository;
         }
 
         // عرض جميع الكورسات
@@ -55,23 +59,43 @@ namespace SoumerMVCView.Controllers.CoursesManagment
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var course = await _courseService.GetCourseById(id);
-
             if (course == null)
-            {
                 return NotFound();
-            }
 
             var isEnrolled = await _courseService.IsUserEnrolled(id, userId);
             var userBalance = await _balanceService.GetUserBalance(userId);
             var eligibility = await _courseService.CheckEnrollmentEligibility(id, userId);
 
+            // جلب الأساتذة المرتبطين بالكورس
+            var teacherCourses = await _teacherCourseRepository
+                .GetByKey(tc => tc.CourseId == id);
+
+            var teachers = teacherCourses?
+                .Where(tc => tc.Teacher != null)
+                .Select(tc => new TeacherDto
+                {
+                    Id = tc.Teacher.Id,
+                    Name = tc.Teacher.Name,
+                    Subject = tc.Teacher.Subject,
+                    Image = tc.Teacher.Image
+                })
+                .ToList() ?? new List<TeacherDto>();
+
+            // جلب عدد الفيديوهات
+            var videos = await _courseVideoService.GetCourseVideos(id);
+            var totalVideos = videos?.Count(v => v.IsPublished) ?? 0;
+            var freeVideos = videos?.Count(v => v.IsPublished && v.IsFree) ?? 0;
+
             var model = new CourseDetailViewModel
             {
                 Course = course,
                 IsEnrolled = isEnrolled,
-                UserBalance = userBalance.CurrentBalance,
+                UserBalance = userBalance?.CurrentBalance ?? 0,
                 CanEnroll = eligibility.IsEligible && !isEnrolled,
-                EnrollmentMessage = eligibility.Message
+                EnrollmentMessage = eligibility.Message,
+                Teachers = teachers,
+                TotalVideos = totalVideos,
+                FreeVideos = freeVideos
             };
 
             return View(model);

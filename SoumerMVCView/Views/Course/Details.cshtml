@@ -1,249 +1,899 @@
 ﻿@model CourseDetailViewModel
+@{
+    ViewData["Title"] = Model.Course.Name;
+}
 
-<div class="course-detail-page">
-    <div>
-        <!-- بطاقة تفاصيل الكورس الرئيسية -->
-        <div class="course-detail-card-enhanced">
-            <div class="course-header">
-                <div class="course-badge">📚 كورس تعليمي</div>
-                <h1 class="course-title">@Model.Course.Name</h1>
-                <p class="course-description">@Model.Course.Description</p>
-            </div>
+<div class="course-details-page">
 
-            <div class="course-meta-grid">
-                <div class="meta-item">
-                    <div class="meta-icon">💰</div>
-                    <div class="meta-content">
-                        <div class="meta-label">سعر الكورس</div>
-                        <div class="meta-value">@Model.Course.Price.ToString("N0") <span class="meta-unit">نقطة</span></div>
-                    </div>
-                </div>
-                <div class="meta-item">
-                    <div class="meta-icon">📅</div>
-                    <div class="meta-content">
-                        <div class="meta-label">تاريخ الإضافة</div>
-                        <div class="meta-value">@Model.Course.CreatedAt.ToString("yyyy/MM/dd")</div>
-                    </div>
-                </div>
-            </div>
+    <!-- ==========================================
+         رأس الصفحة
+         ========================================== -->
+    <div class="cd-header">
+        <a href="/Course/Index" class="cd-back-btn">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+        <h1 class="cd-page-title">تفاصيل الكورس</h1>
+    </div>
 
-            <div class="course-action-section">
-                @if (Model.IsEnrolled)
-                {
-                    <div class="enrolled-status-card">
-                        <div class="status-icon">✅</div>
-                        <div class="status-content">
-                            <div class="status-title">أنت مسجل في هذا الكورس</div>
-                            <div class="status-message">يمكنك البدء في التعلم الآن</div>
-                        </div>
-                        <button class="btn-unenroll" onclick="unenrollFromCourse()">
-                            إلغاء التسجيل
-                            <span>←</span>
-                        </button>
-                    </div>
-                }
-                else if (Model.CanEnroll)
-                {
-                    <div class="enroll-action-card">
-                        <div class="enroll-info">
-                            <div class="enroll-price-badge">
-                                <span class="price-icon">💎</span>
-                                <span class="price-amount">@Model.Course.Price.ToString("N0")</span>
-                                <span class="price-unit">نقطة</span>
-                            </div>
-                            <div class="enroll-message">
-                                قم بالتسجيل الآن وابدأ رحلتك التعليمية
-                            </div>
-                        </div>
-                        <button class="btn-enroll-primary" onclick="enrollInCourse()">
-                            تسجيل الآن
-                            <span>→</span>
-                        </button>
-                    </div>
-                }
-                else
-                {
-                    <div class="warning-card">
-                        <div class="warning-icon">⚠️</div>
-                        <div class="warning-content">
-                            <div class="warning-title">لا يمكنك التسجيل في هذا الكورس</div>
-                            <div class="warning-message">@Model.EnrollmentMessage</div>
-                        </div>
-                        @if (Model.UserBalance < Model.Course.Price)
-                        {
-                            <a href="/Balance/Index" class="warning-action-btn">
-                                شحن الرصيد
-                                <span>→</span>
-                            </a>
-                        }
-                    </div>
-                }
+    <!-- ==========================================
+         بطاقة الكورس الرئيسية
+         ========================================== -->
+    <div class="cd-hero @(Model.HasActiveDiscount ? "has-discount" : "")">
+        @if (Model.HasActiveDiscount)
+        {
+            <div class="cd-hero-ribbon">
+                <i class="fas fa-fire"></i>
+                خصم @Model.Course.DiscountPercent%
             </div>
+        }
+
+        <div class="cd-hero-icon">
+            <i class="fas fa-book-open"></i>
         </div>
 
-        <!-- معلومات إضافية عن الكورس -->
-        <div class="course-info-card">
-            <div class="info-card-header">
-                <div class="header-icon">ℹ️</div>
-                <h3 class="header-title">معلومات الكورس</h3>
+        <h2 class="cd-hero-name">@Model.Course.Name</h2>
+
+        <p class="cd-hero-description">
+            @(string.IsNullOrWhiteSpace(Model.Course.Description) ? "لا يوجد وصف" : Model.Course.Description)
+        </p>
+
+        <!-- السعر -->
+        <div class="cd-price-block">
+            @if (Model.HasActiveDiscount)
+            {
+                <span class="cd-old-price">@Model.Course.Price.ToString("N0") نقطة</span>
+                <span class="cd-new-price">@Model.EffectivePrice.ToString("N0") <small>نقطة</small></span>
+                <div class="cd-discount-badge">
+                    <i class="fas fa-clock"></i>
+                    @if (Model.DiscountDaysLeft > 0)
+                    {
+                        <span>ينتهي العرض بعد @Model.DiscountDaysLeft يوم</span>
+                    }
+                    else
+                    {
+                        <span>ينتهي العرض اليوم</span>
+                    }
+                </div>
+            }
+            else
+            {
+                <span class="cd-normal-price">@Model.Course.Price.ToString("N0") <small>نقطة</small></span>
+            }
+        </div>
+    </div>
+
+    <!-- ==========================================
+         المعلومات السريعة (Meta)
+         ========================================== -->
+    <div class="cd-meta-grid">
+        <div class="cd-meta-card">
+            <div class="cd-meta-icon cd-meta-icon-blue">
+                <i class="fas fa-video"></i>
             </div>
-            <div class="info-card-content">
-                <div class="info-row">
-                    <div class="info-label">المستوى:</div>
-                    <div class="info-value">مبتدئ - متقدم</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">المدة:</div>
-                    <div class="info-value">يحدد لاحقاً</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">الشهادة:</div>
-                    <div class="info-value">شهادة إتمام عند الانتهاء</div>
-                </div>
+            <div class="cd-meta-body">
+                <span class="cd-meta-value">@Model.TotalVideos</span>
+                <span class="cd-meta-label">فيديو</span>
+            </div>
+        </div>
+        <div class="cd-meta-card">
+            <div class="cd-meta-icon cd-meta-icon-green">
+                <i class="fas fa-gift"></i>
+            </div>
+            <div class="cd-meta-body">
+                <span class="cd-meta-value">@Model.FreeVideos</span>
+                <span class="cd-meta-label">مجاني</span>
+            </div>
+        </div>
+        <div class="cd-meta-card">
+            <div class="cd-meta-icon cd-meta-icon-purple">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="cd-meta-body">
+                <span class="cd-meta-value">@Model.Course.CreatedAt.ToString("yyyy/MM")</span>
+                <span class="cd-meta-label">الإضافة</span>
             </div>
         </div>
     </div>
 
-    <div>
-        <!-- بطاقة الرصيد -->
-        <div class="balance-summary-card">
-            <div class="balance-summary-header">
-                <div class="header-icon">💎</div>
-                <h3 class="header-title">رصيدك الحالي</h3>
+    <!-- ==========================================
+         قائمة الأساتذة
+         ========================================== -->
+    @if (Model.Teachers.Any())
+    {
+        <div class="cd-card">
+            <div class="cd-card-head">
+                <h3><i class="fas fa-chalkboard-teacher"></i> الأساتذة</h3>
+                <span class="cd-count-pill">@Model.Teachers.Count</span>
             </div>
-            <div class="balance-summary-content">
-                <div class="balance-amount-large">
-                    @Model.UserBalance.ToString("N0")
-                    <span class="balance-unit">نقطة</span>
-                </div>
-                <div class="balance-progress">
-                    <div class="progress-bar-wrapper">
-                        <div class="progress-fill" style="width: @(Math.Min(100, (Model.UserBalance / (Model.Course.Price * 2) * 100)))%"></div>
+            <div class="cd-teachers-list">
+                @foreach (var teacher in Model.Teachers)
+                {
+                    <div class="cd-teacher-item">
+                        <div class="cd-teacher-avatar">
+                            <img src="@(string.IsNullOrEmpty(teacher.Image) ? "/images/default-avatar.png" : teacher.Image)"
+                                 alt="@teacher.Name" />
+                        </div>
+                        <div class="cd-teacher-info">
+                            <h4>@teacher.Name</h4>
+                            <span>@teacher.Subject</span>
+                        </div>
                     </div>
-                    <div class="progress-labels">
-                        <span>الرصيد الحالي</span>
-                        <span>@(Model.Course.Price) نقطة لتسجيل الكورس</span>
-                    </div>
-                </div>
-            </div>
-            <div class="balance-summary-footer">
-                <a href="/Balance/Index" class="balance-action-link">
-                    إدارة الرصيد
-                    <span>→</span>
-                </a>
+                }
             </div>
         </div>
+    }
 
-        <!-- كورسات مقترحة -->
-        <div class="suggested-courses-card">
-            <div class="suggested-header">
-                <div class="header-icon">🌟</div>
-                <h3 class="header-title">كورسات قد تعجبك</h3>
-            </div>
-            <div class="suggested-content">
-                <div class="suggested-item">
-                    <div class="suggested-icon">📖</div>
-                    <div class="suggested-info">
-                        <div class="suggested-title">كورسات مقترحة قريباً</div>
-                        <div class="suggested-desc">سيتم إضافة كورسات جديدة قريباً</div>
-                    </div>
+    <!-- ==========================================
+         بطاقة الإجراء الرئيسية
+         ========================================== -->
+    <div class="cd-action-card @(Model.IsEnrolled ? "enrolled" : (Model.CanEnroll ? "available" : "blocked"))">
+
+        @if (Model.IsEnrolled)
+        {
+            <div class="cd-action-status">
+                <div class="cd-status-icon success">
+                    <i class="fas fa-check-circle"></i>
                 </div>
+                <div class="cd-status-text">
+                    <h3>أنت مسجل في هذا الكورس</h3>
+                    <p>ابدأ المشاهدة الآن واستكمل تقدمك</p>
+                </div>
+            </div>
+
+            <div class="cd-action-buttons">
+                <a href="/Course/CourseVideos?courseId=@Model.Course.Id" class="cd-btn cd-btn-primary">
+                    <i class="fas fa-play-circle"></i>
+                    <span>مشاهدة الفيديوهات</span>
+                </a>
+                <button type="button" class="cd-btn cd-btn-ghost" onclick="unenrollFromCourse()">
+                    <i class="fas fa-times"></i>
+                    <span>إلغاء التسجيل</span>
+                </button>
+            </div>
+        }
+        else if (Model.CanEnroll)
+        {
+            <div class="cd-action-status">
+                <div class="cd-status-icon primary">
+                    <i class="fas fa-lock-open"></i>
+                </div>
+                <div class="cd-status-text">
+                    <h3>سجّل الآن وابدأ التعلم</h3>
+                    <p>
+                        رصيدك:
+                        <strong>@Model.UserBalance.ToString("N0")</strong> نقطة
+                        @if (Model.HasActiveDiscount)
+                        {
+                            <span class="cd-save-badge">
+                                توفير @Model.Course.DiscountAmount.ToString("N0") نقطة
+                            </span>
+                        }
+                    </p>
+                </div>
+            </div>
+
+            <div class="cd-action-buttons">
+                <button type="button" class="cd-btn cd-btn-primary @(Model.HasActiveDiscount ? "with-discount" : "")" onclick="enrollInCourse()">
+                    <i class="fas @(Model.HasActiveDiscount ? "fa-fire" : "fa-shopping-cart")"></i>
+                    <span>
+                        @if (Model.HasActiveDiscount)
+                        {
+                            @:اشترك بسعر العرض - @Model.EffectivePrice.ToString("N0") نقطة
+                        }
+                        else
+                        {
+                            @:تسجيل الآن - @Model.Course.Price.ToString("N0") نقطة
+                        }
+                    </span>
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="cd-action-status">
+                <div class="cd-status-icon warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="cd-status-text">
+                    <h3>لا يمكنك التسجيل الآن</h3>
+                    <p>@Model.EnrollmentMessage</p>
+                </div>
+            </div>
+
+            @if (Model.UserBalance < Model.EffectivePrice)
+            {
+                <div class="cd-action-buttons">
+                    <a href="/Balance/Index" class="cd-btn cd-btn-warning">
+                        <i class="fas fa-wallet"></i>
+                        <span>شحن الرصيد</span>
+                    </a>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- ==========================================
+         معلومات إضافية
+         ========================================== -->
+    <div class="cd-card">
+        <div class="cd-card-head">
+            <h3><i class="fas fa-info-circle"></i> معلومات إضافية</h3>
+        </div>
+        <div class="cd-info-rows">
+            <div class="cd-info-row">
+                <span class="cd-info-label">المستوى</span>
+                <span class="cd-info-value">مبتدئ - متقدم</span>
+            </div>
+            <div class="cd-info-row">
+                <span class="cd-info-label">الشهادة</span>
+                <span class="cd-info-value">شهادة إتمام</span>
+            </div>
+            <div class="cd-info-row">
+                <span class="cd-info-label">عدد الفيديوهات</span>
+                <span class="cd-info-value">@Model.TotalVideos فيديو</span>
             </div>
         </div>
     </div>
 </div>
 
+<style>
+    /* ==========================================
+           تنسيقات صفحة تفاصيل الكورس
+           ========================================== */
+    .course-details-page {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: var(--spacing-lg);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-lg);
+    }
+
+    /* ---------- رأس الصفحة ---------- */
+    .cd-header {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .cd-back-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: var(--white);
+        border: 1px solid var(--border-color);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s ease;
+    }
+
+        .cd-back-btn:hover {
+            background: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+            transform: translateX(-2px);
+        }
+
+    .cd-page-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--text-color);
+        margin: 0;
+    }
+
+    /* ---------- بطاقة الهيرو ---------- */
+    .cd-hero {
+        position: relative;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+        color: var(--white);
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-xl) var(--spacing-lg);
+        text-align: center;
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+    }
+
+        .cd-hero.has-discount {
+            background: linear-gradient(135deg, #d97706, #b45309);
+        }
+
+        .cd-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1), transparent 70%);
+            pointer-events: none;
+        }
+
+    .cd-hero-ribbon {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(6px);
+        color: #fff;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .cd-hero-icon {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto var(--spacing-md);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+    }
+
+    .cd-hero-name {
+        font-size: 1.3rem;
+        font-weight: 900;
+        color: #fff;
+        margin: 0 0 var(--spacing-sm);
+        line-height: 1.3;
+    }
+
+    .cd-hero-description {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.85);
+        line-height: 1.6;
+        margin: 0 0 var(--spacing-lg);
+    }
+
+    .cd-price-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .cd-old-price {
+        text-decoration: line-through;
+        color: rgba(255, 255, 255, 0.65);
+        font-size: 0.95rem;
+    }
+
+    .cd-new-price {
+        font-size: 1.7rem;
+        font-weight: 900;
+        color: #fff;
+    }
+
+        .cd-new-price small {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            font-weight: 600;
+        }
+
+    .cd-normal-price {
+        font-size: 1.7rem;
+        font-weight: 900;
+        color: #fff;
+    }
+
+        .cd-normal-price small {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            font-weight: 600;
+        }
+
+    .cd-discount-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 12px;
+        border-radius: 14px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        margin-top: 6px;
+    }
+
+    /* ---------- شبكة المعلومات ---------- */
+    .cd-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-sm);
+    }
+
+    .cd-meta-card {
+        background: var(--white);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-md);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .cd-meta-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .cd-meta-icon-blue {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .cd-meta-icon-green {
+        background: #d1fae5;
+        color: #059669;
+    }
+
+    .cd-meta-icon-purple {
+        background: var(--primary-soft);
+        color: var(--primary-color);
+    }
+
+    .cd-meta-body {
+        text-align: center;
+    }
+
+    .cd-meta-value {
+        display: block;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--text-color);
+        line-height: 1.2;
+    }
+
+    .cd-meta-label {
+        font-size: 0.7rem;
+        color: var(--icon-color);
+        font-weight: 600;
+    }
+
+    /* ---------- بطاقة عامة ---------- */
+    .cd-card {
+        background: var(--white);
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+
+    .cd-card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--spacing-md) var(--spacing-lg);
+        background: var(--light-bg);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+        .cd-card-head h3 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--text-color);
+            margin: 0;
+        }
+
+            .cd-card-head h3 i {
+                color: var(--primary-color);
+            }
+
+    .cd-count-pill {
+        background: var(--primary-color);
+        color: var(--white);
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
+    /* ---------- الأساتذة ---------- */
+    .cd-teachers-list {
+        padding: var(--spacing-md);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .cd-teacher-item {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-md);
+        transition: background 0.2s;
+    }
+
+        .cd-teacher-item:hover {
+            background: var(--light-bg);
+        }
+
+    .cd-teacher-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid var(--primary-soft);
+        flex-shrink: 0;
+    }
+
+        .cd-teacher-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .cd-teacher-info h4 {
+        margin: 0;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-color);
+    }
+
+    .cd-teacher-info span {
+        font-size: 0.72rem;
+        color: var(--icon-color);
+    }
+
+    /* ---------- بطاقة الإجراء ---------- */
+    .cd-action-card {
+        background: var(--white);
+        border-radius: var(--radius-xl);
+        border: 2px solid var(--border-color);
+        padding: var(--spacing-lg);
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+
+        .cd-action-card.enrolled {
+            border-color: #a7f3d0;
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+        }
+
+        .cd-action-card.available {
+            border-color: var(--primary-soft);
+            background: linear-gradient(135deg, #faf5ff, #f0ebf8);
+        }
+
+        .cd-action-card.blocked {
+            border-color: #fecaca;
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+        }
+
+    .cd-action-status {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+    }
+
+    .cd-status-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+        .cd-status-icon.success {
+            background: #10b981;
+            color: #fff;
+        }
+
+        .cd-status-icon.primary {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        .cd-status-icon.warning {
+            background: #f59e0b;
+            color: #fff;
+        }
+
+    .cd-status-text h3 {
+        font-size: 0.95rem;
+        font-weight: 800;
+        margin: 0 0 4px;
+        color: var(--text-color);
+    }
+
+    .cd-status-text p {
+        font-size: 0.8rem;
+        color: var(--icon-color);
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .cd-save-badge {
+        display: inline-block;
+        margin-right: 6px;
+        padding: 1px 8px;
+        background: #fef3c7;
+        color: #b45309;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
+    .cd-action-buttons {
+        display: flex;
+        gap: var(--spacing-sm);
+        flex-wrap: wrap;
+    }
+
+    .cd-btn {
+        flex: 1;
+        min-width: 140px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 18px;
+        border-radius: var(--radius-md);
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        border: none;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .cd-btn-primary {
+        background: var(--primary-color);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(33, 0, 87, 0.25);
+    }
+
+        .cd-btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            color: #fff;
+        }
+
+        .cd-btn-primary.with-discount {
+            background: linear-gradient(135deg, #d97706, #b45309);
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+        }
+
+            .cd-btn-primary.with-discount:hover {
+                background: linear-gradient(135deg, #b45309, #92400e);
+            }
+
+    .cd-btn-ghost {
+        background: transparent;
+        color: #dc2626;
+        border: 2px solid #fecaca;
+    }
+
+        .cd-btn-ghost:hover {
+            background: #fee2e2;
+            border-color: #dc2626;
+        }
+
+    .cd-btn-warning {
+        background: #f59e0b;
+        color: #fff;
+    }
+
+        .cd-btn-warning:hover {
+            background: #d97706;
+            color: #fff;
+        }
+
+    /* ---------- المعلومات الإضافية ---------- */
+    .cd-info-rows {
+        padding: 0 var(--spacing-lg) var(--spacing-md);
+    }
+
+    .cd-info-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--spacing-md) 0;
+        border-bottom: 1px dashed var(--border-color);
+    }
+
+        .cd-info-row:last-child {
+            border-bottom: none;
+        }
+
+    .cd-info-label {
+        font-size: 0.8rem;
+        color: var(--icon-color);
+        font-weight: 600;
+    }
+
+    .cd-info-value {
+        font-size: 0.85rem;
+        color: var(--text-color);
+        font-weight: 700;
+    }
+
+    /* ---------- استجابة ---------- */
+    @@media (max-width: 360px) {
+        .course-details-page
+
+    {
+        padding: var(--spacing-md);
+    }
+
+    .cd-meta-grid {
+        gap: 6px;
+    }
+
+    .cd-meta-card {
+        padding: var(--spacing-sm);
+    }
+
+    .cd-meta-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 0.85rem;
+    }
+
+    .cd-action-buttons {
+        flex-direction: column;
+    }
+
+    .cd-btn {
+        width: 100%;
+    }
+
+    }
+</style>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        const courseId = @Model.Course.Id;
+        const effectivePrice = @Model.EffectivePrice;
+        const originalPrice = @Model.Course.Price;
+        const courseName = @Html.Raw(Json.Serialize(Model.Course.Name));
+        const hasDiscount = @(Model.HasActiveDiscount.ToString().ToLower());
+
+        // ==========================================
+        // التسجيل
+        // ==========================================
         function enrollInCourse() {
+            const priceInfo = hasDiscount
+                ? `<div style="text-align:right; margin-top:10px;">
+                       <div style="color:#9496a5; text-decoration:line-through; font-size:0.85rem;">
+                           ${Number(originalPrice).toLocaleString()} نقطة
+                       </div>
+                       <div style="color:#059669; font-size:1.2rem; font-weight:800;">
+                           ${Number(effectivePrice).toLocaleString()} نقطة
+                           <span style="font-size:0.7rem; background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:8px; margin-right:6px;">🔥 عرض</span>
+                       </div>
+                   </div>`
+                : `<div style="margin-top:10px; color:#210057; font-weight:800; font-size:1.1rem;">
+                       ${Number(originalPrice).toLocaleString()} نقطة
+                   </div>`;
+
             Swal.fire({
                 title: 'تأكيد التسجيل',
-                html: `هل أنت متأكد من رغبتك في التسجيل في كورس <strong>"${@Html.Raw(Json.Serialize(Model.Course.Name))}"</strong>؟<br>سيتم خصم <strong>${@(Model.Course.Price.ToString())} نقطة</strong> من رصيدك.`,
+                html: `
+                    <div style="text-align:right;">
+                        <p style="margin:0; font-size:0.9rem;">هل تريد التسجيل في كورس</p>
+                        <strong style="color:#210057; font-size:1rem;">"${courseName}"</strong>
+                        <p style="margin:8px 0 0; font-size:0.85rem; color:#9496a5;">سيتم خصم المبلغ التالي من رصيدك:</p>
+                        ${priceInfo}
+                    </div>
+                `,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'نعم، سجلني',
                 cancelButtonText: 'إلغاء',
-                confirmButtonColor: '#10b981',
-                cancelButtonColor: '#64748b'
+                confirmButtonColor: '#210057',
+                cancelButtonColor: '#9496a5'
             }).then(async (result) => {
-                if (result.isConfirmed) {
-                    try {
-                        const response = await fetch(`/Course/Enroll?courseId=${@Model.Course.Id}`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                if (!result.isConfirmed) return;
+
+                try {
+                    const response = await fetch(`/Course/Enroll?courseId=${courseId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() || ''
+                        }
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        Swal.fire({
+                            title: '🎉 تم التسجيل بنجاح',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonText: 'ابدأ المشاهدة',
+                            confirmButtonColor: '#210057',
+                            showCancelButton: true,
+                            cancelButtonText: 'البقاء هنا',
+                            cancelButtonColor: '#9496a5'
+                        }).then((r) => {
+                            if (r.isConfirmed) {
+                                window.location.href = `/Course/CourseVideos?courseId=${courseId}`;
+                            } else {
+                                location.reload();
                             }
                         });
-                        const data = await response.json();
-
-                        if (data.success) {
-                            Swal.fire({
-                                title: 'تم التسجيل بنجاح!',
-                                text: data.message,
-                                icon: 'success',
-                                confirmButtonText: 'حسناً',
-                                confirmButtonColor: '#10b981'
-                            }).then(() => location.reload());
-                        } else {
-                            Swal.fire({
-                                title: 'خطأ',
-                                text: data.message,
-                                icon: 'error',
-                                confirmButtonText: 'حسناً',
-                                confirmButtonColor: '#ef4444'
-                            });
-                        }
-                    } catch (error) {
-                        Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
+                    } else {
+                        Swal.fire({
+                            title: 'تعذر التسجيل',
+                            text: data.message,
+                            icon: 'error',
+                            confirmButtonColor: '#210057'
+                        });
                     }
+                } catch {
+                    Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
                 }
             });
         }
 
+        // ==========================================
+        // إلغاء التسجيل
+        // ==========================================
         function unenrollFromCourse() {
             Swal.fire({
                 title: 'تأكيد إلغاء التسجيل',
-                text: 'هل أنت متأكد من رغبتك في إلغاء التسجيل من هذا الكورس؟',
+                text: 'هل تريد إلغاء تسجيلك في هذا الكورس؟',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'نعم، ألغِ التسجيل',
-                cancelButtonText: 'إلغاء',
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#64748b'
+                confirmButtonText: 'نعم، إلغاء',
+                cancelButtonText: 'تراجع',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#9496a5'
             }).then(async (result) => {
-                if (result.isConfirmed) {
-                    try {
-                        const response = await fetch(`/Course/Unenroll?courseId=${@Model.Course.Id}`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                            }
-                        });
-                        const data = await response.json();
+                if (!result.isConfirmed) return;
 
-                        if (data.success) {
-                            Swal.fire({
-                                title: 'تم إلغاء التسجيل',
-                                text: data.message,
-                                icon: 'success',
-                                confirmButtonText: 'حسناً',
-                                confirmButtonColor: '#10b981'
-                            }).then(() => location.reload());
-                        } else {
-                            Swal.fire({
-                                title: 'خطأ',
-                                text: data.message,
-                                icon: 'error',
-                                confirmButtonText: 'حسناً',
-                                confirmButtonColor: '#ef4444'
-                            });
+                try {
+                    const response = await fetch(`/Course/Unenroll?courseId=${courseId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() || ''
                         }
-                    } catch (error) {
-                        Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'تم إلغاء التسجيل',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonColor: '#210057'
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire('خطأ', data.message, 'error');
                     }
+                } catch {
+                    Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
                 }
             });
         }

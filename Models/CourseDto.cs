@@ -12,6 +12,12 @@ namespace Models
         public string Name { get; set; }
         public string Description { get; set; }
         public decimal Price { get; set; }
+        public decimal? DiscountPrice { get; set; }
+        public DateTime? DiscountEndDate { get; set; }
+        public bool HasActiveDiscount { get; set; }
+        public decimal EffectivePrice { get; set; }
+        public decimal DiscountAmount { get; set; }
+        public int DiscountPercent { get; set; }
         public virtual ICollection<TeacherCourseDto> TeacherCourses { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
@@ -19,4 +25,6 @@ namespace Models
         public string ModifiedBy { get; set; }
         public string DeletedBy { get; set; }
     }
+
+ 
 }

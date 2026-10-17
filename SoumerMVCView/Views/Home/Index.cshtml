@@ -3,7 +3,6 @@
     ViewData["Title"] = "الرئيسية";
 }
 
-
 <div class="home-page">
     <!-- ==========================================
          السلايدر العلوي - 50% من الشاشة
@@ -74,12 +73,12 @@
          قسم المراحل الدراسية
          ========================================== -->
     <div class="grades-section" id="gradesSection">
-        <div class="grades-header"> 
+        <div class="grades-header">
             <span class="grades-count">
                 @(Model.GradesTeachers?.Count ?? 0) مرحلة
             </span>
             <span class="grades-count">
-                @(Model.GradesTeachers?.SelectMany(e=>e.Teachers).Count() ?? 0) استاذ
+                @(Model.GradesTeachers?.SelectMany(e => e.Teachers).Count() ?? 0) استاذ
             </span>
         </div>
 
@@ -171,7 +170,7 @@
 
         // النقر على المؤشرات
         heroIndicators.forEach(indicator => {
-            indicator.addEventListener('click', function() {
+            indicator.addEventListener('click', function () {
                 const index = parseInt(this.dataset.slide);
                 showHeroSlide(index);
                 stopHeroSlideshow();
@@ -181,7 +180,7 @@
 
         // النقر على السلايد لعرض كورسات المعلم
         heroSlides.forEach(slide => {
-            slide.addEventListener('click', function() {
+            slide.addEventListener('click', function () {
                 const teacherId = this.dataset.teacherId;
                 if (teacherId) {
                     showTeacherCourses(parseInt(teacherId));
@@ -235,7 +234,7 @@
         }
 
         // إغلاق المودال عند النقر خارجه
-        document.getElementById('teachersModalOverlay').addEventListener('click', function(e) {
+        document.getElementById('teachersModalOverlay').addEventListener('click', function (e) {
             if (e.target === this) {
                 closeTeachersModal();
             }
@@ -258,6 +257,9 @@
             }
         }
 
+        // ==========================================
+        // عرض بطاقات الكورسات (مع دعم العروض + الاشتراكات)
+        // ==========================================
         function displayTeacherCourses(teacher) {
             const courses = teacher.teacherCourses || teacher.courses || [];
             const mainContainer = document.querySelector('.main-container');
@@ -344,64 +346,229 @@
                         flex-direction: column;
                         gap: 12px;
                     ">
-                        ${hasCourses ? courses.map(course => `
-                            <div style="
-                                background: #fff;
-                                border-radius: 16px;
-                                padding: 20px;
-                                box-shadow: 0 2px 8px rgba(33, 0, 87, 0.08);
-                                transition: all 0.2s;
-                            ">
-                                <div style="font-size: 2rem; margin-bottom: 8px;">📖</div>
-                                <h3 style="
-                                    font-size: 1rem;
-                                    font-weight: 700;
-                                    margin-bottom: 8px;
-                                    color: #333;
-                                ">${escapeHtml(course.name)}</h3>
-                                <p style="
-                                    font-size: 0.8rem;
-                                    color: #9496a5;
-                                    margin-bottom: 12px;
-                                    line-height: 1.4;
-                                ">${escapeHtml(course.description ? (course.description.length > 80 ? course.description.substring(0, 80) + '...' : course.description) : 'لا يوجد وصف')}</p>
-                                <div style="
-                                    margin-bottom: 12px;
-                                    padding: 12px;
-                                    background: #f8f9fc;
-                                    border-radius: 12px;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: space-between;
-                                ">
-                                    <span style="font-size: 0.8rem; color: #9496a5;">السعر:</span>
-                                    <span style="font-size: 1.2rem; font-weight: 800; color: #210057;">
-                                        ${course.price ? course.price.toLocaleString() : '0'} نقطة
+                        ${hasCourses ? courses.map(course => {
+
+                            // ==========================================
+                            // حالة الاشتراك
+                            // ==========================================
+                            const isEnrolled = course.isEnrolled === true;
+
+                            // ==========================================
+                            // حساب السعر والعرض
+                            // ==========================================
+                            const hasDiscount = course.hasActiveDiscount === true;
+                            const effectivePrice = Number(course.effectivePrice ?? course.price ?? 0);
+                            const originalPrice = Number(course.price ?? 0);
+                            const discountPercent = Number(course.discountPercent ?? 0);
+                            const discountEndDate = course.discountEndDate
+                                ? new Date(course.discountEndDate)
+                                : null;
+
+                            const endDateStr = discountEndDate
+                                ? discountEndDate.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })
+                                : '';
+
+                            // ==========================================
+                            // كتلة السعر (لا تُعرض إن كان مشتركاً)
+                            // ==========================================
+                            const priceBlock = isEnrolled
+                                ? `
+                                    <span style="font-size: 0.85rem; font-weight: 700; color: #059669; display:flex; align-items:center; gap:6px;">
+                                        <i class="fas fa-check-circle"></i>
+                                        تم الشراء
                                     </span>
-                                </div>
-                                <button onclick="enrollInCourse('${teacher.id}', '${course.id}')"
-                                        style="
-                                    background: #210057;
-                                    color: #fff;
-                                    border: none;
-                                    padding: 12px;
-                                    border-radius: 12px;
-                                    cursor: pointer;
-                                    font-weight: 700;
-                                    font-size: 0.9rem;
-                                    width: 100%;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    gap: 8px;
+                                `
+                                : (hasDiscount
+                                    ? `
+                                        <div style="display:flex; flex-direction:column; align-items:flex-start; gap:2px;">
+                                            <span style="text-decoration: line-through; color: #9496a5; font-size: 0.8rem;">
+                                                ${originalPrice.toLocaleString('ar-EG')} نقطة
+                                            </span>
+                                            <div style="display:flex; align-items:center; gap:8px;">
+                                                <span style="font-size: 1.3rem; font-weight: 900; color: #059669;">
+                                                    ${effectivePrice.toLocaleString('ar-EG')} نقطة
+                                                </span>
+                                                <span style="
+                                                    background:#fef3c7; color:#b45309;
+                                                    font-size:0.7rem; font-weight:700;
+                                                    padding:2px 8px; border-radius:10px;
+                                                ">🔥 -${discountPercent}%</span>
+                                            </div>
+                                        </div>
+                                    `
+                                    : `
+                                        <span style="font-size: 1.2rem; font-weight: 800; color: #210057;">
+                                            ${originalPrice.toLocaleString('ar-EG')} نقطة
+                                        </span>
+                                    `);
+
+                            // ==========================================
+                            // العدّاد التنازلي (فقط للعروض غير المشترك بها)
+                            // ==========================================
+                            const countdownBlock = (!isEnrolled && hasDiscount && discountEndDate)
+                                ? `
+                                    <div class="course-countdown"
+                                         data-end="${discountEndDate.toISOString()}"
+                                         style="
+                                            margin-top: 8px;
+                                            font-size: 0.72rem;
+                                            font-weight: 600;
+                                            color: #b45309;
+                                            background: #fffbeb;
+                                            border: 1px dashed #fcd34d;
+                                            border-radius: 8px;
+                                            padding: 6px 10px;
+                                            display: flex;
+                                            align-items: center;
+                                            gap: 6px;
+                                         ">
+                                        <i class="fas fa-clock"></i>
+                                        <span class="countdown-text">ينتهي العرض ${endDateStr}</span>
+                                    </div>
+                                `
+                                : '';
+
+                            // ==========================================
+                            // الشارة: "✅ مشترك" لها الأولوية على "🔥 عرض"
+                            // ==========================================
+                            const ribbon = isEnrolled
+                                ? `
+                                    <div style="
+                                        position: absolute;
+                                        top: 12px;
+                                        left: 12px;
+                                        background: linear-gradient(135deg, #059669, #047857);
+                                        color: #fff;
+                                        padding: 4px 10px;
+                                        border-radius: 20px;
+                                        font-size: 0.65rem;
+                                        font-weight: 800;
+                                        box-shadow: 0 2px 6px rgba(4,120,87,0.4);
+                                        z-index: 2;
+                                        display:flex; align-items:center; gap:4px;
+                                    "><i class="fas fa-check"></i> مشترك</div>
+                                `
+                                : (hasDiscount
+                                    ? `
+                                        <div style="
+                                            position: absolute;
+                                            top: 12px;
+                                            left: 12px;
+                                            background: linear-gradient(135deg, #f59e0b, #d97706);
+                                            color: #fff;
+                                            padding: 4px 10px;
+                                            border-radius: 20px;
+                                            font-size: 0.65rem;
+                                            font-weight: 800;
+                                            box-shadow: 0 2px 6px rgba(217,119,6,0.4);
+                                            z-index: 2;
+                                        ">🔥 عرض</div>
+                                    `
+                                    : '');
+
+                            // ==========================================
+                            // زر الإجراء (تسجيل / مشاهدة)
+                            // ==========================================
+                            const actionButton = isEnrolled
+                                ? `
+                                    <button onclick="watchCourse(${course.id})"
+                                            style="
+                                                margin-top: 12px;
+                                                background: #059669;
+                                                color: #fff;
+                                                border: none;
+                                                padding: 12px;
+                                                border-radius: 12px;
+                                                cursor: pointer;
+                                                font-weight: 700;
+                                                font-size: 0.9rem;
+                                                width: 100%;
+                                                display: flex;
+                                                align-items: center;
+                                                justify-content: center;
+                                                gap: 8px;
+                                                transition: all 0.2s;
+                                                font-family: 'Tajawal', sans-serif;
+                                            ">
+                                        <i class="fas fa-play-circle"></i>
+                                        مشاهدة الكورس
+                                    </button>
+                                `
+                                : `
+                                    <button onclick="enrollInCourse('${teacher.id}', '${course.id}')"
+                                            style="
+                                                margin-top: 12px;
+                                                background: ${hasDiscount ? '#059669' : '#210057'};
+                                                color: #fff;
+                                                border: none;
+                                                padding: 12px;
+                                                border-radius: 12px;
+                                                cursor: pointer;
+                                                font-weight: 700;
+                                                font-size: 0.9rem;
+                                                width: 100%;
+                                                display: flex;
+                                                align-items: center;
+                                                justify-content: center;
+                                                gap: 8px;
+                                                transition: all 0.2s;
+                                                font-family: 'Tajawal', sans-serif;
+                                            ">
+                                        ${hasDiscount ? '🔥 اشترك بسعر العرض' : 'تسجيل الآن'}
+                                        <i class="fas fa-arrow-left"></i>
+                                    </button>
+                                `;
+
+                            return `
+                                <div style="
+                                    position: relative;
+                                    background: #fff;
+                                    border-radius: 16px;
+                                    padding: 20px;
+                                    box-shadow: 0 2px 8px rgba(33, 0, 87, 0.08);
                                     transition: all 0.2s;
-                                    font-family: 'Tajawal', sans-serif;
+                                    ${isEnrolled ? 'border: 2px solid #a7f3d0;' : (hasDiscount ? 'border: 2px solid #fde68a;' : '')}
                                 ">
-                                    تسجيل الآن
-                                    <i class="fas fa-arrow-left"></i>
-                                </button>
-                            </div>
-                        `).join('') : `
+                                    ${ribbon}
+                                    <div style="font-size: 2rem; margin-bottom: 8px;">📖</div>
+                                    <h3 style="
+                                        font-size: 1rem;
+                                        font-weight: 700;
+                                        margin-bottom: 8px;
+                                        color: #333;
+                                    ">${escapeHtml(course.name)}</h3>
+                                    <p style="
+                                        font-size: 0.8rem;
+                                        color: #9496a5;
+                                        margin-bottom: 12px;
+                                        line-height: 1.4;
+                                    ">${escapeHtml(
+                                        course.description
+                                            ? (course.description.length > 80
+                                                ? course.description.substring(0, 80) + '...'
+                                                : course.description)
+                                            : 'لا يوجد وصف'
+                                    )}</p>
+
+                                    <div style="
+                                        margin-bottom: 12px;
+                                        padding: 12px;
+                                        background: ${isEnrolled ? '#ecfdf5' : (hasDiscount ? '#fffbeb' : '#f8f9fc')};
+                                        border-radius: 12px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: space-between;
+                                        gap: 8px;
+                                    ">
+                                        <span style="font-size: 0.8rem; color: #9496a5;">السعر:</span>
+                                        ${priceBlock}
+                                    </div>
+
+                                    ${countdownBlock}
+                                    ${actionButton}
+                                </div>
+                            `;
+                        }).join('') : `
                             <div style="
                                 text-align: center;
                                 padding: 40px;
@@ -419,6 +586,9 @@
 
             mainContainer.innerHTML = coursesHTML;
             window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // تشغيل العدّاد التنازلي بعد إدراج البطاقات
+            setTimeout(initCourseCountdowns, 50);
         }
 
         function escapeHtml(text) {
@@ -427,6 +597,81 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        // ==========================================
+        // الانتقال إلى مشاهدة الكورس (للمشتركين)
+        // ==========================================
+        function watchCourse(courseId) {
+            window.location.href = `/Course/CourseVideos?courseId=${courseId}`;
+        }
+
+        // ==========================================
+        // عدّاد تنازلي حيّ لكل كورس عليه عرض
+        // ==========================================
+        let courseCountdownInterval = null;
+
+        function initCourseCountdowns() {
+            if (courseCountdownInterval) {
+                clearInterval(courseCountdownInterval);
+                courseCountdownInterval = null;
+            }
+
+            const countdownEls = document.querySelectorAll('.course-countdown');
+            if (countdownEls.length === 0) return;
+
+            const update = () => {
+                let anyExpired = false;
+
+                countdownEls.forEach(el => {
+                    const endAttr = el.dataset.end;
+                    if (!endAttr) return;
+
+                    const end = new Date(endAttr).getTime();
+                    const diff = end - Date.now();
+                    const textEl = el.querySelector('.countdown-text');
+                    if (!textEl) return;
+
+                    if (diff <= 0) {
+                        textEl.textContent = 'انتهى العرض';
+                        el.style.background = '#fee2e2';
+                        el.style.borderColor = '#fecaca';
+                        el.style.color = '#dc2626';
+                        anyExpired = true;
+                        return;
+                    }
+
+                    const days = Math.floor(diff / 86400000);
+                    const hours = Math.floor(diff / 3600000) % 24;
+                    const minutes = Math.floor(diff / 60000) % 60;
+                    const seconds = Math.floor(diff / 1000) % 60;
+
+                    let label = 'ينتهي العرض';
+                    if (days > 0) label += ` خلال ${days} يوم و${hours} ساعة`;
+                    else if (hours > 0) label += ` خلال ${hours} ساعة و${minutes} دقيقة`;
+                    else if (minutes > 0) label += ` خلال ${minutes} دقيقة و${seconds} ثانية`;
+                    else label += ` خلال ${seconds} ثانية`;
+
+                    textEl.textContent = label;
+                });
+
+                // إن انتهى أحد العروض، انتظر قليلاً ثم أعد تحميل الصفحة
+                if (anyExpired) {
+                    clearInterval(courseCountdownInterval);
+                    courseCountdownInterval = null;
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
+                }
+            };
+
+            update();
+            courseCountdownInterval = setInterval(update, 1000);
+        }
+
+        // أوقف العدّاد عند مغادرة الصفحة
+        window.addEventListener('beforeunload', () => {
+            if (courseCountdownInterval) clearInterval(courseCountdownInterval);
+        });
 
         // ==========================================
         // التسجيل في كورس
@@ -465,7 +710,7 @@
                         cancelButtonColor: '#9496a5'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            window.location.href = '/Course/MyCourses';
+                            window.location.href = '/MyCourses/Index';
                         } else {
                             location.reload();
                         }
@@ -495,11 +740,11 @@
         // ==========================================
         // تهيئة الصفحة
         // ==========================================
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             startHeroSlideshow();
 
             // إيقاف السلايدر عند مغادرة الصفحة
-            document.addEventListener('visibilitychange', function() {
+            document.addEventListener('visibilitychange', function () {
                 if (document.hidden) {
                     stopHeroSlideshow();
                 } else {

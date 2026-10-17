@@ -538,68 +538,140 @@ namespace SoumerMVCView.Controllers.Managment
 
             return View(courses);
         }
-
         [HttpGet]
         public IActionResult CreateCourse()
         {
-            return View(new Course());
+            return View(new CourseFormViewModel());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateCourse(Course course)
+        public async Task<IActionResult> CreateCourse(CourseFormViewModel model)
         {
-            if (ModelState.IsValid)
+            // تحقق من صحة العرض
+            ValidateDiscount(model);
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var course = new Course
             {
-                course.CreatedAt = DateTime.Now;
-                _context.Courses.Add(course);
-                await _context.SaveChangesAsync();
+                Name = model.Name?.Trim(),
+                Description = model.Description,
+                Price = model.Price,
+                DiscountPrice = model.DiscountPrice,
+                DiscountEndDate = model.DiscountEndDate,
+                CreatedAt = DateTime.Now
+            };
 
-                TempData["SuccessMessage"] = "تم إضافة الكورس بنجاح";
-                return RedirectToAction(nameof(Courses));
-            }
+            _context.Courses.Add(course);
+            await _context.SaveChangesAsync();
 
-            return View(course);
+            TempData["SuccessMessage"] = "تم إضافة الكورس بنجاح";
+            return RedirectToAction(nameof(Courses));
         }
 
         [HttpGet]
         public async Task<IActionResult> EditCourse(int id)
         {
-            var course = await _context.Courses.FindAsync(id);
-            if (course == null || course.DeletedAt != null)
+            var course = await _context.Courses
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt == null);
+
+            if (course == null)
                 return NotFound();
 
-            return View(course);
+            var vm = new CourseFormViewModel
+            {
+                Id = course.Id,
+                Name = course.Name,
+                Description = course.Description,
+                Price = course.Price,
+                DiscountPrice = course.DiscountPrice,
+                DiscountEndDate = course.DiscountEndDate,
+                CreatedAt = course.CreatedAt,
+                CreatedAtDisplay = course.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+            };
+
+            return View(vm);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditCourse(int id, Course course)
+        public async Task<IActionResult> EditCourse(int id, CourseFormViewModel model)
         {
-            if (id != course.Id)
+            if (id != model.Id)
                 return NotFound();
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    course.ModifiedAt = DateTime.Now;
-                    _context.Update(course);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!CourseExists(course.Id))
-                        return NotFound();
-                    else
-                        throw;
-                }
+            // تحقق من صحة العرض
+            ValidateDiscount(model);
 
-                TempData["SuccessMessage"] = "تم تحديث الكورس بنجاح";
-                return RedirectToAction(nameof(Courses));
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var course = await _context.Courses
+                .FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt == null);
+
+            if (course == null)
+                return NotFound();
+
+            // ✅ تحديث الحقول المسموح بتعديلها فقط (CreatedAt يبقى كما هو)
+            course.Name = model.Name?.Trim();
+            course.Description = model.Description;
+            course.Price = model.Price;
+            course.DiscountPrice = model.DiscountPrice;
+            course.DiscountEndDate = model.DiscountEndDate;
+            course.ModifiedAt = DateTime.Now;
+            course.ModifiedBy = User.Identity?.Name;
+
+            // CreatedAt لا يُمسّ إطلاقاً
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "تم تحديث الكورس بنجاح";
+            return RedirectToAction(nameof(Courses));
+        }
+
+        // دالة مساعدة للتحقق من صحة العرض
+        private void ValidateDiscount(CourseFormViewModel model)
+        {
+            // إن لم يُدخل سعر عرض، يجب ألا يوجد تاريخ انتهاء
+            if (!model.DiscountPrice.HasValue && model.DiscountEndDate.HasValue)
+            {
+                ModelState.AddModelError(nameof(model.DiscountPrice),
+                    "يجب إدخال سعر العرض عند تحديد تاريخ انتهاء");
+                return;
             }
 
-            return View(course);
+            if (!model.DiscountPrice.HasValue)
+                return; // لا يوجد عرض، لا مشكلة
+
+            if (model.DiscountPrice.Value <= 0)
+            {
+                ModelState.AddModelError(nameof(model.DiscountPrice),
+                    "سعر العرض يجب أن يكون أكبر من صفر");
+                return;
+            }
+
+            if (model.DiscountPrice.Value >= model.Price)
+            {
+                ModelState.AddModelError(nameof(model.DiscountPrice),
+                    "سعر العرض يجب أن يكون أقل من السعر الأصلي");
+                return;
+            }
+
+            if (!model.DiscountEndDate.HasValue)
+            {
+                ModelState.AddModelError(nameof(model.DiscountEndDate),
+                    "يجب تحديد تاريخ ووقت انتهاء العرض عند إدخال سعر عرض");
+                return;
+            }
+
+            if (model.DiscountEndDate.Value <= DateTime.Now)
+            {
+                ModelState.AddModelError(nameof(model.DiscountEndDate),
+                    "تاريخ انتهاء العرض يجب أن يكون في المستقبل");
+            }
         }
 
         [HttpPost]
@@ -998,6 +1070,126 @@ namespace SoumerMVCView.Controllers.Managment
                 return Json(new { success = false, balance = 0 });
             }
         }
+
+        // ==========================================
+        // GET: /Admin/GetCourseDiscount?id=X
+        // جلب بيانات العرض الحالية للكورس
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> GetCourseDiscount(int id)
+        {
+            var course = await _context.Courses
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt == null);
+
+            if (course == null)
+                return Json(new { success = false, message = "الكورس غير موجود" });
+
+            return Json(new
+            {
+                success = true,
+                course = new
+                {
+                    id = course.Id,
+                    name = course.Name,
+                    price = course.Price,
+                    discountPrice = course.DiscountPrice,
+                    discountEndDate = course.DiscountEndDate,
+                    hasActiveDiscount = course.HasActiveDiscount,
+                    discountPercent = course.DiscountPercent,
+                    discountAmount = course.DiscountAmount,
+                    isExpired = course.DiscountEndDate.HasValue
+                                  && course.DiscountEndDate.Value <= DateTime.Now
+                                  && course.DiscountPrice.HasValue
+                }
+            });
+        }
+
+        // ==========================================
+        // POST: /Admin/SaveCourseDiscount
+        // إضافة أو تعديل العرض
+        // ==========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveCourseDiscount(
+            int courseId,
+            decimal? discountPrice,
+            DateTime? discountEndDate)
+        {
+            try
+            {
+                var course = await _context.Courses
+                    .FirstOrDefaultAsync(c => c.Id == courseId && c.DeletedAt == null);
+
+                if (course == null)
+                    return Json(new { success = false, message = "الكورس غير موجود" });
+
+                // التحقق
+                if (!discountPrice.HasValue || discountPrice.Value <= 0)
+                    return Json(new { success = false, message = "يجب إدخال سعر عرض صالح أكبر من صفر" });
+
+                if (discountPrice.Value >= course.Price)
+                    return Json(new { success = false, message = "سعر العرض يجب أن يكون أقل من السعر الأصلي" });
+
+                if (!discountEndDate.HasValue)
+                    return Json(new { success = false, message = "يجب تحديد تاريخ ووقت انتهاء العرض" });
+
+                if (discountEndDate.Value <= DateTime.Now)
+                    return Json(new { success = false, message = "تاريخ انتهاء العرض يجب أن يكون في المستقبل" });
+
+                course.DiscountPrice = discountPrice.Value;
+                course.DiscountEndDate = discountEndDate.Value;
+                course.ModifiedAt = DateTime.Now;
+                course.ModifiedBy = User.Identity?.Name;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    message = "تم حفظ العرض بنجاح",
+                    discountPercent = course.DiscountPercent,
+                    effectivePrice = course.EffectivePrice
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error saving discount for course {CourseId}", courseId);
+                return Json(new { success = false, message = "حدث خطأ أثناء حفظ العرض" });
+            }
+        }
+
+        // ==========================================
+        // POST: /Admin/RemoveCourseDiscount
+        // حذف العرض (العودة للسعر الأصلي)
+        // ==========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveCourseDiscount(int courseId)
+        {
+            try
+            {
+                var course = await _context.Courses
+                    .FirstOrDefaultAsync(c => c.Id == courseId && c.DeletedAt == null);
+
+                if (course == null)
+                    return Json(new { success = false, message = "الكورس غير موجود" });
+
+                course.DiscountPrice = null;
+                course.DiscountEndDate = null;
+                course.ModifiedAt = DateTime.Now;
+                course.ModifiedBy = User.Identity?.Name;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "تم إزالة العرض بنجاح" });
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error removing discount for course {CourseId}", courseId);
+                return Json(new { success = false, message = "حدث خطأ أثناء إزالة العرض" });
+            }
+        }
         // ==================== HELPER METHODS ====================
         private bool TeacherExists(int id)
         {
@@ -1098,6 +1290,7 @@ namespace SoumerMVCView.Controllers.Managment
                 .Include(c => c.TeacherCourses)
                 .ThenInclude(tc => tc.Teacher)
                 .Include(c => c.CourseVideos)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt == null);
 
             if (course == null)
@@ -1112,12 +1305,23 @@ namespace SoumerMVCView.Controllers.Managment
                     course.Name,
                     course.Description,
                     course.Price,
+                    course.DiscountPrice,
+                    course.DiscountEndDate,
+                    // ✅ الحقول المشتقة — ضرورية لعرض المودال
+                    hasActiveDiscount = course.HasActiveDiscount,
+                    effectivePrice = course.EffectivePrice,
+                    discountAmount = course.DiscountAmount,
+                    discountPercent = course.DiscountPercent,
+                    // ✅ تواريخ
+                    createdAt = course.CreatedAt,
                     teachers = course.TeacherCourses
-                        .Where(tc => tc.DeletedAt == null)
+                        .Where(tc => tc.DeletedAt == null && tc.Teacher != null)
                         .Select(tc => new
                         {
                             tc.Teacher.Id,
-                            tc.Teacher.Name
+                            tc.Teacher.Name,
+                            tc.Teacher.Subject,
+                            tc.Teacher.Image
                         }),
                     videos = course.CourseVideos
                         .Where(v => v.DeletedAt == null)
@@ -1126,7 +1330,8 @@ namespace SoumerMVCView.Controllers.Managment
                             v.Id,
                             v.Title,
                             v.Order,
-                            v.IsFree
+                            v.IsFree,
+                            v.Duration
                         })
                 }
             });
