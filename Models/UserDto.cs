@@ -33,6 +33,7 @@ namespace Models
         public bool IsActive { get; set; } = true;
         public string FullName { get; set; }
         public string AvatarUrl { get; set; }
+        public string PhoneNumber { get; set; }   // ← أضف هذا
         public IFormFile AvatarFile { get; set; }
     }
 

@@ -63,6 +63,7 @@ namespace DataAccess.Repositories
                 FullName = model.FullName,
                 AvatarUrl = model.AvatarUrl,
                 Description = model.Description,
+                PhoneNumber = model.PhoneNumber,   
                 IsActive = model.IsActive,
                 CreatedAt = DateTime.Now
             };

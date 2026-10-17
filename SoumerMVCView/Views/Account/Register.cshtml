@@ -1,0 +1,818 @@
+﻿@model SoumerMVCView.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "إنشاء حساب جديد";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#210057" />
+    <title>@ViewData["Title"] - سومر</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+
+    <style>
+        :root {
+            --primary-color: #210057;
+            --primary-dark: #180040;
+            --icon-color: #9496a5;
+            --text-color: #333;
+            --white: #fff;
+            --light-bg: #f8f9fc;
+            --border-color: #e8eaf0;
+            --success-color: #059669;
+            --safe-area-top: env(safe-area-inset-top, 0px);
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100%;
+            min-height: 100dvh;
+            font-family: 'Tajawal', 'Cairo', sans-serif;
+            background: var(--primary-color);
+            overflow-x: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ==========================================
+                   الهيدر - جزء من الصور
+                   ========================================== */
+        .register-header {
+            position: relative;
+            width: 100%;
+            height: 32vh;
+            height: 32dvh;
+            min-height: 220px;
+            overflow: hidden;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+            .register-header::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, rgba(33,0,87,0.95) 0%, rgba(33,0,87,0.7) 60%, rgba(33,0,87,0.95) 100%), url('/images/slide1.jpg') center/cover no-repeat;
+                z-index: 0;
+            }
+
+        .register-header-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+
+        .register-header .app-icon {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+            .register-header .app-icon i {
+                font-size: 34px;
+                color: var(--white);
+            }
+
+        .register-header h1 {
+            color: var(--white);
+            font-size: 1.7rem;
+            font-weight: 900;
+            margin-bottom: 6px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .register-header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        /* زر الرجوع */
+        .back-btn {
+            position: absolute;
+            top: calc(16px + var(--safe-area-top));
+            right: 16px;
+            z-index: 10;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+            .back-btn:hover {
+                background: rgba(255, 255, 255, 0.25);
+                transform: scale(1.05);
+            }
+
+        /* ==========================================
+                   منطقة النموذج
+                   ========================================== */
+        .register-body {
+            flex: 1;
+            background: var(--light-bg);
+            border-radius: 30px 30px 0 0;
+            margin-top: -30px;
+            z-index: 10;
+            position: relative;
+            padding: 28px 20px calc(30px + var(--safe-area-bottom));
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .register-form-wrapper {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .form-title {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+            .form-title h2 {
+                color: var(--text-color);
+                font-size: 1.3rem;
+                font-weight: 800;
+                margin-bottom: 4px;
+            }
+
+            .form-title span {
+                color: var(--icon-color);
+                font-size: 0.85rem;
+            }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 6px;
+            padding-right: 4px;
+        }
+
+            .input-label .required {
+                color: #dc2626;
+                margin-right: 2px;
+            }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--icon-color);
+            font-size: 1rem;
+            pointer-events: none;
+            transition: color 0.3s;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 13px 45px 13px 16px;
+            font-size: 0.95rem;
+            font-family: 'Tajawal', 'Cairo', sans-serif;
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            transition: all 0.3s;
+            background: var(--white);
+            color: var(--text-color);
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+            .input-field:focus {
+                outline: none;
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 4px rgba(33, 0, 87, 0.1);
+            }
+
+                .input-field:focus + .input-icon {
+                    color: var(--primary-color);
+                }
+
+            .input-field::placeholder {
+                color: #b0b3c0;
+            }
+
+        .toggle-password {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: var(--icon-color);
+            font-size: 1rem;
+            transition: color 0.3s;
+            background: none;
+            border: none;
+            padding: 4px;
+        }
+
+            .toggle-password:hover {
+                color: var(--primary-color);
+            }
+
+        .validation-error {
+            color: #dc2626;
+            font-size: 0.75rem;
+            display: block;
+            margin-top: 4px;
+            padding-right: 4px;
+        }
+
+        .alert-danger {
+            background-color: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+            .alert-danger i {
+                margin-top: 2px;
+            }
+
+        /* شروط الأحكام */
+        .terms-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 18px 0;
+            padding: 12px 14px;
+            background: #f0ebf8;
+            border-radius: 12px;
+        }
+
+            .terms-group input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+                margin-top: 2px;
+                accent-color: var(--primary-color);
+                cursor: pointer;
+                flex-shrink: 0;
+            }
+
+            .terms-group label {
+                font-size: 0.85rem;
+                color: var(--text-color);
+                line-height: 1.5;
+                cursor: pointer;
+            }
+
+                .terms-group label a {
+                    color: var(--primary-color);
+                    font-weight: 700;
+                    text-decoration: none;
+                }
+
+                    .terms-group label a:hover {
+                        text-decoration: underline;
+                    }
+
+        /* زر التسجيل */
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 14px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            font-family: 'Tajawal', 'Cairo', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 8px;
+            box-shadow: 0 4px 14px rgba(33, 0, 87, 0.25);
+        }
+
+            .btn-submit:hover {
+                background: var(--primary-dark);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(33, 0, 87, 0.35);
+            }
+
+            .btn-submit:active {
+                transform: translateY(0);
+            }
+
+            .btn-submit:disabled {
+                opacity: 0.7;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+        /* رابط تسجيل الدخول */
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: var(--icon-color);
+        }
+
+            .login-link a {
+                color: var(--primary-color);
+                font-weight: 700;
+                text-decoration: none;
+                margin-right: 4px;
+            }
+
+                .login-link a:hover {
+                    text-decoration: underline;
+                }
+
+        /* مؤشر قوة كلمة المرور */
+        .password-strength {
+            margin-top: 6px;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+            .password-strength-bar.weak {
+                width: 33%;
+                background: #dc2626;
+            }
+
+            .password-strength-bar.medium {
+                width: 66%;
+                background: #f59e0b;
+            }
+
+            .password-strength-bar.strong {
+                width: 100%;
+                background: var(--success-color);
+            }
+
+        /* ==========================================
+                   حركات
+                   ========================================== */
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .register-form-wrapper > * {
+            animation: fadeInUp 0.4s ease-out backwards;
+        }
+
+            .register-form-wrapper > *:nth-child(1) {
+                animation-delay: 0.05s;
+            }
+
+            .register-form-wrapper > *:nth-child(2) {
+                animation-delay: 0.1s;
+            }
+
+            .register-form-wrapper > *:nth-child(3) {
+                animation-delay: 0.15s;
+            }
+
+            .register-form-wrapper > *:nth-child(4) {
+                animation-delay: 0.2s;
+            }
+
+            .register-form-wrapper > *:nth-child(5) {
+                animation-delay: 0.25s;
+            }
+
+            .register-form-wrapper > *:nth-child(6) {
+                animation-delay: 0.3s;
+            }
+
+        /* ==========================================
+                   استجابة للشاشات
+                   ========================================== */
+        @@media (max-height: 700px) {
+            .register-header {
+                height: 26vh;
+                min-height: 180px;
+            }
+
+                .register-header h1 {
+                    font-size: 1.4rem;
+                }
+
+                .register-header .app-icon {
+                    width: 55px;
+                    height: 55px;
+                    margin-bottom: 10px;
+                }
+
+                    .register-header .app-icon i {
+                        font-size: 26px;
+                    }
+
+            .register-body {
+                padding: 22px 16px calc(24px + var(--safe-area-bottom));
+            }
+        }
+
+        @@media (min-width: 768px) {
+            .register-body {
+                border-radius: 30px;
+                margin-top: 20px;
+                margin-bottom: 20px;
+                padding: 32px;
+            }
+
+            .register-header {
+                height: 40vh;
+                border-radius: 0 0 30px 30px;
+            }
+        }
+
+        @@supports (padding: max(0px)) {
+            .register-body {
+                padding-bottom: max(30px, env(safe-area-inset-bottom));
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- الهيدر -->
+    <div class="register-header">
+        <a asp-action="Login" class="back-btn" title="العودة لتسجيل الدخول">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+
+        <div class="register-header-content">
+            <div class="app-icon">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <h1>إنشاء حساب جديد</h1>
+            <p>انضم إلى منصة سومر التعليمية</p>
+        </div>
+    </div>
+
+    <!-- منطقة النموذج -->
+    <div class="register-body">
+        <div class="register-form-wrapper">
+            <div class="form-title">
+                <h2>بيانات الحساب</h2>
+                <span>املأ الحقول التالية لإنشاء حسابك</span>
+            </div>
+
+            @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+            {
+                <div class="alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>@ViewData.ModelState[string.Empty].Errors.First().ErrorMessage</span>
+                </div>
+            }
+
+            <form asp-action="Register" method="post" id="registerForm">
+                @Html.AntiForgeryToken()
+
+                <!-- الاسم الكامل -->
+                <div class="form-group">
+                    <label class="input-label" asp-for="FullName">
+                        الاسم الكامل <span class="required">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input asp-for="FullName" class="input-field" placeholder="أدخل اسمك الكامل" autocomplete="name" />
+                        <i class="fas fa-user input-icon"></i>
+                    </div>
+                    <span asp-validation-for="FullName" class="validation-error"></span>
+                </div>
+
+                <!-- اسم المستخدم -->
+                <div class="form-group">
+                    <label class="input-label" asp-for="UserName">
+                        اسم المستخدم <span class="required">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input asp-for="UserName" class="input-field" placeholder="اختر اسم مستخدم فريد" autocomplete="username" />
+                        <i class="fas fa-at input-icon"></i>
+                    </div>
+                    <span asp-validation-for="UserName" class="validation-error"></span>
+                </div>
+
+                <!-- البريد الإلكتروني -->
+                <div class="form-group">
+                    <label class="input-label" asp-for="Email">
+                        البريد الإلكتروني <span class="required">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input asp-for="Email" class="input-field" placeholder="example@email.com" type="email" autocomplete="email" />
+                        <i class="fas fa-envelope input-icon"></i>
+                    </div>
+                    <span asp-validation-for="Email" class="validation-error"></span>
+                </div>
+
+                <!-- رقم الهاتف (اختياري) -->
+                <div class="form-group">
+                    <label class="input-label" asp-for="PhoneNumber">
+                        رقم الهاتف <span style="color: var(--icon-color); font-weight: 400;">(اختياري)</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input asp-for="PhoneNumber" class="input-field" placeholder="+966 5X XXX XXXX" type="tel" autocomplete="tel" />
+                        <i class="fas fa-phone input-icon"></i>
+                    </div>
+                    <span asp-validation-for="PhoneNumber" class="validation-error"></span>
+                </div>
+
+                <!-- كلمة المرور -->
+                <div class="form-group">
+                    <label class="input-label" asp-for="Password">
+                        كلمة المرور <span class="required">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input asp-for="Password" class="input-field" placeholder="6 أحرف على الأقل" type="password" id="passwordInput" autocomplete="new-password" />
+                        <i class="fas fa-lock input-icon"></i>
+                        <button type="button" class="toggle-password" id="togglePassword" tabindex="-1">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="password-strength">
+                        <div class="password-strength-bar" id="passwordStrengthBar"></div>
+                    </div>
+                    <span asp-validation-for="Password" class="validation-error"></span>
+                </div>
+
+                <!-- تأكيد كلمة المرور -->
+                <div class="form-group">
+                    <label class="input-label" asp-for="ConfirmPassword">
+                        تأكيد كلمة المرور <span class="required">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input asp-for="ConfirmPassword" class="input-field" placeholder="أعد إدخال كلمة المرور" type="password" id="confirmPasswordInput" autocomplete="new-password" />
+                        <i class="fas fa-lock input-icon"></i>
+                        <button type="button" class="toggle-password" id="toggleConfirmPassword" tabindex="-1">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="ConfirmPassword" class="validation-error"></span>
+                </div>
+
+                <!-- الوصف (اختياري) -->
+                <div class="form-group">
+                    <label class="input-label" asp-for="Description">
+                        نبذة عنك <span style="color: var(--icon-color); font-weight: 400;">(اختياري)</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input asp-for="Description" class="input-field" placeholder="اكتب نبذة قصيرة عن نفسك" />
+                        <i class="fas fa-quote-right input-icon"></i>
+                    </div>
+                    <span asp-validation-for="Description" class="validation-error"></span>
+                </div>
+
+                <!-- الموافقة على الشروط -->
+                <div class="terms-group">
+                    <input asp-for="AcceptTerms" type="checkbox" id="acceptTerms" />
+                    <label for="acceptTerms">
+                        أوافق على <a href="/Home/Privacy" target="_blank">سياسة الخصوصية</a> و
+                        <a href="/Home/Terms" target="_blank">الشروط والأحكام</a> الخاصة بمنصة سومر
+                    </label>
+                </div>
+                <span asp-validation-for="AcceptTerms" class="validation-error" style="display: block; margin-top: -10px; margin-bottom: 10px;"></span>
+
+                <!-- زر التسجيل -->
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <i class="fas fa-user-plus"></i>
+                    <span>إنشاء الحساب</span>
+                </button>
+            </form>
+
+            <div class="login-link">
+                لديك حساب بالفعل؟
+                <a asp-action="Login">تسجيل الدخول</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+
+               
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('--- Register Form Diagnostics ---');
+            console.log('jQuery loaded:', typeof jQuery !== 'undefined');
+            console.log('jQuery Validate loaded:', typeof jQuery !== 'undefined' && typeof jQuery.fn.validate !== 'undefined');
+            console.log('Unobtrusive loaded:', typeof jQuery !== 'undefined' && typeof jQuery.validator !== 'undefined' && typeof jQuery.validator.unobtrusive !== 'undefined');
+            console.log('Form found:', !!document.getElementById('registerForm'));
+            console.log('Submit btn found:', !!document.getElementById('submitBtn'));
+            console.log('Terms checkbox found:', !!document.getElementById('acceptTerms'));
+
+            if (typeof jQuery !== 'undefined' && jQuery('#registerForm').length) {
+                console.log('Form valid now:', jQuery('#registerForm').valid());
+                // اطبع الحقول غير الصالحة
+                jQuery('#registerForm').validate();
+                if (jQuery('#registerForm').data('validator')) {
+                    console.log('Invalid fields:', jQuery('#registerForm').data('validator').invalidElements?.() || []);
+                }
+            }
+        });
+        // ==========================================
+        // إظهار/إخفاء كلمة المرور
+        // ==========================================
+        function setupPasswordToggle(toggleId, inputId) {
+            const toggle = document.getElementById(toggleId);
+            const input = document.getElementById(inputId);
+            if (toggle && input) {
+                toggle.addEventListener('click', function () {
+                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                    input.setAttribute('type', type);
+                    const icon = this.querySelector('i');
+                    icon.classList.toggle('fa-eye');
+                    icon.classList.toggle('fa-eye-slash');
+                });
+            }
+        }
+
+        setupPasswordToggle('togglePassword', 'passwordInput');
+        setupPasswordToggle('toggleConfirmPassword', 'confirmPasswordInput');
+
+        // ==========================================
+        // مؤشر قوة كلمة المرور
+        // ==========================================
+        const passwordInput = document.getElementById('passwordInput');
+        const strengthBar = document.getElementById('passwordStrengthBar');
+
+        if (passwordInput && strengthBar) {
+            passwordInput.addEventListener('input', function () {
+                const value = this.value;
+                let score = 0;
+
+                if (value.length >= 6) score++;
+                if (value.length >= 10) score++;
+                if (/[a-z]/.test(value) && /[A-Z]/.test(value)) score++;
+                if (/[0-9]/.test(value)) score++;
+                if (/[^a-zA-Z0-9]/.test(value)) score++;
+
+                strengthBar.className = 'password-strength-bar';
+
+                if (value.length === 0) {
+                    strengthBar.style.width = '0';
+                } else if (score <= 2) {
+                    strengthBar.classList.add('weak');
+                } else if (score <= 4) {
+                    strengthBar.classList.add('medium');
+                } else {
+                    strengthBar.classList.add('strong');
+                }
+            });
+        }
+
+        // ==========================================
+        // تحسين تجربة الإدخال
+        // ==========================================
+        document.querySelectorAll('.input-field').forEach(input => {
+            input.addEventListener('focus', function () {
+                const icon = this.parentElement.querySelector('.input-icon');
+                if (icon) icon.style.color = '#210057';
+            });
+
+            input.addEventListener('blur', function () {
+                const icon = this.parentElement.querySelector('.input-icon');
+                if (icon) icon.style.color = '#9496a5';
+            });
+        });
+
+           
+        // ==========================================
+        // منع الإرسال المزدوج + تحقق يدوي من الشروط
+        // ==========================================
+        (function () {
+            const form = document.getElementById('registerForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const terms = document.getElementById('acceptTerms');
+            const termsError = document.querySelector('[data-valmsg-for="AcceptTerms"]');
+            if (!form || !submitBtn) return;
+
+            form.addEventListener('submit', function (e) {
+                // 1) تحقق يدوي من الشروط (قبل jQuery Validate)
+                if (terms && !terms.checked) {
+                    e.preventDefault();
+                    if (termsError) {
+                        termsError.textContent = 'يجب الموافقة على الشروط والأحكام';
+                        termsError.style.display = 'block';
+                    } else {
+                        alert('يجب الموافقة على الشروط والأحكام');
+                    }
+                    terms.focus();
+                    return;
+                }
+                // إخفاء رسالة الشروط إذا تم التحقق
+                if (termsError && terms && terms.checked) {
+                    termsError.style.display = 'none';
+                    termsError.textContent = '';
+                }
+
+                // 2) إذا كان jQuery Validate متاحاً، تحقق من بقية الحقول
+                try {
+                    if (window.jQuery && jQuery.fn.valid && !jQuery(form).valid()) {
+                        // فشل التحقق — jQuery Validate يعرض الأخطاء
+                        return;
+                    }
+                } catch (err) {
+                    console.warn('Validation check failed:', err);
+                    // لا تمنع الإرسال — نترك الخادم يتحقق
+                }
+
+                // 3) عطّل الزر بعد بدء الإرسال (setTimeout لضمان عدم منع الإرسال)
+                setTimeout(function () {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>جارٍ إنشاء الحساب...</span>';
+                }, 0);
+            });
+
+            // إعادة التفعيل عند أي عرض للصفحة
+            function resetSubmitButton() {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-user-plus"></i><span>إنشاء الحساب</span>';
+            }
+
+            document.addEventListener('DOMContentLoaded', resetSubmitButton);
+            window.addEventListener('pageshow', resetSubmitButton);
+        })();
+
+        // ==========================================
+        // إعادة تفعيل الزر عند الرجوع للصفحة
+        // ==========================================
+        window.addEventListener('pageshow', function () {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-user-plus"></i><span>إنشاء الحساب</span>';
+            }
+        });
+
+
+    </script>
+</body>
+</html>

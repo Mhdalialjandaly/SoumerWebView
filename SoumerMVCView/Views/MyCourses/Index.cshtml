@@ -28,9 +28,9 @@
             <div class="stats-label">نقطة منفقة</div>
         </div>
         <div class="stats-card">
-            <div class="stats-icon">🎓</div>
-            <div class="stats-number">@Model.EnrolledCourses.Count</div>
-            <div class="stats-label">شهادة</div>
+            <div class="stats-icon">🎬</div>
+            <div class="stats-number">@Model.TotalVideos</div>
+            <div class="stats-label">فيديو</div>
         </div>
     </div>
 
@@ -55,73 +55,122 @@
                     ? Model.CourseVideos[enrollment.CourseId]
                     : new List<CourseVideoDto>();
 
-                    <div class="course-item-wrapper" id="courseWrapper-@enrollment.CourseId">
-                        <div class="course-item" onclick="toggleVideos(@enrollment.CourseId)">
-                            <div class="course-icon">📘</div>
-                            <div class="course-info">
-                                <div class="course-name">@enrollment.Course.Name</div>
-                                <div class="course-date">
-                                    <i class="fa-regular fa-calendar"></i>
-                                    تاريخ التسجيل: @enrollment.CreatedAt.ToString("yyyy/MM/dd")
+                    <div class="course-item-wrapper">
+                        <!-- استخدام details/summary بدلاً من JavaScript -->
+                        <details class="course-details">
+                            <summary class="course-item">
+                                <div class="course-icon">📘</div>
+                                <div class="course-info">
+                                    <div class="course-name">@enrollment.Course.Name</div>
+                                    <div class="course-date">
+                                        <i class="fa-regular fa-calendar"></i>
+                                        تاريخ التسجيل: @enrollment.CreatedAt.ToString("yyyy/MM/dd")
+                                    </div>
                                 </div>
-                            </div>
-                            @if (videos.Any())
-                            {
-                                <span class="course-videos-count">
-                                    <i class="fa-solid fa-play"></i>
-                                    @videos.Count(v => v.IsPublished) فيديو
+                                @if (videos.Any())
+                                {
+                                    <span class="course-videos-count">
+                                        <i class="fa-solid fa-play"></i>
+                                        @videos.Count(v => v.IsPublished) فيديو
+                                    </span>
+                                }
+                                <span class="course-price-badge">
+                                    @enrollment.Course.Price.ToString("N0") نقطة
                                 </span>
-                            }
-                            <span class="course-price-badge">
-                                @enrollment.Course.Price.ToString("N0") نقطة
-                            </span>
-                            <a href="/Course/Details/@enrollment.CourseId" class="course-details-btn" onclick="event.stopPropagation();">
-                                <i class="fa-solid fa-eye"></i>
-                                التفاصيل
-                            </a>
-                        </div>
+                                <a href="/Course/Details/@enrollment.CourseId" class="course-details-btn" onclick="event.stopPropagation(); event.preventDefault();">
+                                    <i class="fa-solid fa-eye"></i>
+                                    التفاصيل
+                                </a>
+                            </summary>
 
-                        <!-- قائمة الفيديوهات -->
-                        @if (videos.Any(v => v.IsPublished))
-                        {
-                            <div class="course-videos-dropdown" id="videosDropdown-@enrollment.CourseId">
-                                <div class="videos-header">
-                                    <span>🎬 فيديوهات الكورس</span>
-                                    <span>@videos.Count(v => v.IsPublished) فيديو</span>
-                                </div>
-                                <div class="videos-list">
-                                    @foreach (var video in videos.Where(v => v.IsPublished))
-                                    {
-                                        <div class="video-item" onclick="watchVideo(@video.Id)">
-                                            <div class="video-thumbnail">
-                                                @if (!string.IsNullOrEmpty(video.EmbedUrl))
-                                                {
-                                                    <img src="@video.EmbedUrl" alt="@video.Title">
-                                                }
-                                                else
-                                                {
+                            @if (videos.Any(v => v.IsPublished))
+                            {
+                                <div class="videos-dropdown-content">
+                                    <div class="videos-header">
+                                        <span>🎬 فيديوهات الكورس</span>
+                                        <span>@videos.Count(v => v.IsPublished) فيديو</span>
+                                    </div>
+                                    <div class="videos-list">
+                                        @foreach (var video in videos.Where(v => v.IsPublished))
+                                        {
+                                            <div class="video-item">
+                                                <div class="video-thumbnail">
                                                     <i class="fa-solid fa-play"></i>
-                                                }
-                                                <div class="video-play-overlay">
+                                                    <div class="video-play-overlay">
+                                                        <i class="fa-solid fa-play"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="video-info">
+                                                    <div class="video-title">@video.Title</div>
+                                                    <div class="video-duration">
+                                                        <i class="fa-regular fa-clock"></i>
+                                                        @(video.Duration > 0 ? $"{video.Duration} دقيقة" : "المدة غير محددة")
+                                                    </div>
+                                                </div>
+
+                                                <!-- زر فتح المودال باستخدام Bootstrap Modal -->
+                                                <button class="video-watch-btn" data-bs-toggle="modal" data-bs-target="#videoModal-@video.Id">
                                                     <i class="fa-solid fa-play"></i>
+                                                    معاينة
+                                                </button>
+
+                                                <a href="@Url.Action("WatchVideo", "MyCourses", new { videoId = video.Id })"
+                                                   class="btn-fullscreen-watch">
+                                                    <i class="fa-solid fa-expand"></i>
+                                                    مشاهدة
+                                                </a>
+                                            </div>
+
+                                            <!-- مودال معاينة الفيديو لكل فيديو -->
+                                            <div class="modal fade" id="videoModal-@video.Id" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                    <div class="modal-content" style="border-radius: 20px; overflow: hidden;">
+                                                        <div class="modal-header" style="background: #210057; color: #fff; border: none;">
+                                                            <h5 class="modal-title">
+                                                                <i class="fa-solid fa-play-circle me-2"></i>
+                                                                @video.Title
+                                                            </h5>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body p-0">
+                                                            <div class="ratio ratio-16x9">
+                                                                @if (!string.IsNullOrEmpty(video.EmbedUrl))
+                                                                {
+                                                                    <iframe src="@video.EmbedUrl"
+                                                                            title="@video.Title"
+                                                                            frameborder="0"
+                                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                                            allowfullscreen>
+                                                                    </iframe>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <div style="background: #000; color: #fff; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                                                                        <i class="fa-solid fa-video-slash" style="font-size: 3rem; margin-bottom: 16px;"></i>
+                                                                        <p>رابط الفيديو غير متوفر</p>
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                            <div style="padding: 16px 20px;">
+                                                                @if (!string.IsNullOrEmpty(video.Description))
+                                                                {
+                                                                    <p style="color: #9496a5; margin-bottom: 12px;">@video.Description</p>
+                                                                }
+                                                                <a href="@Url.Action("WatchVideo", "MyCourses", new { videoId = video.Id })"
+                                                                   class="btn-fullscreen-watch">
+                                                                    <i class="fa-solid fa-expand"></i>
+                                                                    مشاهدة في صفحة كاملة
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="video-info">
-                                                <div class="video-title">@video.Title</div>
-                                                <div class="video-duration">
-                                                    <i class="fa-regular fa-clock"></i>
-                                                    @(video.Duration > 0 ? $"{video.Duration} دقيقة" : "المدة غير محددة")
-                                                </div>
-                                            </div>
-                                            <button class="video-watch-btn" onclick="event.stopPropagation(); watchVideo(@video.Id)">
-                                                <i class="fa-solid fa-play"></i>
-                                                مشاهدة
-                                            </button>
-                                        </div>
-                                    }
+                                        }
+                                    </div>
                                 </div>
-                            </div>
-                        }
+                            }
+                        </details>
                     </div>
                 }
             </div>
@@ -140,123 +189,3 @@
         }
     </div>
 </div>
-
-<!-- مودال مشاهدة الفيديو -->
-<div class="video-modal-overlay" id="videoModalOverlay">
-    <div class="video-modal">
-        <div class="video-modal-header">
-            <h3 class="video-modal-title">
-                <i class="fa-solid fa-play-circle"></i>
-                <span id="videoModalTitle">مشاهدة الفيديو</span>
-            </h3>
-            <button class="video-modal-close" onclick="closeVideoModal()">
-                <i class="fa-solid fa-times"></i>
-            </button>
-        </div>
-        <div class="video-modal-body">
-            <div class="video-player-container">
-                <video id="videoPlayer" controls>
-                    <source src="" type="video/mp4">
-                    متصفحك لا يدعم تشغيل الفيديو
-                </video>
-            </div>
-            <div class="video-modal-info">
-                <p class="video-modal-description" id="videoModalDescription"></p>
-            </div>
-        </div>
-    </div>
-</div>
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        // ==========================================
-        // إصلاح مشكلة Permissions API
-        // ==========================================
-        (function() {
-            // إصلاح مشكلة Illegal invocation
-            if (navigator.permissions && navigator.permissions.query) {
-                const originalQuery = navigator.permissions.query.bind(navigator.permissions);
-                navigator.permissions.query = function(permissionDesc) {
-                    try {
-                        return originalQuery(permissionDesc);
-                    } catch (error) {
-                        console.warn('Permissions API error:', error);
-                        return Promise.resolve({ state: 'granted' });
-                    }
-                };
-            }
-        })();
-
-        // تبديل عرض الفيديوهات
-        function toggleVideos(courseId) {
-            const dropdown = document.getElementById(`videosDropdown-${courseId}`);
-            if (dropdown) {
-                dropdown.classList.toggle('open');
-            }
-        }
-
-        // معاينة الفيديو في المودال
-               // معاينة الفيديو في المودال - طريقة بديلة
-        async function watchVideoInModal(videoId) {
-            try {
-                const response = await fetch(`/MyCourses/GetVideoDetails?videoId=${videoId}`);
-                const data = await response.json();
-
-                if (data.success && data.video) {
-                    const video = data.video;
-                    const embedUrl = video.embedUrl || video.videoUrl;
-
-                    document.getElementById('videoModalTitle').textContent = video.title;
-                    document.getElementById('videoModalDescription').textContent = video.description || 'لا يوجد وصف';
-
-                    const fullscreenLink = document.getElementById('fullscreenWatchLink');
-                    fullscreenLink.href = `/MyCourses/WatchVideo/${video.id}`;
-
-                    // استخدام طريقة أكثر أماناً لإنشاء iframe
-                    const playerContainer = document.getElementById('videoModalPlayer');
-
-                    // تنظيف المحتوى السابق
-                    while (playerContainer.firstChild) {
-                        playerContainer.removeChild(playerContainer.firstChild);
-                    }
-
-                    // إنشاء iframe جديد
-                    const iframe = document.createElement('iframe');
-                    iframe.src = embedUrl;
-                    iframe.title = video.title;
-                    iframe.frameBorder = '0';
-                    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-                    iframe.allowFullscreen = true;
-                    iframe.style.width = '100%';
-                    iframe.style.height = '100%';
-
-                    playerContainer.appendChild(iframe);
-
-                    document.getElementById('videoModalOverlay').classList.add('show');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-
-        // إغلاق مودال الفيديو
-        function closeVideoModal() {
-            document.getElementById('videoModalOverlay').classList.remove('show');
-            document.getElementById('videoModalPlayer').innerHTML = '';
-        }
-
-        // إغلاق المودال عند النقر خارجه
-        document.getElementById('videoModalOverlay').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeVideoModal();
-            }
-        });
-
-        // إغلاق المودال بزر Escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeVideoModal();
-            }
-        });
-    </script>
-}
