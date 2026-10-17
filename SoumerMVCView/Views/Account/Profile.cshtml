@@ -4,314 +4,1049 @@
 @{
     ViewData["Title"] = "الملف الشخصي";
     var user = await UserManager.GetUserAsync(User);
+    var initial = (user?.FullName ?? user?.UserName ?? "؟").Trim();
+    initial = initial.Length > 0 ? initial.Substring(0, 1).ToUpper() : "؟";
 }
 
-<div class="profile-container">
-    <!-- HEADER -->
-    <div class="profile-header">
-        <div class="profile-cover">
+<div class="profile-page">
+
+    <!-- ==========================================
+         بطاقة الهوية
+         ========================================== -->
+    <div class="profile-hero">
+        <div class="profile-hero-bg"></div>
+
+        <div class="profile-hero-content">
             <div class="profile-avatar-wrapper">
-                <div class="profile-avatar">
+                <div class="profile-avatar" id="profileAvatar">
                     @if (!string.IsNullOrEmpty(user?.AvatarUrl))
                     {
-                        <img src="@user.AvatarUrl" alt="@user.UserName" />
+                        <img id="profileAvatarImg" src="@user.AvatarUrl" alt="@user.UserName" />
+                        <span id="profileAvatarInitial" class="avatar-initial" style="display:none;">@initial</span>
                     }
                     else
                     {
-                        <span>👨‍🏫</span>
+                        <span id="profileAvatarInitial" class="avatar-initial">@initial</span>
+                        <img id="profileAvatarImg" src="" alt="" style="display:none;" />
                     }
                 </div>
-                <button class="change-avatar-btn" id="changeAvatarBtn" title="تغيير الصورة">
-                    📷
+                <button class="change-avatar-btn" id="changeAvatarBtn" type="button" title="تغيير الصورة">
+                    <i class="fas fa-camera"></i>
                 </button>
             </div>
-            <div class="profile-info">
-                <h1 class="profile-name">@(user?.FullName ?? user?.UserName)</h1>
-                <p class="profile-email">@user?.Email</p>
-                <div class="profile-badges">
-                    @if (user?.EmailConfirmed == true)
-                    {
-                        <span class="badge">
-                            <span class="badge-icon">✅</span>
-                            البريد مؤكد
-                        </span>
-                    }
-                    @if (user?.IsActive == true)
-                    {
-                        <span class="badge">
-                            <span class="badge-icon">🟢</span>
-                            نشط
-                        </span>
-                    }
-                </div>
+
+            <h1 class="profile-hero-name">@(user?.FullName ?? user?.UserName)</h1>
+            <p class="profile-hero-email">@user?.Email</p>
+
+            <div class="profile-hero-badges">
+                @if (user?.EmailConfirmed == true)
+                {
+                    <span class="pill pill-success">
+                        <i class="fas fa-check-circle"></i>
+                        البريد مؤكد
+                    </span>
+                }
+                else
+                {
+                    <span class="pill pill-warning">
+                        <i class="fas fa-exclamation-circle"></i>
+                        البريد غير مؤكد
+                    </span>
+                }
+                @if (user?.IsActive == true)
+                {
+                    <span class="pill pill-primary">
+                        <i class="fas fa-circle"></i>
+                        نشط
+                    </span>
+                }
             </div>
-            <button class="edit-profile-btn" id="editProfileBtn">
-                ✏️ تعديل الملف الشخصي
+
+            <button class="btn btn-primary profile-edit-toggle" id="editProfileBtn" type="button">
+                <i class="fas fa-pen"></i>
+                تعديل الملف
             </button>
         </div>
     </div>
 
-    <!-- CONTENT -->
-    <div class="profile-content">
-        <!-- SIDEBAR -->
-        <div class="profile-sidebar">
-            <!-- STATS -->
-            <div class="stats-card">
-                <h3>📊 إحصائيات</h3>
-                <div class="stat-item">
-                    <div class="stat-icon">📅</div>
-                    <div class="stat-info">
-                        <span class="stat-label">تاريخ الانضمام</span>
-                        <span class="stat-value">@user?.CreatedAt.ToString("dd MMMM yyyy")</span>
-                    </div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-icon">🕒</div>
-                    <div class="stat-info">
-                        <span class="stat-label">آخر دخول</span>
-                        <span class="stat-value">@(user?.LastLogin?.ToString("dd MMMM yyyy") ?? "لم يسجل بعد")</span>
-                    </div>
-                </div>
+    <!-- ==========================================
+         الإحصائيات السريعة
+         ========================================== -->
+    <div class="profile-stats">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+            <div class="stat-body">
+                <span class="stat-value">@(user?.CreatedAt.ToString("dd MMM yyyy") ?? "—")</span>
+                <span class="stat-label">تاريخ الانضمام</span>
             </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-body">
+                <span class="stat-value">@(user?.LastLogin?.ToString("dd MMM yyyy") ?? "لم يسجل")</span>
+                <span class="stat-label">آخر دخول</span>
+            </div>
+        </div>
+    </div>
 
-            <!-- QUICK ACTIONS -->
-            <div class="quick-actions-card">
-                <h3>⚡ إجراءات سريعة</h3>
-                <button class="quick-action" onclick="location.href='/Account/ChangePassword'">
-                    <span>🔑</span>
-                    تغيير كلمة المرور
-                </button>
-                <button class="quick-action" onclick="location.href='/Account/Settings'">
-                    <span>⚙️</span>
-                    الإعدادات
-                </button>
-                <button class="quick-action" onclick="location.href='/MyCourses/Index'">
-                    <span>📖</span>
-                    كورساتي
-                </button>
-                <button class="quick-action" onclick="location.href='/Balance/Index'">
-                    <span>💎</span>
-                    نقاطي
-                </button>
+    <!-- ==========================================
+         المعلومات الشخصية
+         ========================================== -->
+    <div class="card profile-card">
+        <div class="card-head">
+            <h2 class="card-title">
+                <i class="fas fa-id-card"></i>
+                المعلومات الشخصية
+            </h2>
+            <button class="card-action" id="editInfoBtn" type="button">تعديل</button>
+        </div>
+
+        <div class="info-list">
+            <div class="info-row">
+                <span class="info-label">اسم المستخدم</span>
+                <span class="info-value" id="usernameValue">@user?.UserName</span>
+                <input class="info-input" id="usernameInput" value="@user?.UserName" style="display:none;" />
+            </div>
+            <div class="info-row">
+                <span class="info-label">الاسم الكامل</span>
+                <span class="info-value" id="fullNameValue">@(user?.FullName ?? "غير محدد")</span>
+                <input class="info-input" id="fullNameInput" value="@user?.FullName" style="display:none;" />
+            </div>
+            <div class="info-row">
+                <span class="info-label">البريد الإلكتروني</span>
+                <span class="info-value" id="emailValue">@user?.Email</span>
+                <input class="info-input" id="emailInput" type="email" value="@user?.Email" style="display:none;" />
+            </div>
+            <div class="info-row">
+                <span class="info-label">رقم الهاتف</span>
+                <span class="info-value" id="phoneValue">@(user?.PhoneNumber ?? "غير مضاف")</span>
+                <input class="info-input" id="phoneInput" type="tel" value="@user?.PhoneNumber" style="display:none;" />
+            </div>
+            <div class="info-row info-row-col">
+                <span class="info-label">الوصف</span>
+                <span class="info-value info-multiline" id="descriptionValue">@(user?.Description ?? "لا يوجد وصف")</span>
+                <textarea class="info-input" id="descriptionInput" rows="3" style="display:none;">@user?.Description</textarea>
             </div>
         </div>
 
-        <!-- MAIN -->
-        <div class="profile-main">
-            <!-- PERSONAL INFO -->
-            <div class="info-card">
-                <div class="card-header">
-                    <h3>📋 المعلومات الشخصية</h3>
-                    <button class="edit-section-btn" data-section="personal">
-                        تعديل
-                    </button>
-                </div>
-                <div class="info-grid">
-                    <div class="info-field">
-                        <label>اسم المستخدم</label>
-                        <div class="field-value" id="usernameValue">@user?.UserName</div>
-                        <input type="text" class="edit-input" id="usernameInput" value="@user?.UserName" style="display: none;">
-                    </div>
-                    <div class="info-field">
-                        <label>الاسم الكامل</label>
-                        <div class="field-value" id="fullNameValue">@(user?.FullName ?? "غير محدد")</div>
-                        <input type="text" class="edit-input" id="fullNameInput" value="@user?.FullName" style="display: none;">
-                    </div>
-                    <div class="info-field">
-                        <label>البريد الإلكتروني</label>
-                        <div class="field-value" id="emailValue">@user?.Email</div>
-                        <input type="email" class="edit-input" id="emailInput" value="@user?.Email" style="display: none;">
-                    </div>
-                    <div class="info-field">
-                        <label>رقم الهاتف</label>
-                        <div class="field-value" id="phoneValue">@(user?.PhoneNumber ?? "غير مضاف")</div>
-                        <input type="tel" class="edit-input" id="phoneInput" value="@user?.PhoneNumber" style="display: none;">
-                    </div>
-                    <div class="info-field full-width">
-                        <label>الوصف</label>
-                        <div class="field-value" id="descriptionValue">@(user?.Description ?? "لا يوجد وصف")</div>
-                        <textarea class="edit-input" id="descriptionInput" rows="3" style="display: none;">@user?.Description</textarea>
-                    </div>
-                </div>
-                <div class="edit-actions" id="personalEditActions" style="display: none;">
-                    <button class="save-btn" onclick="savePersonalInfo()">💾 حفظ</button>
-                    <button class="cancel-btn" onclick="cancelEdit('personal')">إلغاء</button>
-                </div>
-            </div>
+        <div class="edit-actions" id="personalEditActions" style="display:none;">
+            <button class="btn btn-primary" type="button" onclick="savePersonalInfo()">
+                <i class="fas fa-save"></i>
+                حفظ
+            </button>
+            <button class="btn btn-ghost" type="button" onclick="cancelEdit()">إلغاء</button>
+        </div>
+    </div>
 
-            <!-- SECURITY -->
-            <div class="info-card">
-                <div class="card-header">
-                    <h3>🔐 الأمان</h3>
-                </div>
-                <div class="security-options">
-                    <div class="security-item">
-                        <div class="security-info">
-                            <span class="security-icon">🔑</span>
-                            <div>
-                                <h4>كلمة المرور</h4>
-                                <p>تغيير كلمة المرور الخاصة بك</p>
-                            </div>
-                        </div>
-                        <button class="security-action" onclick="location.href='/Account/ChangePassword'">
-                            تغيير
-                        </button>
-                    </div>
-                    <div class="security-item">
-                        <div class="security-info">
-                            <span class="security-icon">📧</span>
-                            <div>
-                                <h4>البريد الإلكتروني</h4>
-                                <p>@(user?.EmailConfirmed == true ? "تم التحقق" : "لم يتم التحقق")</p>
-                            </div>
-                        </div>
-                        @if (user?.EmailConfirmed != true)
-                        {
-                            <button class="security-action" onclick="verifyEmail()">
-                                تحقق
-                            </button>
-                        }
-                    </div>
-                </div>
+    <!-- ==========================================
+         الأمان
+         ========================================== -->
+    <div class="card profile-card">
+        <div class="card-head">
+            <h2 class="card-title">
+                <i class="fas fa-shield-alt"></i>
+                الأمان
+            </h2>
+        </div>
+
+        <div class="security-list">
+            <button class="security-row" type="button" onclick="location.href='/Account/ChangePassword'">
+                <span class="security-icon"><i class="fas fa-key"></i></span>
+                <span class="security-body">
+                    <span class="security-title">كلمة المرور</span>
+                    <span class="security-desc">تغيير كلمة المرور الخاصة بك</span>
+                </span>
+                <i class="fas fa-chevron-left security-arrow"></i>
+            </button>
+
+            <div class="security-row">
+                <span class="security-icon"><i class="fas fa-envelope"></i></span>
+                <span class="security-body">
+                    <span class="security-title">البريد الإلكتروني</span>
+                    <span class="security-desc">@(user?.EmailConfirmed == true ? "تم التحقق" : "لم يتم التحقق")</span>
+                </span>
+                @if (user?.EmailConfirmed != true)
+                {
+                    <button class="btn btn-ghost btn-sm" type="button" onclick="verifyEmail()">تحقق</button>
+                }
+                else
+                {
+                    <span class="pill pill-success pill-sm">
+                        <i class="fas fa-check"></i>
+                        مؤكد
+                    </span>
+                }
             </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         إجراءات سريعة
+         ========================================== -->
+    <div class="card profile-card">
+        <div class="card-head">
+            <h2 class="card-title">
+                <i class="fas fa-bolt"></i>
+                إجراءات سريعة
+            </h2>
+        </div>
+        <div class="quick-grid">
+            <a class="quick-tile" href="/Account/Settings">
+                <i class="fas fa-cog"></i>
+                <span>الإعدادات</span>
+            </a>
+            <a class="quick-tile" href="/MyCourses/Index">
+                <i class="fas fa-book-open"></i>
+                <span>كورساتي</span>
+            </a>
+            <a class="quick-tile" href="/Balance/Index">
+                <i class="fas fa-gem"></i>
+                <span>نقاطي</span>
+            </a>
+            <form asp-action="Logout" method="post" class="quick-tile-form">
+                @Html.AntiForgeryToken()
+                <button class="quick-tile quick-tile-danger" type="submit">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>خروج</span>
+                </button>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- AVATAR MODAL -->
-<div id="avatarModal" class="modal">
-    <div class="modal-content avatar-modal">
-        <h3>تغيير الصورة الشخصية</h3>
+<!-- ==========================================
+     مودال تغيير الصورة
+     ========================================== -->
+<div class="modal-overlay" id="avatarModal">
+    <div class="modal-sheet">
+        <div class="modal-head">
+            <h3>تغيير الصورة الشخصية</h3>
+            <button class="modal-close" type="button" id="closeAvatarModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
         <div class="avatar-options">
-            <div class="avatar-option" data-avatar="👨‍🏫">👨‍🏫</div>
-            <div class="avatar-option" data-avatar="👩‍🏫">👩‍🏫</div>
-            <div class="avatar-option" data-avatar="👨‍🎓">👨‍🎓</div>
-            <div class="avatar-option" data-avatar="👩‍🎓">👩‍🎓</div>
-            <div class="avatar-option" data-avatar="📚">📚</div>
-            <div class="avatar-option" data-avatar="🎓">🎓</div>
+            <button class="avatar-option" type="button" data-avatar="👨‍🏫">👨‍🏫</button>
+            <button class="avatar-option" type="button" data-avatar="👩‍🏫">👩‍🏫</button>
+            <button class="avatar-option" type="button" data-avatar="👨‍🎓">👨‍🎓</button>
+            <button class="avatar-option" type="button" data-avatar="👩‍🎓">👩‍🎓</button>
+            <button class="avatar-option" type="button" data-avatar="📚">📚</button>
+            <button class="avatar-option" type="button" data-avatar="🎓">🎓</button>
         </div>
-        <button class="close-modal-btn">إغلاق</button>
     </div>
 </div>
+
+<style>
+    /* ==========================================
+           تنسيقات خاصة بالصفحة - تعتمد على متغيرات site.css
+           ========================================== */
+    .profile-page {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: var(--spacing-lg);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-lg);
+    }
+
+    /* ---------- بطاقة الهوية ---------- */
+    .profile-hero {
+        position: relative;
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        background: var(--white);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-color);
+    }
+
+    .profile-hero-bg {
+        height: 110px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+        position: relative;
+    }
+
+        .profile-hero-bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15), transparent 60%), radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1), transparent 60%);
+        }
+
+    .profile-hero-content {
+        position: relative;
+        padding: 0 var(--spacing-lg) var(--spacing-lg);
+        margin-top: -50px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: var(--spacing-sm);
+    }
+
+    .profile-avatar-wrapper {
+        position: relative;
+        width: 100px;
+        height: 100px;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--primary-soft);
+        border: 4px solid var(--white);
+        box-shadow: var(--shadow-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        color: var(--primary-color);
+        font-weight: 800;
+    }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .avatar-initial {
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--primary-color);
+        line-height: 1;
+    }
+
+    .change-avatar-btn {
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: var(--white);
+        border: 3px solid var(--white);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 0.8rem;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+    }
+
+        .change-avatar-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+
+    .profile-hero-name {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--text-color);
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    .profile-hero-email {
+        font-size: 0.8rem;
+        color: var(--icon-color);
+        margin: 0;
+    }
+
+    .profile-hero-badges {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 4px;
+    }
+
+    .profile-edit-toggle {
+        margin-top: var(--spacing-sm);
+        padding: 8px 16px;
+        font-size: 0.8rem;
+        border-radius: var(--radius-md);
+    }
+
+    /* ---------- شارات (Pills) ---------- */
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    .pill-sm {
+        padding: 3px 8px;
+        font-size: 0.65rem;
+    }
+
+    .pill-primary {
+        background: var(--primary-soft);
+        color: var(--primary-color);
+    }
+
+    .pill-success {
+        background: #d1fae5;
+        color: #059669;
+    }
+
+    .pill-warning {
+        background: #fef3c7;
+        color: #b45309;
+    }
+
+    /* ---------- الإحصائيات ---------- */
+    .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-md);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .stat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: var(--radius-md);
+        background: var(--primary-soft);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .stat-body {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .stat-value {
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: var(--text-color);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        color: var(--icon-color);
+        font-weight: 500;
+    }
+
+    /* ---------- بطاقة عامة ---------- */
+    .profile-card {
+        padding: var(--spacing-lg);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+
+    .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: var(--spacing-sm);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--text-color);
+        margin: 0;
+    }
+
+        .card-title i {
+            color: var(--primary-color);
+            font-size: 0.9rem;
+        }
+
+    .card-action {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--primary-color);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: inherit;
+    }
+
+        .card-action:hover {
+            background: var(--primary-soft);
+            border-color: var(--primary-color);
+        }
+
+    /* ---------- قائمة المعلومات ---------- */
+    .info-list {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--spacing-md);
+        padding: 10px 0;
+        border-bottom: 1px dashed var(--border-color);
+    }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+    .info-row-col {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    .info-label {
+        font-size: 0.78rem;
+        color: var(--icon-color);
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .info-value {
+        font-size: 0.85rem;
+        color: var(--text-color);
+        font-weight: 600;
+        text-align: left;
+        word-break: break-word;
+        flex: 1;
+    }
+
+    .info-multiline {
+        text-align: right;
+        line-height: 1.5;
+        font-weight: 500;
+    }
+
+    .info-input {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 0.9rem;
+        font-family: inherit;
+        color: var(--text-color);
+        background: var(--light-bg);
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-md);
+        transition: all 0.2s ease;
+    }
+
+        .info-input:focus {
+            border-color: var(--primary-color);
+            background: var(--white);
+        }
+
+    .edit-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+        padding-top: var(--spacing-sm);
+        border-top: 1px solid var(--border-color);
+    }
+
+        .edit-actions .btn {
+            flex: 1;
+            padding: 10px;
+            font-size: 0.85rem;
+        }
+
+    /* ---------- الأمان ---------- */
+    .security-list {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .security-row {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-color);
+        background: transparent;
+        border-left: none;
+        border-right: none;
+        border-top: none;
+        width: 100%;
+        text-align: right;
+        cursor: pointer;
+        font-family: inherit;
+        color: inherit;
+        transition: background 0.2s ease;
+    }
+
+        .security-row:last-child {
+            border-bottom: none;
+        }
+
+        .security-row:hover {
+            background: var(--primary-soft);
+            border-radius: var(--radius-md);
+            padding-right: 8px;
+            padding-left: 8px;
+        }
+
+    .security-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: var(--radius-md);
+        background: var(--primary-soft);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+    }
+
+    .security-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .security-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-color);
+    }
+
+    .security-desc {
+        font-size: 0.72rem;
+        color: var(--icon-color);
+    }
+
+    .security-arrow {
+        color: var(--icon-color);
+        font-size: 0.75rem;
+    }
+
+    /* ---------- الإجراءات السريعة ---------- */
+    .quick-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--spacing-sm);
+    }
+
+    .quick-tile-form {
+        display: contents;
+    }
+
+    .quick-tile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: var(--spacing-md) var(--spacing-xs);
+        border-radius: var(--radius-lg);
+        background: var(--primary-soft);
+        color: var(--primary-color);
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-decoration: none;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: inherit;
+    }
+
+        .quick-tile i {
+            font-size: 1.1rem;
+        }
+
+        .quick-tile:hover {
+            background: var(--white);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            color: var(--primary-color);
+        }
+
+    .quick-tile-danger {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+        .quick-tile-danger:hover {
+            background: #dc2626;
+            border-color: #dc2626;
+            color: var(--white);
+        }
+
+    /* ---------- أزرار عامة ---------- */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px 18px;
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        font-family: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        color: var(--white);
+    }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: var(--shadow-md);
+        }
+
+    .btn-ghost {
+        background: transparent;
+        color: var(--text-color);
+        border: 2px solid var(--border-color);
+    }
+
+        .btn-ghost:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
+
+    /* ---------- مودال ---------- */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        z-index: 2000;
+        padding: 0;
+    }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+    .modal-sheet {
+        width: 100%;
+        max-width: 500px;
+        background: var(--white);
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        padding: var(--spacing-lg);
+        padding-bottom: calc(var(--spacing-lg) + var(--safe-area-bottom));
+        animation: slideUp 0.3s ease-out;
+    }
+
+    .modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--spacing-md);
+    }
+
+        .modal-head h3 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--text-color);
+            margin: 0;
+        }
+
+    .modal-close {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--light-bg);
+        border: none;
+        color: var(--icon-color);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+        .modal-close:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+    .avatar-options {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-sm);
+    }
+
+    .avatar-option {
+        aspect-ratio: 1;
+        border-radius: var(--radius-lg);
+        background: var(--light-bg);
+        border: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .avatar-option:hover {
+            border-color: var(--primary-color);
+            background: var(--primary-soft);
+            transform: scale(1.05);
+        }
+
+    @@keyframes slideUp {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    /* ---------- استجابة للشاشات ---------- */
+    @@media (min-width: 600px) {
+        .profile-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .quick-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .modal-overlay {
+            align-items: center;
+        }
+
+        .modal-sheet {
+            border-radius: var(--radius-xl);
+            margin: var(--spacing-lg);
+        }
+    }
+
+    @@media (max-width: 360px) {
+        .profile-page {
+            padding: var(--spacing-md);
+        }
+
+        .info-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+
+        .info-value {
+            text-align: right;
+            width: 100%;
+        }
+
+        .quick-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
 
 <script>
-    let currentEditSection = null;
-    let originalValues = {};
+    (function () {
+        // ==========================================
+        // عناصر
+        // ==========================================
+        const editInfoBtn = document.getElementById('editInfoBtn');
+        const editProfileBtn = document.getElementById('editProfileBtn');
+        const personalEditActions = document.getElementById('personalEditActions');
 
-    function editSection(section) {
-        currentEditSection = section;
+        const fields = ['username', 'fullName', 'email', 'phone', 'description'];
+        let originalValues = {};
 
-        if (section === 'personal') {
-            originalValues = {
-                username: document.getElementById('usernameValue').innerText,
-                fullName: document.getElementById('fullNameValue').innerText,
-                email: document.getElementById('emailValue').innerText,
-                phone: document.getElementById('phoneValue').innerText,
-                description: document.getElementById('descriptionValue').innerText
+        // ==========================================
+        // تعديل المعلومات
+        // ==========================================
+        function editSection() {
+            originalValues = {};
+            fields.forEach(f => {
+                const valueEl = document.getElementById(f + 'Value');
+                if (valueEl) originalValues[f] = valueEl.innerText;
+                valueEl.style.display = 'none';
+                const inputEl = document.getElementById(f + 'Input');
+                if (inputEl) inputEl.style.display = 'block';
+            });
+            personalEditActions.style.display = 'flex';
+            editInfoBtn.style.display = 'none';
+
+            const first = document.getElementById('fullNameInput');
+            if (first) first.focus();
+        }
+
+        function cancelEdit() {
+            fields.forEach(f => {
+                const valueEl = document.getElementById(f + 'Value');
+                const inputEl = document.getElementById(f + 'Input');
+                if (valueEl) {
+                    if (originalValues[f] !== undefined) valueEl.innerText = originalValues[f];
+                    valueEl.style.display = 'block';
+                }
+                if (inputEl) {
+                    if (originalValues[f] !== undefined) inputEl.value = originalValues[f];
+                    inputEl.style.display = 'none';
+                }
+            });
+            personalEditActions.style.display = 'none';
+            editInfoBtn.style.display = 'inline-flex';
+        }
+
+        // ==========================================
+        // حفظ المعلومات
+        // ==========================================
+        window.savePersonalInfo = async function () {
+            const data = {
+                username: document.getElementById('usernameInput').value.trim(),
+                fullName: document.getElementById('fullNameInput').value.trim(),
+                email: document.getElementById('emailInput').value.trim(),
+                phoneNumber: document.getElementById('phoneInput').value.trim(),
+                description: document.getElementById('descriptionInput').value.trim()
             };
 
-            // إخفاء القيم وإظهار الحقول
-            ['username', 'fullName', 'email', 'phone', 'description'].forEach(field => {
-                document.getElementById(field + 'Value').style.display = 'none';
-                document.getElementById(field + 'Input').style.display = 'block';
-            });
-
-            document.getElementById('personalEditActions').style.display = 'flex';
-        }
-    }
-
-    function cancelEdit(section) {
-        if (section === 'personal') {
-            // استعادة القيم
-            ['username', 'fullName', 'email', 'phone', 'description'].forEach(field => {
-                document.getElementById(field + 'Value').innerText = originalValues[field];
-                document.getElementById(field + 'Value').style.display = 'block';
-                document.getElementById(field + 'Input').style.display = 'none';
-            });
-
-            document.getElementById('personalEditActions').style.display = 'none';
-        }
-    }
-
-    async function savePersonalInfo() {
-        const data = {
-            username: document.getElementById('usernameInput').value,
-            fullName: document.getElementById('fullNameInput').value,
-            email: document.getElementById('emailInput').value,
-            phoneNumber: document.getElementById('phoneInput').value,
-            description: document.getElementById('descriptionInput').value
-        };
-
-        try {
-            const response = await fetch('/Account/UpdateProfile', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            });
-
-            if (response.ok) {
+            if (!data.username || !data.email) {
                 Swal.fire({
-                    title: 'تم!',
-                    text: 'تم حفظ التغييرات بنجاح',
-                    icon: 'success',
-                    confirmButtonText: 'حسناً'
-                }).then(() => location.reload());
-            } else {
+                    icon: 'warning',
+                    title: 'تنبيه',
+                    text: 'اسم المستخدم والبريد الإلكتروني مطلوبان',
+                    confirmButtonColor: '#210057'
+                });
+                return;
+            }
+
+            try {
+                const response = await fetch('/Account/UpdateProfile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'تم',
+                        text: 'تم حفظ التغييرات بنجاح',
+                        confirmButtonColor: '#210057',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => location.reload());
+                } else {
+                    let msg = 'تعذر حفظ التغييرات';
+                    try {
+                        const errs = await response.json();
+                        if (Array.isArray(errs) && errs.length) {
+                            msg = errs.map(e => e.description || e.code || e).join('، ');
+                        }
+                    } catch (_) { }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'خطأ',
+                        text: msg,
+                        confirmButtonColor: '#210057'
+                    });
+                }
+            } catch (error) {
+                console.error(error);
                 Swal.fire({
-                    title: 'خطأ',
-                    text: 'حدث خطأ في حفظ التغييرات',
                     icon: 'error',
-                    confirmButtonText: 'حسناً'
+                    title: 'خطأ',
+                    text: 'حدث خطأ في الاتصال بالخادم',
+                    confirmButtonColor: '#210057'
                 });
             }
-        } catch (error) {
-            console.error('Error:', error);
+        };
+
+        // ==========================================
+        // التحقق من البريد
+        // ==========================================
+        window.verifyEmail = function () {
             Swal.fire({
-                title: 'خطأ',
-                text: 'حدث خطأ في حفظ التغييرات',
-                icon: 'error',
-                confirmButtonText: 'حسناً'
+                icon: 'info',
+                title: 'التحقق من البريد',
+                text: 'سيتم إرسال رابط التحقق إلى بريدك الإلكتروني',
+                confirmButtonColor: '#210057'
             });
-        }
-    }
+        };
 
-    function verifyEmail() {
-        Swal.fire({
-            title: 'التحقق من البريد',
-            text: 'سيتم إرسال رابط التحقق إلى بريدك الإلكتروني',
-            icon: 'info',
-            confirmButtonText: 'حسناً'
-        });
-    }
-
-    // ربط الأحداث
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.edit-section-btn').forEach(btn => {
-            btn.addEventListener('click', () => editSection('personal'));
-        });
-
-        document.getElementById('editProfileBtn')?.addEventListener('click', () => editSection('personal'));
-
-        // Modal
+        // ==========================================
+        // المودال
+        // ==========================================
         const avatarModal = document.getElementById('avatarModal');
-        document.getElementById('changeAvatarBtn')?.addEventListener('click', () => {
-            if (avatarModal) avatarModal.style.display = 'flex';
+        const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+        const closeAvatarModal = document.getElementById('closeAvatarModal');
+
+        changeAvatarBtn?.addEventListener('click', () => avatarModal.classList.add('show'));
+        closeAvatarModal?.addEventListener('click', () => avatarModal.classList.remove('show'));
+        avatarModal?.addEventListener('click', e => {
+            if (e.target === avatarModal) avatarModal.classList.remove('show');
         });
 
-        document.querySelectorAll('.avatar-option').forEach(option => {
-            option.addEventListener('click', () => {
-                const avatar = option.getAttribute('data-avatar');
-                document.querySelector('.profile-avatar span')?.remove();
-                const avatarElement = document.querySelector('.profile-avatar');
-                avatarElement.innerHTML = `<span>${avatar}</span>`;
-                if (avatarModal) avatarModal.style.display = 'none';
+        // اختيار صورة
+        document.querySelectorAll('.avatar-option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                const avatar = opt.getAttribute('data-avatar');
+                const avatarEl = document.getElementById('profileAvatar');
+                const img = document.getElementById('profileAvatarImg');
+                const initial = document.getElementById('profileAvatarInitial');
+
+                if (img) img.style.display = 'none';
+                if (initial) {
+                    initial.textContent = avatar;
+                    initial.style.display = 'flex';
+                }
+                avatarModal.classList.remove('show');
             });
         });
 
-        document.querySelector('.close-modal-btn')?.addEventListener('click', () => {
-            if (avatarModal) avatarModal.style.display = 'none';
-        });
-    });
+        // ==========================================
+        // ربط الأزرار
+        // ==========================================
+        editInfoBtn?.addEventListener('click', editSection);
+        editProfileBtn?.addEventListener('click', editSection);
+
+        // إتاحة الإلغاء عبر window (تُستدعى من onclick)
+        window.cancelEdit = cancelEdit;
+    })();
 </script>
