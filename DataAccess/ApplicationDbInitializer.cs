@@ -17,6 +17,7 @@ namespace DataAccess
             modelBuilder.Entity<IdentityRole>()
               .HasData(new List<IdentityRole>
               {
+                    new() { Id = "1", Name = "Student", NormalizedName = "STUDENT", ConcurrencyStamp = "1" },
                     new() { Id = "2", Name = "Admin", NormalizedName = "ADMIN", ConcurrencyStamp = "1" },
                     new() { Id = "3", Name = "Teacher", NormalizedName = "TEACHER", ConcurrencyStamp = "2" },
                     new() { Id = "4", Name = "Employee", NormalizedName = "EMPLOYEE", ConcurrencyStamp = "3" },
@@ -44,11 +45,31 @@ namespace DataAccess
                 LockoutEnabled = true,
                 AccessFailedCount = 0,
                 CreatedAt = fixedDate
-            });
+            },new User
+            {
+                Id = "2",
+                UserName = "Student",
+                NormalizedUserName = "Student@SYSTEM.COM",
+                Email = "student@system.com",
+                NormalizedEmail = "Student@SYSTEM.COM",
+                EmailConfirmed = true,
+                PasswordHash = fixedPasswordHash,
+                SecurityStamp = "FIXED_STAMP_12345",
+                ConcurrencyStamp = "FIXED_CONCURRENCY_12345",
+                Description = "مدير النظام",
+                IsActive = true,
+                PhoneNumberConfirmed = false,
+                TwoFactorEnabled = false,
+                LockoutEnabled = true,
+                AccessFailedCount = 0,
+                CreatedAt = fixedDate
+            }
+            );
 
 
             modelBuilder.Entity<IdentityUserRole<string>>().HasData(
-                new IdentityUserRole<string> { UserId = "1", RoleId = "2" }
+                new IdentityUserRole<string> { UserId = "1", RoleId = "2" },
+                new IdentityUserRole<string> { UserId = "2", RoleId = "1" }
             );
         }
     }

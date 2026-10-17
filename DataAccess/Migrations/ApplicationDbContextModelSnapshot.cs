@@ -542,6 +542,25 @@ namespace DataAccess.Migrations
                             SecurityStamp = "FIXED_STAMP_12345",
                             TwoFactorEnabled = false,
                             UserName = "admin@system.com"
+                        },
+                        new
+                        {
+                            Id = "2",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "FIXED_CONCURRENCY_12345",
+                            CreatedAt = new DateTime(2026, 2, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "مدير النظام",
+                            Email = "student@system.com",
+                            EmailConfirmed = true,
+                            IsActive = true,
+                            LockoutEnabled = true,
+                            NormalizedEmail = "Student@SYSTEM.COM",
+                            NormalizedUserName = "Student@SYSTEM.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIJPo4WuBKtpsZhjP/uYwhUixPJs+RLJFHwMaU12CUPdcLTVbv9T0ODgOKvSMnkITg==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "FIXED_STAMP_12345",
+                            TwoFactorEnabled = false,
+                            UserName = "Student"
                         });
                 });
 
@@ -572,6 +591,13 @@ namespace DataAccess.Migrations
                     b.ToTable("AspNetRoles", (string)null);
 
                     b.HasData(
+                        new
+                        {
+                            Id = "1",
+                            ConcurrencyStamp = "1",
+                            Name = "Student",
+                            NormalizedName = "STUDENT"
+                        },
                         new
                         {
                             Id = "2",
@@ -707,6 +733,11 @@ namespace DataAccess.Migrations
                         {
                             UserId = "1",
                             RoleId = "2"
+                        },
+                        new
+                        {
+                            UserId = "2",
+                            RoleId = "1"
                         });
                 });
 
