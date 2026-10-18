@@ -77,7 +77,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
 
             // جلب الأساتذة المرتبطين بالمادة
             var teacherCourses = await _teacherCourseRepository
-                .GetByKey(tc => tc.CourseId == id);
+                .GetByKey(tc => tc.CourseId == id,"Teacher","Courses");
 
             var teachers = teacherCourses?
                 .Where(tc => tc.Teacher != null)
@@ -85,7 +85,6 @@ namespace SoumerMVCView.Controllers.CoursesManagment
                 {
                     Id = tc.Teacher.Id,
                     Name = tc.Teacher.Name,
-                    Subject = tc.Teacher.Subject,
                     Image = tc.Teacher.Image
                 })
                 .ToList() ?? new List<TeacherDto>();

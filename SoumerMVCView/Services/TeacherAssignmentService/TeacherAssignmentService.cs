@@ -26,11 +26,12 @@ namespace SoumerMVCView.Services.TeacherAssignmentService
                 // جلب التوزيعات المحفوظة من قاعدة البيانات فقط
                 var assignments = await _assignmentRepository.GetAssignmentsByGrade(grade);
 
-                string gradeLevel = grade <= 6 ? "الابتدائية" : grade <= 9 ? "المتوسطة" : "الثانوية";
+                string gradeLevel = grade <= 6 ? "الابتدائي" : grade <= 9 ? "الأعدادي" : "الثانوي";
 
                 gradesTeachers.Add(new GradeTeachersDto
                 {
                     Grade = grade,
+                    GradeName = GetGradeName(grade),
                     GradeLevel = gradeLevel,
                     // عرض الأساتذة المحفوظين فقط حسب الأولوية
                     Teachers = assignments
@@ -41,6 +42,52 @@ namespace SoumerMVCView.Services.TeacherAssignmentService
             }
 
             return gradesTeachers;
+        }
+
+        private string GetGradeName(int grade)
+        {
+            switch (grade)
+            {
+                default:
+                    return "";
+
+                case 1:
+                    return "الأول";
+
+                case 2:
+                    return "الثاني";
+
+                case 3:
+                    return "الثالث";
+
+                case 4:
+                    return "الربع";
+
+                case 5:
+                    return "الخامس";
+
+                case 6:
+                    return "السادس";
+
+                case 7:
+                    return "السابع";
+
+                case 8:
+                    return "الثامن";
+
+                case 9:
+                    return "التاسع";
+
+                case 10:
+                    return "العاشر";
+
+                case 11:
+                    return "الحادي عشر";
+
+                case 12:
+                    return "الثاني عشر";
+
+            }
         }
 
         //private async Task<List<TeacherGradeAssignmentDto>> FillRemainingTeachers(

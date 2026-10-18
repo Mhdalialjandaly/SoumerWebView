@@ -229,13 +229,23 @@ namespace SoumerMVCView.Controllers.Managment
                 return RedirectToAction(nameof(TeacherGrades));
             }
 
+            if (grade < 1 || grade > 12)
+            {
+                TempData["ErrorMessage"] = "صف غير صالح";
+                return RedirectToAction(nameof(TeacherGrades));
+            }
+
+            // ✅ حساب أعلى أولوية حالية في الصف
+            var maxPriority = await _context.Set<TeacherGradeAssignment>()
+                .Where(a => a.Grade == grade && a.DeletedAt == null)
+                .MaxAsync(a => (int?)a.Priority) ?? 0;
+
             var addedCount = 0;
             var skippedCount = 0;
 
             for (int i = 0; i < teacherIds.Length; i++)
             {
                 var teacherId = teacherIds[i];
-                var priority = priorities != null && i < priorities.Length ? priorities[i] : i + 1;
 
                 // التحقق من عدم وجود تعيين مسبق
                 var exists = await _context.Set<TeacherGradeAssignment>()
@@ -243,22 +253,24 @@ namespace SoumerMVCView.Controllers.Managment
                                 && a.Grade == grade
                                 && a.DeletedAt == null);
 
-                if (!exists)
-                {
-                    var assignment = new TeacherGradeAssignment
-                    {
-                        TeacherId = teacherId,
-                        Grade = grade,
-                        Priority = priority,
-                        CreatedAt = DateTime.Now
-                    };
-                    _context.Set<TeacherGradeAssignment>().Add(assignment);
-                    addedCount++;
-                }
-                else
+                if (exists)
                 {
                     skippedCount++;
+                    continue;
                 }
+
+                // ✅ الأولوية = أعلى موجودة + الترتيب التسلسلي
+                var newPriority = maxPriority + addedCount + 1;
+
+                var assignment = new TeacherGradeAssignment
+                {
+                    TeacherId = teacherId,
+                    Grade = grade,
+                    Priority = newPriority,
+                    CreatedAt = DateTime.Now
+                };
+                _context.Set<TeacherGradeAssignment>().Add(assignment);
+                addedCount++;
             }
 
             await _context.SaveChangesAsync();
@@ -269,7 +281,7 @@ namespace SoumerMVCView.Controllers.Managment
             return RedirectToAction(nameof(TeacherGrades));
         }
 
-        // API للحصول على أساتذة صف معين
+
         [HttpGet]
         public async Task<IActionResult> GetTeachersByGrade(int grade)
         {
@@ -290,7 +302,63 @@ namespace SoumerMVCView.Controllers.Managment
 
             return Json(new { success = true, teachers });
         }
+        // ==========================================
+        // GET: /Admin/GetAllTeachersForAssignment?grade=X
+        // إرجاع كل الأساتذة النشطين مع علامة "معيّن مسبقاً" للصف المختار
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> GetAllTeachersForAssignment(int grade)
+        {
+            try
+            {
+                // 1. كل الأساتذة النشطين
+                var allTeachers = await _context.Teachers
+                    .Where(t => t.DeletedAt == null)
+                    .OrderBy(t => t.Name)
+                    .Select(t => new
+                    {
+                        t.Id,
+                        t.Name,
+                        t.Subject,
+                        t.Image
+                    })
+                    .ToListAsync();
 
+                // 2. الأساتذة المعيّنين بالفعل لهذا الصف
+                var assignedIds = await _context.Set<TeacherGradeAssignment>()
+                    .Where(a => a.Grade == grade && a.DeletedAt == null)
+                    .Select(a => a.TeacherId)
+                    .ToListAsync();
+
+                // 3. أعلى أولوية حالية
+                var maxPriority = await _context.Set<TeacherGradeAssignment>()
+                    .Where(a => a.Grade == grade && a.DeletedAt == null)
+                    .MaxAsync(a => (int?)a.Priority) ?? 0;
+
+                // 4. بناء النتيجة
+                var teachers = allTeachers.Select(t => new
+                {
+                    t.Id,
+                    t.Name,
+                    t.Subject,
+                    t.Image,
+                    IsAssigned = assignedIds.Contains(t.Id)
+                }).ToList();
+
+                return Json(new
+                {
+                    success = true,
+                    teachers,
+                    totalAssigned = assignedIds.Count,
+                    nextPriority = maxPriority + 1
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error loading teachers for grade {Grade}", grade);
+                return Json(new { success = false, message = "حدث خطأ أثناء تحميل الأساتذة" });
+            }
+        }
         // API لإحصائيات التوزيع
         [HttpGet]
         public async Task<IActionResult> GetGradeDistributionStats()
@@ -323,8 +391,13 @@ namespace SoumerMVCView.Controllers.Managment
         }
 
         [HttpGet]
-        public IActionResult CreateTeacher()
+        public async Task<IActionResult> CreateTeacher()
         {
+            ViewBag.Courses = await _context.Courses
+                .Where(c => c.DeletedAt == null)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+
             return View(new Teacher());
         }
 
@@ -332,33 +405,101 @@ namespace SoumerMVCView.Controllers.Managment
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateTeacher(Teacher teacher, IFormFile ImageFile)
         {
-            if (ModelState.IsValid)
-            {
-                // Handle image upload
-                if (ImageFile != null && ImageFile.Length > 0)
-                {
-                    var imagePath = await UploadImage(ImageFile);
-                    if (imagePath == null)
-                    {
-                        ModelState.AddModelError("ImageFile", "فشل في رفع الصورة. تأكد من صيغة وحجم الملف.");
-                        return View(teacher);
-                    }
-                    teacher.Image = imagePath;
-                }
+            // جلب قائمة المواد للـ ViewBag (في حال رجوع النموذج)
+            ViewBag.Courses = await _context.Courses
+                .Where(c => c.DeletedAt == null)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
 
-                teacher.CreatedAt = DateTime.Now;
-                teacher.Name = $"{teacher.FirstName} {teacher.LastName}";
+            // ==========================================
+            // 1. التحقق من المادة المختارة
+            // ==========================================
+            if (!teacher.MainCourseId.HasValue || teacher.MainCourseId.Value <= 0)
+            {
+                ModelState.AddModelError(nameof(teacher.MainCourseId), "يجب اختيار المادة");
+                return View(teacher);
+            }
+
+            var course = await _context.Courses
+                .FirstOrDefaultAsync(c => c.Id == teacher.MainCourseId.Value && c.DeletedAt == null);
+
+            if (course == null)
+            {
+                ModelState.AddModelError(nameof(teacher.MainCourseId), "المادة المختارة غير موجودة");
+                return View(teacher);
+            }
+
+            // ✅ ملء Subject تلقائياً من اسم المادة
+            teacher.Subject = course.Name;
+
+            // ==========================================
+            // 2. حفظ الأستاذ
+            // ==========================================
+            if (!ModelState.IsValid)
+                return View(teacher);
+
+            // معالجة الصورة
+            if (ImageFile != null && ImageFile.Length > 0)
+            {
+                var imagePath = await UploadImage(ImageFile);
+                if (imagePath == null)
+                {
+                    ModelState.AddModelError("ImageFile", "فشل في رفع الصورة. تأكد من صيغة وحجم الملف.");
+                    return View(teacher);
+                }
+                teacher.Image = imagePath;
+            }
+
+            teacher.CreatedAt = DateTime.Now;
+            teacher.Name = $"{teacher.FirstName} {teacher.LastName}";
+
+            // ==========================================
+            // 3. استخدام Transaction لضمان تكامل البيانات
+            // ==========================================
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // إضافة الأستاذ
                 _context.Teachers.Add(teacher);
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = "تم إضافة الأستاذ بنجاح";
+                // ✅ بعد الحفظ يُصبح teacher.Id متوفراً
+
+                // ==========================================
+                // 4. ربط الأستاذ بالمادة عبر TeacherCourse
+                // ==========================================
+                var teacherCourse = new TeacherCourse
+                {
+                    TeacherId = teacher.Id,
+                    CourseId = course.Id,
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.TeacherCourses.Add(teacherCourse);
+                await _context.SaveChangesAsync();
+
+                // ==========================================
+                // 5. (اختياري) إضافة الأستاذ إلى المرحلة بحسب المادة
+                // ==========================================
+                // إن كان لديك جدول CourseGrade أو ما يشبهه يربط المادة بصف دراسي،
+                // أضف هنا تلقائياً TeacherGradeAssignment.
+
+                await transaction.CommitAsync();
+
+                TempData["SuccessMessage"] = $"تم إضافة الأستاذ '{teacher.Name}' وربطه بمادة '{course.Name}' بنجاح";
                 return RedirectToAction(nameof(Teachers));
             }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger?.LogError(ex, "Error creating teacher and linking to course");
 
-            return View(teacher);
+                ModelState.AddModelError(string.Empty, "حدث خطأ أثناء حفظ البيانات. يرجى المحاولة لاحقاً");
+                return View(teacher);
+            }
         }
 
-        // استبدل دالة EditTeacher بـ:
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditTeacher(int id, Teacher teacher, IFormFile ImageFile)
@@ -366,57 +507,122 @@ namespace SoumerMVCView.Controllers.Managment
             if (id != teacher.Id)
                 return NotFound();
 
-            if (ModelState.IsValid)
+            ViewBag.Courses = await _context.Courses
+                .Where(c => c.DeletedAt == null)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+
+            // ==========================================
+            // 1. التحقق من المادة
+            // ==========================================
+            if (!teacher.MainCourseId.HasValue || teacher.MainCourseId.Value <= 0)
             {
-                try
+                ModelState.AddModelError(nameof(teacher.MainCourseId), "يجب اختيار المادة");
+                return View(teacher);
+            }
+
+            var newCourse = await _context.Courses
+                .FirstOrDefaultAsync(c => c.Id == teacher.MainCourseId.Value && c.DeletedAt == null);
+
+            if (newCourse == null)
+            {
+                ModelState.AddModelError(nameof(teacher.MainCourseId), "المادة المختارة غير موجودة");
+                return View(teacher);
+            }
+
+            teacher.Subject = newCourse.Name;
+
+            if (!ModelState.IsValid)
+                return View(teacher);
+
+            // ==========================================
+            // 2. تحديث الأستاذ + مزامنة TeacherCourse
+            // ==========================================
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var existingTeacher = await _context.Teachers.FindAsync(id);
+                if (existingTeacher == null)
+                    return NotFound();
+
+                // الصورة
+                if (ImageFile != null && ImageFile.Length > 0)
                 {
-                    var existingTeacher = await _context.Teachers.FindAsync(id);
-                    if (existingTeacher == null)
-                        return NotFound();
+                    if (!string.IsNullOrEmpty(existingTeacher.Image))
+                        DeleteImage(existingTeacher.Image);
 
-                    // Handle image upload
-                    if (ImageFile != null && ImageFile.Length > 0)
+                    var imagePath = await UploadImage(ImageFile);
+                    if (imagePath == null)
                     {
-                        // Delete old image if exists
-                        if (!string.IsNullOrEmpty(existingTeacher.Image))
-                        {
-                            DeleteImage(existingTeacher.Image);
-                        }
-
-                        var imagePath = await UploadImage(ImageFile);
-                        if (imagePath == null)
-                        {
-                            ModelState.AddModelError("ImageFile", "فشل في رفع الصورة. تأكد من صيغة وحجم الملف.");
-                            return View(teacher);
-                        }
-                        teacher.Image = imagePath;
+                        ModelState.AddModelError("ImageFile", "فشل في رفع الصورة.");
+                        return View(teacher);
                     }
-                    else
-                    {
-                        // Keep existing image
-                        teacher.Image = existingTeacher.Image;
-                    }
-
-                    teacher.Name = $"{teacher.FirstName} {teacher.LastName}";
-                    teacher.ModifiedAt = DateTime.Now;
-                    teacher.CreatedAt = existingTeacher.CreatedAt; // Preserve original creation date
-
-                    _context.Entry(existingTeacher).CurrentValues.SetValues(teacher);
-                    await _context.SaveChangesAsync();
+                    teacher.Image = imagePath;
                 }
-                catch (DbUpdateConcurrencyException)
+                else
                 {
-                    if (!TeacherExists(teacher.Id))
-                        return NotFound();
-                    else
-                        throw;
+                    teacher.Image = existingTeacher.Image;
                 }
+
+                teacher.Name = $"{teacher.FirstName} {teacher.LastName}";
+                teacher.ModifiedAt = DateTime.Now;
+                teacher.CreatedAt = existingTeacher.CreatedAt;
+
+                _context.Entry(existingTeacher).CurrentValues.SetValues(teacher);
+                await _context.SaveChangesAsync();
+
+                // ==========================================
+                // 3. مزامنة TeacherCourse
+                // ==========================================
+                // الروابط الحالية للأستاذ
+                var existingLinks = await _context.TeacherCourses
+                    .Where(tc => tc.TeacherId == id && tc.DeletedAt == null)
+                    .ToListAsync();
+
+                // هل المادة الجديدة مرتبطة بالفعل؟
+                var alreadyLinked = existingLinks.Any(tc => tc.CourseId == newCourse.Id);
+
+                if (!alreadyLinked)
+                {
+                    // إزالة الروابط القديمة (Soft Delete) — أو إبقاؤها إن أردت دعم مواد متعددة
+                    // هنا نزيل فقط الروابط القديمة التي "مصدرها" MainCourseId السابق.
+                    // الطريقة الأدق: حذف الروابط التي لا يساوي CourseId المادة الجديدة.
+                    foreach (var link in existingLinks)
+                    {
+                        link.DeletedAt = DateTime.Now;
+                        link.DeletedBy = User.Identity?.Name;
+                    }
+
+                    // إضافة الربط الجديد
+                    _context.TeacherCourses.Add(new TeacherCourse
+                    {
+                        TeacherId = id,
+                        CourseId = newCourse.Id,
+                        CreatedAt = DateTime.Now
+                    });
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
 
                 TempData["SuccessMessage"] = "تم تحديث بيانات الأستاذ بنجاح";
                 return RedirectToAction(nameof(Teachers));
             }
-
-            return View(teacher);
+            catch (DbUpdateConcurrencyException)
+            {
+                await transaction.RollbackAsync();
+                if (!TeacherExists(teacher.Id))
+                    return NotFound();
+                throw;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger?.LogError(ex, "Error updating teacher");
+                ModelState.AddModelError(string.Empty, "حدث خطأ أثناء تحديث البيانات");
+                return View(teacher);
+            }
         }
 
         // دالة مساعدة لرفع الصورة
@@ -476,6 +682,11 @@ namespace SoumerMVCView.Controllers.Managment
             var teacher = await _context.Teachers.FindAsync(id);
             if (teacher == null || teacher.DeletedAt != null)
                 return NotFound();
+
+            ViewBag.Courses = await _context.Courses
+                .Where(c => c.DeletedAt == null)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
 
             return View(teacher);
         }

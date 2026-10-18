@@ -5170,3 +5170,166 @@ img {
         min-width: 220px;
     }
 }
+
+
+/* ==========================================
+       أزرار داخل بطاقة المرحلة
+       ========================================== */
+.grade-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #e8eaf0;
+}
+
+.grade-action-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 5px 6px;
+    border-radius: 8px;
+    border: 1px solid #e8eaf0;
+    background: #f8f9fc;
+    color: #210057;
+    font-size: 0.65rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+    .grade-action-btn i {
+        font-size: 0.7rem;
+    }
+
+    .grade-action-btn:hover {
+        background: #210057;
+        color: #fff;
+        border-color: #210057;
+        transform: translateY(-1px);
+    }
+
+    .grade-action-btn:active {
+        transform: scale(0.95);
+    }
+
+.grade-action-btn-courses {
+    background: #fffbeb;
+    color: #b45309;
+    border-color: #fde68a;
+}
+
+    .grade-action-btn-courses:hover {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #fff;
+        border-color: #d97706;
+    }
+
+/* ==========================================
+       بطاقة مادة داخل مودال المواد
+       ========================================== */
+.grade-course-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f8f9fc;
+    border-radius: 14px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 8px;
+}
+
+    .grade-course-item:hover {
+        background: #f0ebf8;
+        border-color: #210057;
+        transform: translateX(-4px);
+    }
+
+    .grade-course-item.is-enrolled {
+        border-color: #a7f3d0;
+        background: #ecfdf5;
+    }
+
+.grade-course-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #f0ebf8;
+    color: #210057;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.grade-course-item.is-enrolled .grade-course-icon {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.grade-course-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.grade-course-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.grade-course-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    color: #9496a5;
+    flex-wrap: wrap;
+}
+
+.grade-course-price {
+    font-weight: 800;
+    color: #210057;
+}
+
+    .grade-course-price.has-discount {
+        color: #059669;
+    }
+
+    .grade-course-price .old-price {
+        text-decoration: line-through;
+        color: #9496a5;
+        font-weight: 500;
+        margin-right: 4px;
+    }
+
+.grade-course-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 0.62rem;
+    font-weight: 700;
+}
+
+.grade-course-badge-enrolled {
+    background: #059669;
+    color: #fff;
+}
+
+.grade-course-badge-discount {
+    background: #fef3c7;
+    color: #b45309;
+}

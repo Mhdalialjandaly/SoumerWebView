@@ -78,7 +78,7 @@
                 @(Model.GradesTeachers?.Count ?? 0) مرحلة
             </span>
             <span class="grades-count">
-                @(Model.GradesTeachers?.SelectMany(e => e.Teachers).Count() ?? 0) استاذ
+                @(Model.GradesTeachers?.SelectMany(e => e.Teachers).Count() ?? 0) أستاذ
             </span>
         </div>
 
@@ -91,14 +91,36 @@
                         <div class="grade-icon">
                             <i class="fas fa-book-open"></i>
                         </div>
-                        <div class="grade-number">الصف @grade.Grade</div>
-                        <div class="grade-level">@grade.GradeLevel</div>
-                        <span class="grade-teachers-count">
-                            <i class="fas fa-user-graduate"></i>
-                            @grade.Teachers.Count أستاذ
-                        </span>
+
+                        <!-- ✅ عرض اسم المرحلة بدلاً من الرقم -->
+                        <div class="grade-number">
+                            @(string.IsNullOrWhiteSpace(grade.GradeLevel)
+                                                ? $"الصف {grade.Grade} {grade.GradeName}"
+                                                : $"الصف {grade.GradeName} {grade.GradeLevel} ")
+                </div>
+
+                        <div class="grade-level">
+                            @grade.Grade مستوى
+                        </div>
+
+                        <div class="grade-actions">
+                            <button type="button"
+                                    class="grade-action-btn"
+                                    onclick="event.stopPropagation(); showGradeTeachers(@grade.Grade)"
+                                    title="عرض الأساتذة">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <span>@grade.Teachers.Count</span>
+                            </button>
+                            <button type="button"
+                                    class="grade-action-btn grade-action-btn-courses"
+                                    onclick="event.stopPropagation(); showGradeCourses(@grade.Grade)"
+                                    title="عرض المواد">
+                                <i class="fas fa-book"></i>
+                                <span>المواد</span>
+                            </button>
+                        </div>
                     </div>
-                }
+                        }
             }
             else
             {
@@ -110,7 +132,9 @@
     </div>
 </div>
 
-<!-- مودال عرض أساتذة المرحلة -->
+<!-- ==========================================
+     مودال عرض أساتذة المرحلة
+     ========================================== -->
 <div class="teachers-modal-overlay" id="teachersModalOverlay">
     <div class="teachers-modal">
         <div class="teachers-modal-header">
@@ -128,9 +152,243 @@
     </div>
 </div>
 
+<!-- ==========================================
+     مودال عرض مواد المرحلة
+     ========================================== -->
+<div class="teachers-modal-overlay" id="coursesModalOverlay">
+    <div class="teachers-modal">
+        <div class="teachers-modal-header">
+            <h3 class="teachers-modal-title" id="coursesModalTitle">
+                <span>📚</span>
+                مواد المرحلة
+            </h3>
+            <button class="teachers-modal-close" onclick="closeCoursesModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="teachers-list" id="coursesList">
+            <!-- سيتم ملؤها بواسطة JavaScript -->
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ==========================================
+           تنسيقات بطاقة المرحلة - دعم الاسم العربي الكامل
+           ========================================== */
+    .grade-number {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #333;
+        margin-bottom: 4px;
+        line-height: 1.3;
+        min-height: 2.4em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 0 4px;
+    }
+
+    .grade-level {
+        font-size: 0.68rem;
+        color: #9496a5;
+        margin-bottom: 8px;
+        line-height: 1.2;
+    }
+
+    /* أزرار داخل بطاقة المرحلة */
+    .grade-actions {
+        display: flex;
+        gap: 4px;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed #e8eaf0;
+    }
+
+    .grade-action-btn {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 5px 6px;
+        border-radius: 8px;
+        border: 1px solid #e8eaf0;
+        background: #f8f9fc;
+        color: #210057;
+        font-size: 0.65rem;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+        .grade-action-btn i {
+            font-size: 0.7rem;
+        }
+
+        .grade-action-btn:hover {
+            background: #210057;
+            color: #fff;
+            border-color: #210057;
+            transform: translateY(-1px);
+        }
+
+        .grade-action-btn:active {
+            transform: scale(0.95);
+        }
+
+    .grade-action-btn-courses {
+        background: #fffbeb;
+        color: #b45309;
+        border-color: #fde68a;
+    }
+
+        .grade-action-btn-courses:hover {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #fff;
+            border-color: #d97706;
+        }
+
+    /* ==========================================
+           بطاقة مادة داخل مودال المواد
+           ========================================== */
+    .grade-course-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        background: #f8f9fc;
+        border-radius: 14px;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 8px;
+    }
+
+        .grade-course-item:hover {
+            background: #f0ebf8;
+            border-color: #210057;
+            transform: translateX(-4px);
+        }
+
+        .grade-course-item.is-enrolled {
+            border-color: #a7f3d0;
+            background: #ecfdf5;
+        }
+
+    .grade-course-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: #f0ebf8;
+        color: #210057;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .grade-course-item.is-enrolled .grade-course-icon {
+        background: #d1fae5;
+        color: #059669;
+    }
+
+    .grade-course-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .grade-course-name {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 3px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .grade-course-meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.7rem;
+        color: #9496a5;
+        flex-wrap: wrap;
+    }
+
+    .grade-course-price {
+        font-weight: 800;
+        color: #210057;
+    }
+
+        .grade-course-price.has-discount {
+            color: #059669;
+        }
+
+        .grade-course-price .old-price {
+            text-decoration: line-through;
+            color: #9496a5;
+            font-weight: 500;
+            margin-right: 4px;
+        }
+
+    .grade-course-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 7px;
+        border-radius: 10px;
+        font-size: 0.62rem;
+        font-weight: 700;
+    }
+
+    .grade-course-badge-enrolled {
+        background: #059669;
+        color: #fff;
+    }
+
+    .grade-course-badge-discount {
+        background: #fef3c7;
+        color: #b45309;
+    }
+
+    /* استجابة للشاشات الصغيرة */
+    @@media (max-width: 360px) {
+        .grade-number
+
+    {
+        font-size: 0.82rem;
+    }
+
+    .grade-level {
+        font-size: 0.62rem;
+    }
+
+    }
+</style>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // ==========================================
+        // بيانات المراحل من الخادم (تُستخدم في الدوال)
+        // ==========================================
+        const gradesData = @Html.Raw(Json.Serialize(Model.GradesTeachers));
+
+        // دالة مساعدة لجلب اسم المرحلة
+        function getGradeDisplayName(gradeNumber) {
+            const grade = gradesData.find(g => g.grade === gradeNumber);
+            if (grade && grade.gradeLevel) {
+                return `الصف ${grade.gradeLevel}`;
+            }
+            return `الصف ${gradeNumber}`;
+        }
+
         // ==========================================
         // السلايدر التلقائي للأساتذة
         // ==========================================
@@ -192,24 +450,26 @@
         // عرض أساتذة المرحلة
         // ==========================================
         function showGradeTeachers(gradeNumber) {
-            const gradeData = @Html.Raw(Json.Serialize(Model.GradesTeachers));
-            const grade = gradeData.find(g => g.grade === gradeNumber);
+            const grade = gradesData.find(g => g.grade === gradeNumber);
 
             if (grade && grade.teachers && grade.teachers.length > 0) {
+                // ✅ استخدام اسم المرحلة الكامل
+                const gradeName = getGradeDisplayName(gradeNumber);
+
                 document.getElementById('modalTitle').innerHTML = `
                     <span>👨‍🏫</span>
-                    أساتذة الصف ${grade.grade}
+                    أساتذة ${gradeName}
                 `;
 
                 const teachersList = document.getElementById('teachersList');
                 teachersList.innerHTML = grade.teachers.map(teacher => `
                     <div class="teacher-list-item" onclick="showTeacherCourses(${teacher.id})">
                         <div class="teacher-list-avatar">
-                            <img src="${teacher.image || '/images/default-avatar.png'}" alt="${teacher.name}">
+                            <img src="${teacher.image || '/images/default-avatar.png'}" alt="${escapeHtml(teacher.name || '')}">
                         </div>
                         <div class="teacher-list-info">
-                            <div class="teacher-list-name">${teacher.name}</div>
-                            <div class="teacher-list-subject">${teacher.subject || 'مادة غير محددة'}</div>
+                            <div class="teacher-list-name">${escapeHtml(teacher.name || '')}</div>
+                            <div class="teacher-list-subject">${escapeHtml(teacher.subject || 'مادة غير محددة')}</div>
                         </div>
                         <i class="fas fa-chevron-left teacher-list-arrow"></i>
                     </div>
@@ -348,14 +608,10 @@
                     ">
                         ${hasCourses ? courses.map(course => {
 
-                            // ==========================================
                             // حالة الاشتراك
-                            // ==========================================
                             const isEnrolled = course.isEnrolled === true;
 
-                            // ==========================================
                             // حساب السعر والعرض
-                            // ==========================================
                             const hasDiscount = course.hasActiveDiscount === true;
                             const effectivePrice = Number(course.effectivePrice ?? course.price ?? 0);
                             const originalPrice = Number(course.price ?? 0);
@@ -368,9 +624,7 @@
                                 ? discountEndDate.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })
                                 : '';
 
-                            // ==========================================
-                            // كتلة السعر (لا تُعرض إن كان مشتركاً)
-                            // ==========================================
+                            // كتلة السعر
                             const priceBlock = isEnrolled
                                 ? `
                                     <span style="font-size: 0.85rem; font-weight: 700; color: #059669; display:flex; align-items:center; gap:6px;">
@@ -402,9 +656,7 @@
                                         </span>
                                     `);
 
-                            // ==========================================
-                            // العدّاد التنازلي (فقط للعروض غير المشترك بها)
-                            // ==========================================
+                            // العدّاد التنازلي
                             const countdownBlock = (!isEnrolled && hasDiscount && discountEndDate)
                                 ? `
                                     <div class="course-countdown"
@@ -428,9 +680,7 @@
                                 `
                                 : '';
 
-                            // ==========================================
-                            // الشارة: "✅ مشترك" لها الأولوية على "🔥 عرض"
-                            // ==========================================
+                            // الشارة
                             const ribbon = isEnrolled
                                 ? `
                                     <div style="
@@ -466,9 +716,7 @@
                                     `
                                     : '');
 
-                            // ==========================================
-                            // زر الإجراء (تسجيل / مشاهدة)
-                            // ==========================================
+                            // زر الإجراء
                             const actionButton = isEnrolled
                                 ? `
                                     <button onclick="watchCourse(${course.id})"
@@ -587,7 +835,6 @@
             mainContainer.innerHTML = coursesHTML;
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            // تشغيل العدّاد التنازلي بعد إدراج البطاقات
             setTimeout(initCourseCountdowns, 50);
         }
 
@@ -599,14 +846,14 @@
         }
 
         // ==========================================
-        // الانتقال إلى مشاهدة المادة (للمشتركين)
+        // الانتقال إلى مشاهدة المادة
         // ==========================================
         function watchCourse(courseId) {
             window.location.href = `/Course/CourseVideos?courseId=${courseId}`;
         }
 
         // ==========================================
-        // عدّاد تنازلي حيّ لكل مادة عليه عرض
+        // عدّاد تنازلي حيّ
         // ==========================================
         let courseCountdownInterval = null;
 
@@ -654,7 +901,6 @@
                     textEl.textContent = label;
                 });
 
-                // إن انتهى أحد العروض، انتظر قليلاً ثم أعد تحميل الصفحة
                 if (anyExpired) {
                     clearInterval(courseCountdownInterval);
                     courseCountdownInterval = null;
@@ -668,7 +914,6 @@
             courseCountdownInterval = setInterval(update, 1000);
         }
 
-        // أوقف العدّاد عند مغادرة الصفحة
         window.addEventListener('beforeunload', () => {
             if (courseCountdownInterval) clearInterval(courseCountdownInterval);
         });
@@ -738,12 +983,156 @@
         }
 
         // ==========================================
+        // عرض مواد المرحلة
+        // ==========================================
+        async function showGradeCourses(gradeNumber) {
+            const overlay = document.getElementById('coursesModalOverlay');
+            const title = document.getElementById('coursesModalTitle');
+            const list = document.getElementById('coursesList');
+
+            // ✅ استخدام اسم المرحلة الكامل
+            const gradeName = getGradeDisplayName(gradeNumber);
+
+            title.innerHTML = `<span>📚</span> مواد ${gradeName}`;
+            list.innerHTML = `
+                <div style="text-align:center; padding:40px; color:#9496a5;">
+                    <div class="spinner-border text-primary" role="status" style="width:1.5rem; height:1.5rem;"></div>
+                    <p style="margin-top:10px; font-size:0.85rem;">جارٍ التحميل...</p>
+                </div>`;
+
+            overlay.classList.add('show');
+            stopHeroSlideshow();
+
+            try {
+                const response = await fetch(`/Home/GetGradeCourses?grade=${gradeNumber}`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    list.innerHTML = `
+                        <div style="text-align:center; padding:40px; color:#dc2626;">
+                            <i class="fas fa-exclamation-circle" style="font-size:2rem; margin-bottom:8px; display:block;"></i>
+                            <p>${escapeHtml(data.message || 'تعذر تحميل المواد')}</p>
+                        </div>`;
+                    return;
+                }
+
+                if (!data.courses || data.courses.length === 0) {
+                    list.innerHTML = `
+                        <div style="text-align:center; padding:40px; color:#9496a5;">
+                            <div style="font-size:3rem; margin-bottom:12px; opacity:0.5;">📚</div>
+                            <p style="color:#333; margin-bottom:6px;">لا توجد مواد لهذه المرحلة</p>
+                            <small style="display:block; margin-bottom:16px;">سيتم إضافة مواد جديدة قريباً</small>
+                            <a href="/Course/Index"
+                               style="display:inline-flex; align-items:center; gap:6px;
+                                      padding:10px 20px; background:#210057; color:#fff;
+                                      border-radius:10px; text-decoration:none;
+                                      font-size:0.8rem; font-weight:700;">
+                                <i class="fas fa-book-open"></i>
+                                تصفح جميع المواد
+                            </a>
+                        </div>`;
+                    return;
+                }
+
+                const coursesHtml = data.courses.map(course => {
+                    const isEnrolled = course.isEnrolled === true;
+                    const hasDiscount = course.hasActiveDiscount === true;
+                    const effectivePrice = Number(course.effectivePrice ?? course.price ?? 0);
+                    const originalPrice = Number(course.price ?? 0);
+                    const discountPercent = Number(course.discountPercent ?? 0);
+
+                    const priceHtml = isEnrolled
+                        ? `<span class="grade-course-badge grade-course-badge-enrolled"><i class="fas fa-check"></i> مشترك</span>`
+                        : (hasDiscount
+                            ? `<span class="grade-course-price has-discount">
+                                   <span class="old-price">${originalPrice.toLocaleString('ar-EG')}</span>
+                                   ${effectivePrice.toLocaleString('ar-EG')} نقطة
+                               </span>
+                               <span class="grade-course-badge grade-course-badge-discount">🔥 -${discountPercent}%</span>`
+                            : `<span class="grade-course-price">${originalPrice.toLocaleString('ar-EG')} نقطة</span>`);
+
+                    return `
+                        <div class="grade-course-item ${isEnrolled ? 'is-enrolled' : ''}"
+                             onclick="goToCourseDetails(${course.id})">
+                            <div class="grade-course-icon">
+                                <i class="fas ${isEnrolled ? 'fa-check-circle' : 'fa-book'}"></i>
+                            </div>
+                            <div class="grade-course-info">
+                                <div class="grade-course-name">${escapeHtml(course.name)}</div>
+                                <div class="grade-course-meta">
+                                    ${priceHtml}
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-left" style="color:#9496a5; font-size:0.8rem;"></i>
+                        </div>
+                    `;
+                }).join('');
+
+                // زر "عرض جميع المواد"
+                const viewAllBtn = `
+                    <a href="/Course/Index"
+                       style="
+                           display: flex;
+                           align-items: center;
+                           justify-content: center;
+                           gap: 8px;
+                           margin-top: 12px;
+                           padding: 14px;
+                           border: 2px dashed #210057;
+                           border-radius: 14px;
+                           background: #f0ebf8;
+                           color: #210057;
+                           text-decoration: none;
+                           font-size: 0.85rem;
+                           font-weight: 800;
+                           font-family: 'Tajawal', sans-serif;
+                           transition: all 0.2s ease;
+                       "
+                       onmouseover="this.style.background='#210057'; this.style.color='#fff'; this.style.borderStyle='solid';"
+                       onmouseout="this.style.background='#f0ebf8'; this.style.color='#210057'; this.style.borderStyle='dashed';">
+                        <i class="fas fa-th-large"></i>
+                        <span>عرض جميع المواد في المنصة</span>
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                `;
+
+                list.innerHTML = coursesHtml + viewAllBtn;
+
+            } catch (error) {
+                console.error('Error loading grade courses:', error);
+                list.innerHTML = `
+                    <div style="text-align:center; padding:40px; color:#dc2626;">
+                        <i class="fas fa-wifi" style="font-size:2rem; margin-bottom:8px; display:block;"></i>
+                        <p>تعذر الاتصال بالخادم</p>
+                    </div>`;
+            }
+        }
+
+        function closeCoursesModal() {
+            document.getElementById('coursesModalOverlay').classList.remove('show');
+            startHeroSlideshow();
+        }
+
+        function goToCourseDetails(courseId) {
+            closeCoursesModal();
+            setTimeout(() => {
+                window.location.href = `/Course/Details/${courseId}`;
+            }, 200);
+        }
+
+        // إغلاق المودال عند النقر خارجه
+        document.getElementById('coursesModalOverlay')?.addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeCoursesModal();
+            }
+        });
+
+        // ==========================================
         // تهيئة الصفحة
         // ==========================================
         document.addEventListener('DOMContentLoaded', function () {
             startHeroSlideshow();
 
-            // إيقاف السلايدر عند مغادرة الصفحة
             document.addEventListener('visibilitychange', function () {
                 if (document.hidden) {
                     stopHeroSlideshow();

@@ -253,7 +253,77 @@ namespace SoumerMVCView.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetGradeCourses(int grade)
+        {
+            try
+            {
+                // 1. جلب أساتذة المرحلة
+                var gradeTeachers = await _assignmentService.GetOrganizedGradesTeachers();
+                var gradeData = gradeTeachers?.FirstOrDefault(g => g.Grade == grade);
+                var teacherIds = gradeData?.Teachers?.Select(t => t.Id).ToList() ?? new List<int>();
 
+                if (!teacherIds.Any())
+                    return Json(new { success = true, courses = new List<object>(), total = 0 });
+
+                // 2. جلب كل روابط (TeacherCourse) لهؤلاء الأساتذة
+                var teacherCourses = await _teacherCourseRepository
+                    .GetByKey(tc => teacherIds.Contains(tc.TeacherId) && tc.DeletedAt == null);
+
+                // 3. استخراج المواد الفريدة (تجميع حسب CourseId)
+                var courseIds = teacherCourses
+                    .Where(tc => tc.CourseId > 0)
+                    .Select(tc => tc.CourseId)
+                    .Distinct()
+                    .ToList();
+
+                if (!courseIds.Any())
+                    return Json(new { success = true, courses = new List<object>(), total = 0 });
+
+                // 4. جلب بيانات كل مادة
+                var allCourses = await _courseService.GetAvailableCourses();
+                var coursesInGrade = allCourses.Where(c => courseIds.Contains(c.Id)).ToList();
+
+                // 5. جلب مواد المستخدم المشترك بها
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var enrolledIds = new HashSet<int>();
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    try
+                    {
+                        var enrollments = await _courseService.GetUserEnrolledCourses(userId);
+                        enrolledIds = enrollments.Select(e => e.CourseId).Distinct().ToHashSet();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to load enrollments for user {UserId}", userId);
+                    }
+                }
+
+                // 6. تحضير النتيجة
+                var result = coursesInGrade.Select(c => new
+                {
+                    id = c.Id,
+                    name = c.Name ?? "",
+                    description = c.Description ?? "",
+                    price = c.Price,
+                    discountPrice = c.DiscountPrice,
+                    discountEndDate = c.DiscountEndDate,
+                    hasActiveDiscount = c.HasActiveDiscount,
+                    effectivePrice = c.EffectivePrice,
+                    discountAmount = c.DiscountAmount,
+                    discountPercent = c.DiscountPercent,
+                    isEnrolled = enrolledIds.Contains(c.Id)
+                }).ToList();
+
+                return Json(new { success = true, courses = result, total = result.Count });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting courses for grade {Grade}", grade);
+                return Json(new { success = false, message = "حدث خطأ في تحميل المواد" });
+            }
+        }
 
         public IActionResult Privacy()
         {

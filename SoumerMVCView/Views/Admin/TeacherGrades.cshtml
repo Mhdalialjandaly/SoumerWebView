@@ -5,7 +5,10 @@
 }
 
 <div class="teacher-grades-page">
-    <!-- Header with Statistics -->
+
+    <!-- ==========================================
+         بطاقات الإحصائيات
+         ========================================== -->
     <div class="row mb-4">
         <div class="col-md-4 mb-3">
             <div class="stat-card text-center">
@@ -36,17 +39,20 @@
         </div>
     </div>
 
-    <!-- Actions Bar -->
+    <!-- ==========================================
+         شريط الإجراءات + الأكورديون
+         ========================================== -->
     <div class="table-card mb-4">
-        <div class="table-card-header">
+        <div class="table-card-header flex-wrap gap-2">
             <h5 class="table-card-title">
                 <i class="fas fa-layer-group me-2"></i> توزيع الأساتذة حسب الصفوف
             </h5>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap">
                 <a href="/Admin/AssignTeacherToGrade" class="btn-primary-admin">
                     <i class="fas fa-plus"></i> تعيين أستاذ لصف
                 </a>
-                <button class="btn-primary-admin" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);"
+                <button class="btn-primary-admin"
+                        style="background: linear-gradient(135deg, #7c3aed, #6d28d9);"
                         data-bs-toggle="modal" data-bs-target="#bulkAssignModal">
                     <i class="fas fa-users"></i> تعيين جماعي
                 </button>
@@ -95,8 +101,11 @@
                         <h2 class="accordion-header">
                             <button class="accordion-button @(gradeGroup.Key != 1 ? "collapsed" : "")"
                                     type="button" data-bs-toggle="collapse"
-                                    data-bs-target="#@collapseId" aria-expanded="@(gradeGroup.Key == 1 ? "true" : "false")">
-                                <span class="grade-badge" style="background: #4f46e5; color: white; padding: 0.3rem 1rem; border-radius: 20px; font-size: 0.9rem; margin-left: 10px;">
+                                    data-bs-target="#@collapseId"
+                                    aria-expanded="@(gradeGroup.Key == 1 ? "true" : "false")">
+                                <span class="grade-badge"
+                                      style="background: #4f46e5; color: white; padding: 0.3rem 1rem;
+                                                     border-radius: 20px; font-size: 0.9rem; margin-left: 10px;">
                                     @gradeName
                                 </span>
                                 <span class="badge bg-info ms-2">@teachersList.Count أستاذ</span>
@@ -126,7 +135,8 @@
                                                         <div class="d-flex align-items-center">
                                                             <img src="@(string.IsNullOrEmpty(assignment.Teacher?.Image) ? "/images/default-avatar.png" : assignment.Teacher.Image)"
                                                                  alt="@assignment.Teacher?.Name"
-                                                                 style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-left: 10px;">
+                                                                 style="width: 40px; height: 40px; border-radius: 50%;
+                                                                                    object-fit: cover; margin-left: 10px;">
                                                             <div>
                                                                 <strong>@assignment.Teacher?.Name</strong>
                                                             </div>
@@ -156,14 +166,18 @@
                                                     </td>
                                                     <td>@assignment.CreatedAt.ToString("yyyy/MM/dd")</td>
                                                     <td>
-                                                        <a href="/Admin/EditTeacherGrade/@assignment.Id" class="btn-action btn-edit" title="تعديل">
+                                                        <a href="/Admin/EditTeacherGrade/@assignment.Id"
+                                                           class="btn-action btn-edit" title="تعديل">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
-                                                        <form id="deleteForm-@assignment.Id" action="/Admin/DeleteTeacherGrade" method="post" style="display: inline;">
+                                                        <form id="deleteForm-@assignment.Id"
+                                                              action="/Admin/DeleteTeacherGrade"
+                                                              method="post" style="display: inline;">
                                                             @Html.AntiForgeryToken()
                                                             <input type="hidden" name="id" value="@assignment.Id" />
                                                             <button type="button" class="btn-action btn-delete"
-                                                                    onclick="confirmDelete(@assignment.Id, 'teacherGrade')" title="حذف">
+                                                                    onclick="confirmDelete(@assignment.Id, 'teacherGrade')"
+                                                                    title="حذف">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
                                                         </form>
@@ -190,7 +204,9 @@
     </div>
 </div>
 
-<!-- Bulk Assign Modal -->
+<!-- ==========================================
+     مودال التعيين الجماعي
+     ========================================== -->
 <div class="modal fade" id="bulkAssignModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -200,12 +216,18 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="/Admin/BulkAssignTeachers" method="post">
+
+            <form action="/Admin/BulkAssignTeachers" method="post" id="bulkAssignForm">
                 @Html.AntiForgeryToken()
+
                 <div class="modal-body">
+
+                    <!-- اختيار الصف -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold">اختر الصف</label>
-                        <select name="grade" class="form-select" required>
+                        <label class="form-label fw-bold">
+                            اختر الصف <span class="text-danger">*</span>
+                        </label>
+                        <select name="grade" id="bulkGradeSelect" class="form-select" required>
                             <option value="">اختر الصف...</option>
                             <option value="1">الصف الأول</option>
                             <option value="2">الصف الثاني</option>
@@ -222,16 +244,63 @@
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">اختر الأساتذة</label>
-                        <div id="bulkTeacherList" style="max-height: 300px; overflow-y: auto;">
-                            <!-- Loaded dynamically -->
+                    <!-- حالة: لم يتم اختيار صف -->
+                    <div id="bulkPlaceholder" class="text-center py-4 text-muted">
+                        <i class="fas fa-hand-pointer fa-2x mb-2 d-block opacity-50"></i>
+                        <p class="mb-0">اختر صفاً لعرض قائمة الأساتذة</p>
+                    </div>
+
+                    <!-- حالة: تحميل -->
+                    <div id="bulkLoading" class="text-center py-4" style="display:none;">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 mb-0 text-muted">جارٍ تحميل الأساتذة...</p>
+                    </div>
+
+                    <!-- حالة: لا يوجد أساتذة -->
+                    <div id="bulkEmpty" class="text-center py-4" style="display:none;">
+                        <i class="fas fa-user-slash fa-2x mb-2 d-block text-warning opacity-75"></i>
+                        <p class="mb-0 text-muted">لا يوجد أساتذة في النظام بعد</p>
+                        <a href="/Admin/CreateTeacher" class="btn btn-sm btn-outline-primary mt-2">
+                            <i class="fas fa-plus"></i> إضافة أستاذ جديد
+                        </a>
+                    </div>
+
+                    <!-- قائمة الأساتذة -->
+                    <div id="bulkTeacherSection" style="display:none;">
+                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                            <label class="form-label fw-bold mb-0">
+                                اختر الأساتذة <span class="text-danger">*</span>
+                            </label>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                        onclick="selectAllBulkTeachers(true)">
+                                    <i class="fas fa-check-double"></i> تحديد الكل
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        onclick="selectAllBulkTeachers(false)">
+                                    <i class="fas fa-times"></i> إلغاء التحديد
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="bulkTeacherList"
+                             style="max-height: 350px; overflow-y: auto;
+                                    border: 1px solid #e2e8f0;
+                                    border-radius: 12px; padding: 8px;">
+                            <!-- تُملأ ديناميكياً -->
+                        </div>
+
+                        <div class="mt-2 text-end">
+                            <small class="text-muted">
+                                <span id="selectedCount">0</span> أستاذ محدد
+                            </small>
                         </div>
                     </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="submit" class="btn-primary-admin">
+                    <button type="submit" class="btn-primary-admin" id="bulkAssignSubmitBtn" disabled>
                         <i class="fas fa-save"></i> تعيين الأساتذة المختارين
                     </button>
                 </div>
@@ -240,7 +309,9 @@
     </div>
 </div>
 
-<!-- Distribution Chart Modal -->
+<!-- ==========================================
+     مودال إحصائيات التوزيع
+     ========================================== -->
 <div class="modal fade" id="distributionChartModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -260,7 +331,9 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Show distribution chart
+        // ==========================================
+        // إحصائيات التوزيع
+        // ==========================================
         async function showDistributionChart() {
             try {
                 const response = await fetch('/Admin/GetGradeDistributionStats');
@@ -272,7 +345,6 @@
 
                     const ctx = document.getElementById('distributionChart').getContext('2d');
 
-                    // Destroy existing chart if any
                     if (window.distributionChartInstance) {
                         window.distributionChartInstance.destroy();
                     }
@@ -307,9 +379,7 @@
                             scales: {
                                 y: {
                                     beginAtZero: true,
-                                    ticks: {
-                                        stepSize: 1
-                                    }
+                                    ticks: { stepSize: 1 }
                                 }
                             }
                         }
@@ -323,44 +393,230 @@
             }
         }
 
-        // Load teachers for bulk assignment
-        $('#bulkAssignModal').on('show.bs.modal', async function() {
-            const container = $('#bulkTeacherList');
-            container.html('<div class="text-center py-3"><div class="spinner-border"></div></div>');
+        // ==========================================
+        // التعيين الجماعي - عناصر
+        // ==========================================
+        const bulkGradeSelect = document.getElementById('bulkGradeSelect');
+        const bulkPlaceholder = document.getElementById('bulkPlaceholder');
+        const bulkLoading = document.getElementById('bulkLoading');
+        const bulkEmpty = document.getElementById('bulkEmpty');
+        const bulkTeacherSection = document.getElementById('bulkTeacherSection');
+        const bulkTeacherList = document.getElementById('bulkTeacherList');
+        const bulkAssignSubmitBtn = document.getElementById('bulkAssignSubmitBtn');
+        const selectedCountEl = document.getElementById('selectedCount');
+
+        let currentAssignedIds = [];
+
+        // ==========================================
+        // عند فتح المودال: إعادة تعيين الحالة
+        // ==========================================
+        $('#bulkAssignModal').on('show.bs.modal', function () {
+            bulkGradeSelect.value = '';
+            bulkPlaceholder.style.display = 'block';
+            bulkLoading.style.display = 'none';
+            bulkEmpty.style.display = 'none';
+            bulkTeacherSection.style.display = 'none';
+            bulkTeacherList.innerHTML = '';
+            bulkAssignSubmitBtn.disabled = true;
+            selectedCountEl.textContent = '0';
+            currentAssignedIds = [];
+        });
+
+        // ==========================================
+        // عند تغيير الصف: تحميل الأساتذة ديناميكياً
+        // ==========================================
+        bulkGradeSelect.addEventListener('change', async function () {
+            const grade = parseInt(this.value);
+
+            // إعادة تعيين العرض
+            bulkPlaceholder.style.display = 'none';
+            bulkEmpty.style.display = 'none';
+            bulkTeacherSection.style.display = 'none';
+            bulkAssignSubmitBtn.disabled = true;
+
+            if (!grade || grade < 1 || grade > 12) {
+                bulkPlaceholder.style.display = 'block';
+                return;
+            }
+
+            // حالة التحميل
+            bulkLoading.style.display = 'block';
 
             try {
-                const response = await fetch('/Admin/Teachers');
-                const html = await response.text();
-                // Parse teachers from the response or use API
-                // For simplicity, we'll use a dedicated API
-                const apiResponse = await fetch('/Admin/GetTeachersByGrade?grade=0');
-                const data = await apiResponse.json();
+                const response = await fetch(`/Admin/GetAllTeachersForAssignment?grade=${grade}`);
+                const data = await response.json();
 
-                if (data.success) {
-                    let html = '';
-                    data.teachers.forEach((teacher, index) => {
+                bulkLoading.style.display = 'none';
+
+                if (!data.success) {
+                    bulkTeacherList.innerHTML = `
+                        <div class="text-danger text-center py-3">
+                            <i class="fas fa-exclamation-circle"></i>
+                            ${data.message || 'تعذر تحميل الأساتذة'}
+                        </div>`;
+                    bulkTeacherSection.style.display = 'block';
+                    return;
+                }
+
+                if (!data.teachers || data.teachers.length === 0) {
+                    bulkEmpty.style.display = 'block';
+                    return;
+                }
+
+                currentAssignedIds = data.teachers
+                    .filter(t => t.isAssigned)
+                    .map(t => t.id);
+
+                // ==========================================
+                // بناء القائمة
+                // ==========================================
+                let html = '';
+                let priorityCounter = data.nextPriority;
+
+                data.teachers.forEach(teacher => {
+                    const isAssigned = teacher.isAssigned === true;
+                    const imageSrc = teacher.image || '/images/default-avatar.png';
+
+                    if (isAssigned) {
+                        // معيّن مسبقاً - معطّل
                         html += `
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox"
-                                       name="teacherIds" value="${teacher.teacherId}" id="teacher${teacher.teacherId}">
-                                <input type="hidden" name="priorities" value="${index + 1}">
-                                <label class="form-check-label" for="teacher${teacher.teacherId}">
-                                    👨‍🏫 ${teacher.teacherName} - ${teacher.subject}
-                                </label>
+                            <div class="d-flex align-items-center gap-2 p-2 mb-1"
+                                 style="background:#f0fdf4; border-radius:10px; opacity:0.7;">
+                                <input type="checkbox" disabled class="form-check-input" style="margin:0;">
+                                <img src="${imageSrc}"
+                                     style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+                                <div style="flex:1; min-width:0;">
+                                    <div style="font-weight:700; font-size:0.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                        ${escapeHtml(teacher.name)}
+                                    </div>
+                                    <div style="font-size:0.72rem; color:#64748b;">
+                                        ${escapeHtml(teacher.subject || 'مادة غير محددة')}
+                                    </div>
+                                </div>
+                                <span class="badge bg-success" style="font-size:0.65rem;">
+                                    <i class="fas fa-check"></i> معيّن بالفعل
+                                </span>
                             </div>
                         `;
-                    });
-                    container.html(html);
-                }
+                    } else {
+                        // غير معيّن - قابل للاختيار
+                        html += `
+                            <div class="d-flex align-items-center gap-2 p-2 mb-1 teacher-select-row"
+                                 style="border-radius:10px; cursor:pointer;"
+                                 onclick="toggleBulkTeacher(this)">
+                                <input type="checkbox"
+                                       class="form-check-input bulk-teacher-checkbox"
+                                       name="teacherIds"
+                                       value="${teacher.id}"
+                                       data-priority="${priorityCounter}"
+                                       style="margin:0;">
+                                <img src="${imageSrc}"
+                                     style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+                                <div style="flex:1; min-width:0;">
+                                    <div style="font-weight:700; font-size:0.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                        ${escapeHtml(teacher.name)}
+                                    </div>
+                                    <div style="font-size:0.72rem; color:#64748b;">
+                                        ${escapeHtml(teacher.subject || 'مادة غير محددة')}
+                                    </div>
+                                </div>
+                                <span class="badge bg-light text-dark" style="font-size:0.65rem;">
+                                    أولوية ${priorityCounter}
+                                </span>
+                            </div>
+                        `;
+                        priorityCounter++;
+                    }
+                });
+
+                bulkTeacherList.innerHTML = html;
+
+                // مستمعات التحديد
+                bulkTeacherList.querySelectorAll('.bulk-teacher-checkbox').forEach(cb => {
+                    cb.addEventListener('change', updateBulkSelectionCount);
+                });
+
+                bulkTeacherSection.style.display = 'block';
+                updateBulkSelectionCount();
+
             } catch (error) {
-                container.html('<p class="text-danger">فشل تحميل الأساتذة</p>');
+                console.error('Error loading teachers:', error);
+                bulkLoading.style.display = 'none';
+                bulkTeacherList.innerHTML = `
+                    <div class="text-danger text-center py-3">
+                        <i class="fas fa-wifi"></i>
+                        تعذر الاتصال بالخادم
+                    </div>`;
+                bulkTeacherSection.style.display = 'block';
             }
         });
 
-        // Delete confirmation
+        // ==========================================
+        // تبديل تحديد صف
+        // ==========================================
+        function toggleBulkTeacher(row) {
+            const checkbox = row.querySelector('.bulk-teacher-checkbox');
+            if (!checkbox) return;
+            checkbox.checked = !checkbox.checked;
+            updateBulkSelectionCount();
+        }
+
+        // ==========================================
+        // تحديد / إلغاء الكل
+        // ==========================================
+        function selectAllBulkTeachers(select) {
+            bulkTeacherList.querySelectorAll('.bulk-teacher-checkbox').forEach(cb => {
+                cb.checked = select;
+            });
+            updateBulkSelectionCount();
+        }
+
+        // ==========================================
+        // تحديث العدد وحالة زر الإرسال
+        // ==========================================
+        function updateBulkSelectionCount() {
+            const selected = bulkTeacherList.querySelectorAll('.bulk-teacher-checkbox:checked').length;
+            selectedCountEl.textContent = selected;
+            bulkAssignSubmitBtn.disabled = selected === 0 || !bulkGradeSelect.value;
+        }
+
+        // ==========================================
+        // قبل الإرسال: إضافة hidden priorities
+        // ==========================================
+        document.getElementById('bulkAssignForm').addEventListener('submit', function (e) {
+            const grade = bulkGradeSelect.value;
+            if (!grade) {
+                e.preventDefault();
+                Swal.fire('تنبيه', 'يجب اختيار الصف أولاً', 'warning');
+                return;
+            }
+
+            const selectedBoxes = bulkTeacherList.querySelectorAll('.bulk-teacher-checkbox:checked');
+            if (selectedBoxes.length === 0) {
+                e.preventDefault();
+                Swal.fire('تنبيه', 'يجب اختيار أستاذ واحد على الأقل', 'warning');
+                return;
+            }
+
+            // إزالة أي hidden priorities قديمة
+            this.querySelectorAll('input[name="priorities"]').forEach(el => el.remove());
+
+            // إضافة priorities جديدة بالتسلسل
+            selectedBoxes.forEach((cb, index) => {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'priorities';
+                hidden.value = index + 1;
+                this.appendChild(hidden);
+            });
+        });
+
+        // ==========================================
+        // حذف التعيين
+        // ==========================================
         function confirmDelete(id, type) {
             let message = '';
-            switch(type) {
+            switch (type) {
                 case 'teacherGrade':
                     message = 'هل أنت متأكد من إزالة الأستاذ من هذا الصف؟';
                     break;
@@ -382,6 +638,16 @@
                     document.getElementById(`deleteForm-${id}`).submit();
                 }
             });
+        }
+
+        // ==========================================
+        // دالة مساعدة
+        // ==========================================
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     </script>
 }

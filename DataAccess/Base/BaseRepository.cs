@@ -276,5 +276,146 @@ namespace DataAccess.Base
             foreach (var entry in changedEntriesCopy)
                 entry.State = EntityState.Detached;
         }
+
+        public virtual async Task<List<TModel>> GetAll(params string[] includes)
+        {
+            try
+            {
+                var query = _context.Set<TEntity>()
+                    .AsNoTracking()
+                    .Where(e => e.DeletedAt == null);
+
+                query = ApplyIncludes(query, includes);
+
+                var result = await query.ToListAsync();
+                return _mapper.Map<List<TModel>>(result);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public virtual async Task<TModel> GetById(object id, params string[] includes)
+        {
+            var query = _context.Set<TEntity>().AsNoTracking();
+
+            query = ApplyIncludes(query, includes);
+
+            var result = await query
+                .FirstOrDefaultAsync(e => EF.Property<object>(e, "Id").Equals(id));
+
+            return _mapper.Map<TModel>(result);
+        }
+
+        public virtual async Task<List<TModel>> GetByKey(
+            Expression<Func<TEntity, bool>> predicate,
+            params string[] includes)
+        {
+            try
+            {
+                var query = _context.Set<TEntity>()
+                    .AsNoTracking()
+                    .Where(e => e.DeletedAt == null)
+                    .Where(predicate);
+
+                query = ApplyIncludes(query, includes);
+
+                var result = await query.ToListAsync();
+                return _mapper.Map<List<TModel>>(result);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        private IQueryable<TEntity> ApplyIncludes(IQueryable<TEntity> query, params string[] includes)
+        {
+            if (includes == null || includes.Length == 0)
+                return query;
+
+            foreach (var include in includes)
+            {
+                if (string.IsNullOrWhiteSpace(include))
+                    continue;
+
+                // تقسيم السلسلة لدعم ThenInclude: "TeacherCourses.Course"
+                var parts = include.Split('.', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 0) continue;
+
+                // Include الأول
+                IQueryable<TEntity> current = query.Include(parts[0]);
+
+                // ThenInclude للأجزاء التالية
+                // نستخدم الانعكاس لأن نوع الخاصية غير معروف وقت الترجمة
+                for (int i = 1; i < parts.Length; i++)
+                {
+                    current = ApplyThenInclude(current, parts[i], typeof(TEntity), parts, i);
+                }
+
+                query = current;
+            }
+
+            return query;
+        }
+        private IQueryable<TEntity> ApplyThenInclude(
+            IQueryable<TEntity> query,
+            string propertyName,
+            Type currentType,
+            string[] parts,
+            int currentIndex)
+        {
+            // نكتشف نوع الخاصية التي تم عمل Include لها في المستوى السابق
+            // عبر المرور على الخصائص من الجذر حتى الوصول للنوع الحالي
+            Type navigationType = currentType;
+            for (int i = 0; i < currentIndex; i++)
+            {
+                var prop = navigationType.GetProperty(parts[i]);
+                if (prop == null) return query;
+
+                var propType = prop.PropertyType;
+
+                // إن كانت ICollection<T>، استخرج T
+                if (propType.IsGenericType &&
+                    typeof(IEnumerable<>).IsAssignableFrom(propType.GetGenericTypeDefinition()))
+                {
+                    propType = propType.GetGenericArguments()[0];
+                }
+
+                navigationType = propType;
+            }
+
+            // الآن نطبق ThenInclude على navigationType
+            var method = typeof(EntityFrameworkQueryableExtensions)
+                .GetMethods()
+                .FirstOrDefault(m => m.Name == "ThenInclude"
+                    && m.GetParameters().Length == 2
+                    && m.GetParameters()[1].ParameterType.IsGenericType);
+
+            if (method == null) return query;
+
+            // نبني التعبير يدوياً عبر استدعاء ThenInclude<TEntity, TPrev, TProp>
+            // استخدام الطريقة العامة أسهل عبر Reflection على overloads
+            var thenIncludeMethod = typeof(EntityFrameworkQueryableExtensions)
+                .GetMethods()
+                .Where(m => m.Name == "ThenInclude")
+                .FirstOrDefault(m =>
+                {
+                    var ps = m.GetParameters();
+                    if (ps.Length != 2) return false;
+                    var second = ps[1].ParameterType;
+                    return second.IsGenericType
+                        && second.GetGenericTypeDefinition() == typeof(Expression<>)
+                        && second.GetGenericArguments()[0].IsGenericType
+                        && second.GetGenericArguments()[0].GetGenericTypeDefinition() == typeof(Func<,,>);
+                });
+
+            if (thenIncludeMethod == null) return query;
+
+            // نستخدم الـ generic method المناسبة بحسب النوع الحالي
+            // (هذا صعب عبر Reflection مباشرة، لذا نستخدم Include مرة أخرى بسلسلة كاملة)
+            // الحل الأبسط والأكثر أماناً: استخدام Include على المسار الكامل
+            return query.Include(string.Join(".", parts, 0, currentIndex + 1));
+        }
     }
 }

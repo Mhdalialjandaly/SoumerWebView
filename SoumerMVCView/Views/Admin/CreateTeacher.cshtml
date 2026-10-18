@@ -74,30 +74,23 @@
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Subject" class="form-label">
-                        <i class="fas fa-book me-1"></i> المادة
+                    <label asp-for="MainCourseId" class="form-label">
+                        <i class="fas fa-book me-1"></i> المادة الرئيسية
                     </label>
-                    <select asp-for="Subject" class="form-select" required>
+                    <select asp-for="MainCourseId" class="form-select select2" required>
                         <option value="">اختر المادة...</option>
-                        <option value="رياضيات">رياضيات</option>
-                        <option value="فيزياء">فيزياء</option>
-                        <option value="كيمياء">كيمياء</option>
-                        <option value="أحياء">أحياء</option>
-                        <option value="لغة عربية">لغة عربية</option>
-                        <option value="لغة إنجليزية">لغة إنجليزية</option>
-                        <option value="لغة فرنسية">لغة فرنسية</option>
-                        <option value="تاريخ">تاريخ</option>
-                        <option value="جغرافيا">جغرافيا</option>
-                        <option value="فلسفة">فلسفة</option>
-                        <option value="علوم">علوم</option>
-                        <option value="تربية إسلامية">تربية إسلامية</option>
-                        <option value="تربية فنية">تربية فنية</option>
-                        <option value="موسيقى">موسيقى</option>
-                        <option value="رياضة">رياضة</option>
-                        <option value="حاسوب">حاسوب</option>
-                        <option value="أخرى">أخرى</option>
+                        @foreach (var course in (List<Course>)ViewBag.Courses)
+                        {
+                            <option value="@course.Id">
+                                @course.Name — @course.Price.ToString("N0") نقطة
+                            </option>
+                        }
                     </select>
-                    <span asp-validation-for="Subject" class="text-danger"></span>
+                    <span asp-validation-for="MainCourseId" class="text-danger"></span>
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        هذه المادة الرئيسية للأستاذ. يمكن ربطه بمواد أخرى إضافية من صفحة "ربط الأساتذة بالمواد".
+                    </small>
                 </div>
 
                 <div class="mb-3">
@@ -230,6 +223,14 @@
             });
         }
 
+        $(document).ready(function () {
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                language: 'ar',
+                dir: 'rtl',
+                placeholder: 'ابحث عن مادة...'
+            });
+        });
         // Character counter for bio
         document.addEventListener('DOMContentLoaded', function() {
             const bioTextarea = document.getElementById('Bio');

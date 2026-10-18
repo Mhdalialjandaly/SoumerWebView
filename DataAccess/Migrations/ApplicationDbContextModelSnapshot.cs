@@ -382,6 +382,9 @@ namespace DataAccess.Migrations
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("MainCourseId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
@@ -395,6 +398,8 @@ namespace DataAccess.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MainCourseId");
 
                     b.ToTable("Teachers");
                 });
@@ -874,6 +879,15 @@ namespace DataAccess.Migrations
                         .HasForeignKey("UsedByUserId");
 
                     b.Navigation("UsedByUser");
+                });
+
+            modelBuilder.Entity("DataAccess.Entities.Teacher", b =>
+                {
+                    b.HasOne("DataAccess.Entities.Course", "MainCourse")
+                        .WithMany()
+                        .HasForeignKey("MainCourseId");
+
+                    b.Navigation("MainCourse");
                 });
 
             modelBuilder.Entity("DataAccess.Entities.TeacherCourse", b =>
