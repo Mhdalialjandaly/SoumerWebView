@@ -110,7 +110,7 @@
                             `<span class="badge bg-info me-1">${c.name} (${c.price} نقطة)</span>`
                         ).join('');
                     } else {
-                        coursesHtml = '<p class="text-muted">لا توجد كورسات مرتبطة</p>';
+                        coursesHtml = '<p class="text-muted">لا توجد مواد مرتبطة</p>';
                     }
 
                     $('#teacherDetailsContent').html(`
@@ -123,7 +123,7 @@
                         <p class="text-center text-muted">${teacher.subject}</p>
                         <hr>
                         <p><strong>الوصف:</strong> ${teacher.bio || 'لا يوجد وصف'}</p>
-                        <p><strong>الكورسات:</strong></p>
+                        <p><strong>المواد:</strong></p>
                         <div>${coursesHtml}</div>
                     `);
                     $('#teacherDetailsModal').modal('show');

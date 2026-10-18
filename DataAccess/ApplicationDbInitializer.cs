@@ -18,12 +18,12 @@ namespace DataAccess
               .HasData(new List<IdentityRole>
               {
                     new() { Id = "1", Name = "Student", NormalizedName = "STUDENT", ConcurrencyStamp = "1" },
-                    new() { Id = "2", Name = "Admin", NormalizedName = "ADMIN", ConcurrencyStamp = "1" },
-                    new() { Id = "3", Name = "Teacher", NormalizedName = "TEACHER", ConcurrencyStamp = "2" },
-                    new() { Id = "4", Name = "Employee", NormalizedName = "EMPLOYEE", ConcurrencyStamp = "3" },
-                    new() { Id = "5", Name = "FinEmployee", NormalizedName = "FINEMPLOYEE", ConcurrencyStamp = "4" },
-                    new() { Id = "6", Name = "HREmployee", NormalizedName = "HREMPLOYEE", ConcurrencyStamp = "5" },
-                    new() { Id = "7", Name = "STUEmployee", NormalizedName = "STUEMPLOYEE", ConcurrencyStamp = "6" }
+                    new() { Id = "2", Name = "Admin", NormalizedName = "ADMIN", ConcurrencyStamp = "2" },
+                    new() { Id = "3", Name = "Teacher", NormalizedName = "TEACHER", ConcurrencyStamp = "3" },
+                    new() { Id = "4", Name = "Employee", NormalizedName = "EMPLOYEE", ConcurrencyStamp = "4" },
+                    new() { Id = "5", Name = "FinEmployee", NormalizedName = "FINEMPLOYEE", ConcurrencyStamp = "5" },
+                    new() { Id = "6", Name = "HREmployee", NormalizedName = "HREMPLOYEE", ConcurrencyStamp = "6" },
+                    new() { Id = "7", Name = "STUEmployee", NormalizedName = "STUEMPLOYEE", ConcurrencyStamp = "7" }
               });
 
 

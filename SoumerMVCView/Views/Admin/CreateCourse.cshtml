@@ -1,6 +1,6 @@
 ﻿@model SoumerMVCView.Models.CourseFormViewModel
 @{
-    ViewData["Title"] = Model.Id == 0 ? "إضافة كورس جديد" : "تعديل الكورس";
+    ViewData["Title"] = Model.Id == 0 ? "إضافة مادة جديد" : "تعديل المادة";
     Layout = "_AdminLayout";
 }
 
@@ -19,7 +19,7 @@
 
         <!-- بيانات أساسية -->
         <div class="form-group">
-            <label asp-for="Name">اسم الكورس <span class="text-danger">*</span></label>
+            <label asp-for="Name">اسم المادة <span class="text-danger">*</span></label>
             <input asp-for="Name" class="form-control" required />
             <span asp-validation-for="Name" class="text-danger small"></span>
         </div>

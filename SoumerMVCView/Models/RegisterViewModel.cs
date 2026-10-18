@@ -37,6 +37,7 @@ namespace SoumerMVCView.Models
         public string Description { get; set; }
 
         [Display(Name = "رقم الهاتف")]
+        [Required(ErrorMessage ="رقم الهاتف مطلوب")]
         [Phone(ErrorMessage = "رقم الهاتف غير صحيح")]
         public string PhoneNumber { get; set; }
 

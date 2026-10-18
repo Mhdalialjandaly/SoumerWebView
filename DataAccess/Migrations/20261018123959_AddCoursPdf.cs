@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class AddVediosForCourses : Migration
+    public partial class AddCoursPdf : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "CourseVideos",
+                name: "CoursePdfs",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -20,14 +20,12 @@ namespace DataAccess.Migrations
                     CourseId = table.Column<int>(type: "int", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    VideoUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Platform = table.Column<int>(type: "int", nullable: false),
-                    VideoId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Duration = table.Column<int>(type: "int", nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OriginalFileName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FileSize = table.Column<long>(type: "bigint", nullable: false),
                     Order = table.Column<int>(type: "int", nullable: false),
-                    IsFree = table.Column<bool>(type: "bit", nullable: false),
                     IsPublished = table.Column<bool>(type: "bit", nullable: false),
-                    PublishDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsFree = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -36,9 +34,9 @@ namespace DataAccess.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CourseVideos", x => x.Id);
+                    table.PrimaryKey("PK_CoursePdfs", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CourseVideos_Courses_CourseId",
+                        name: "FK_CoursePdfs_Courses_CourseId",
                         column: x => x.CourseId,
                         principalTable: "Courses",
                         principalColumn: "Id",
@@ -46,8 +44,8 @@ namespace DataAccess.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_CourseVideos_CourseId",
-                table: "CourseVideos",
+                name: "IX_CoursePdfs_CourseId",
+                table: "CoursePdfs",
                 column: "CourseId");
         }
 
@@ -55,7 +53,7 @@ namespace DataAccess.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "CourseVideos");
+                name: "CoursePdfs");
         }
     }
 }

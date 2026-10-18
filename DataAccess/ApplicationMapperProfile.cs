@@ -30,6 +30,9 @@ namespace DataAccess
             CreateMap<TeacherDto,Teacher>().ReverseMap();
             CreateMap<Teacher, TeacherDto>();
 
+            CreateMap<CoursePdfDto, CoursePdf>().ReverseMap();
+            CreateMap<CoursePdf, CoursePdfDto>();
+
             CreateMap<CourseDto, Course>().ReverseMap();
             CreateMap<Course, CourseDto>();
 

@@ -1,0 +1,354 @@
+﻿@model List<CoursePdfDto>
+@{
+    ViewData["Title"] = $"ملفات - {(string)ViewBag.CourseName}";
+    var courseId = (int)ViewBag.CourseId;
+    var courseName = (string)ViewBag.CourseName;
+    var isEnrolled = (bool)ViewBag.IsEnrolled;
+}
+
+<div class="pdfs-page">
+
+    <!-- رأس الصفحة -->
+    <div class="pdfs-header">
+        <a href="/Course/Details/@courseId" class="pdfs-back-btn">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+        <div class="pdfs-header-info">
+            <h1 class="pdfs-title">@courseName</h1>
+            <p class="pdfs-subtitle">
+                <i class="fas fa-file-pdf"></i>
+                @Model.Count ملف
+                @if (!isEnrolled)
+                {
+                    <span class="pdfs-warn-pill">غير مشترك — تعرض الملفات المجانية فقط</span>
+                }
+            </p>
+        </div>
+    </div>
+
+    @if (!isEnrolled)
+    {
+        <div class="pdfs-info-banner">
+            <div>
+                <strong>هل تريد الوصول لجميع الملفات؟</strong>
+                <p>اشترك في المادة لتحميل كل ملفات PDF</p>
+            </div>
+            <a href="/Course/Details/@courseId" class="pdfs-info-btn">
+                اشترك الآن
+            </a>
+        </div>
+    }
+
+    @if (Model.Any())
+    {
+        <div class="pdfs-list">
+            @foreach (var pdf in Model)
+            {
+                var size = pdf.FileSize;
+                var sizeStr = size < 1024 ? $"{size} B"
+                : size < 1024 * 1024 ? $"{size / 1024.0:F1} KB"
+                : $"{size / (1024.0 * 1024.0):F1} MB";
+
+                <div class="pdf-card">
+                    <div class="pdf-card-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="pdf-card-body">
+                        <h3 class="pdf-card-title">@pdf.Title</h3>
+                        @if (!string.IsNullOrEmpty(pdf.Description))
+                        {
+                            <p class="pdf-card-desc">@pdf.Description</p>
+                        }
+                        <div class="pdf-card-meta">
+                            <span><i class="fas fa-weight-hanging"></i> @sizeStr</span>
+                            <span><i class="fas fa-calendar"></i> @pdf.CreatedAt.ToString("dd MMM yyyy")</span>
+                            @if (pdf.IsFree)
+                            {
+                                <span class="pdf-tag pdf-tag-free">🎁 مجاني</span>
+                            }
+                        </div>
+                    </div>
+                    <a href="/Course/DownloadPdf/@pdf.Id" class="pdf-download-btn">
+                        <i class="fas fa-download"></i>
+                        تحميل
+                    </a>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="pdfs-empty">
+            <div class="pdfs-empty-icon"><i class="fas fa-folder-open"></i></div>
+            <h2>لا توجد ملفات</h2>
+            <p>لم يتم إضافة ملفات لهذه المادة بعد</p>
+        </div>
+    }
+</div>
+
+<style>
+    .pdfs-page {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: var(--spacing-lg);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-lg);
+    }
+
+    .pdfs-header {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .pdfs-back-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: var(--white);
+        border: 1px solid var(--border-color);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        text-decoration: none;
+        box-shadow: var(--shadow-sm);
+    }
+
+        .pdfs-back-btn:hover {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+    .pdfs-header-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .pdfs-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--text-color);
+        margin: 0 0 4px 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .pdfs-subtitle {
+        font-size: 0.75rem;
+        color: var(--icon-color);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+        .pdfs-subtitle i {
+            color: #dc2626;
+        }
+
+    .pdfs-warn-pill {
+        background: #fef3c7;
+        color: #b45309;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
+    .pdfs-info-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--spacing-md);
+        padding: var(--spacing-md) var(--spacing-lg);
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border: 1px solid #fbbf24;
+        border-radius: var(--radius-lg);
+        flex-wrap: wrap;
+    }
+
+        .pdfs-info-banner strong {
+            display: block;
+            font-size: 0.9rem;
+            color: #78350f;
+            margin-bottom: 2px;
+        }
+
+        .pdfs-info-banner p {
+            margin: 0;
+            font-size: 0.75rem;
+            color: #92400e;
+        }
+
+    .pdfs-info-btn {
+        padding: 8px 16px;
+        background: var(--primary-color);
+        color: var(--white);
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+
+        .pdfs-info-btn:hover {
+            background: var(--primary-dark);
+            color: var(--white);
+        }
+
+    .pdfs-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .pdf-card {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        background: var(--white);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s;
+    }
+
+        .pdf-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-md);
+        }
+
+    .pdf-card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: #fee2e2;
+        color: #dc2626;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+
+    .pdf-card-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .pdf-card-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin: 0 0 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .pdf-card-desc {
+        font-size: 0.75rem;
+        color: var(--icon-color);
+        margin: 0 0 6px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+    }
+
+    .pdf-card-meta {
+        display: flex;
+        gap: 10px;
+        font-size: 0.7rem;
+        color: var(--icon-color);
+        flex-wrap: wrap;
+    }
+
+        .pdf-card-meta i {
+            margin-left: 2px;
+        }
+
+    .pdf-tag {
+        padding: 1px 8px;
+        border-radius: 8px;
+        font-weight: 700;
+    }
+
+    .pdf-tag-free {
+        background: #d1fae5;
+        color: #059669;
+    }
+
+    .pdf-download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 16px;
+        background: var(--primary-color);
+        color: var(--white);
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 700;
+        white-space: nowrap;
+        transition: all 0.2s;
+    }
+
+        .pdf-download-btn:hover {
+            background: var(--primary-dark);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+
+    .pdfs-empty {
+        text-align: center;
+        padding: var(--spacing-2xl);
+        background: var(--white);
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--border-color);
+    }
+
+    .pdfs-empty-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto var(--spacing-md);
+        border-radius: 50%;
+        background: var(--primary-soft);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+    }
+
+    .pdfs-empty h2 {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--text-color);
+        margin: 0 0 6px;
+    }
+
+    .pdfs-empty p {
+        font-size: 0.8rem;
+        color: var(--icon-color);
+        margin: 0;
+    }
+
+    @@media (max-width: 480px) {
+        .pdf-card {
+            flex-wrap: wrap;
+        }
+
+        .pdf-download-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>

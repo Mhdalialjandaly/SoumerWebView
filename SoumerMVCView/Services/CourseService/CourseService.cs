@@ -24,7 +24,7 @@ namespace SoumerMVCView.Services.CourseService
         }
 
         // ==========================================
-        // قراءة الكورسات
+        // قراءة المواد
         // ==========================================
         public async Task<List<CourseDto>> GetAllCourses()
         {
@@ -42,7 +42,7 @@ namespace SoumerMVCView.Services.CourseService
         }
 
         // ==========================================
-        // التسجيل في كورس
+        // التسجيل في مادة
         // ==========================================
         public async Task<bool> EnrollInCourse(int courseId, string userId)
         {
@@ -58,7 +58,7 @@ namespace SoumerMVCView.Services.CourseService
                     return false;
                 }
 
-                // 2. جلب تفاصيل الكورس لبناء وصف المعاملة
+                // 2. جلب تفاصيل المادة لبناء وصف المعاملة
                 var course = await _courseRepository.GetById(courseId);
                 if (course == null)
                 {
@@ -68,8 +68,8 @@ namespace SoumerMVCView.Services.CourseService
 
                 // 3. تجهيز وصف المعاملة مع مراعاة العرض
                 var description = course.HasActiveDiscount
-                    ? $"الاشتراك في كورس '{course.Name}' (سعر عرض {course.DiscountPercent}% — خصم {course.DiscountAmount:N0} نقطة)"
-                    : $"الاشتراك في كورس '{course.Name}' ({course.Price:N0} نقطة)";
+                    ? $"الاشتراك في مادة '{course.Name}' (سعر عرض {course.DiscountPercent}% — خصم {course.DiscountAmount:N0} نقطة)"
+                    : $"الاشتراك في مادة '{course.Name}' ({course.Price:N0} نقطة)";
 
                 // 4. خصم النقاط بالسعر الفعلي (Eligibility.CoursePrice = EffectivePrice)
                 var deduction = await _balanceService.DeductPoints(
@@ -85,7 +85,7 @@ namespace SoumerMVCView.Services.CourseService
                     return false;
                 }
 
-                // 5. تسجيل المستخدم في الكورس
+                // 5. تسجيل المستخدم في المادة
                 var registration = new CourseRegistrationDto
                 {
                     CourseId = courseId,
@@ -107,7 +107,7 @@ namespace SoumerMVCView.Services.CourseService
                         await _balanceService.AddPoints(
                             userId,
                             eligibility.CoursePrice,
-                            $"استرجاع نقاط بعد فشل التسجيل في كورس {courseId}");
+                            $"استرجاع نقاط بعد فشل التسجيل في مادة {courseId}");
                     }
                     catch (Exception refundEx)
                     {
@@ -160,7 +160,7 @@ namespace SoumerMVCView.Services.CourseService
         }
 
         // ==========================================
-        // كورسات المستخدم
+        // مواد المستخدم
         // ==========================================
         public async Task<List<CourseRegistrationDto>> GetUserEnrolledCourses(string userId)
         {
@@ -181,12 +181,12 @@ namespace SoumerMVCView.Services.CourseService
 
             try
             {
-                // 1. جلب تفاصيل الكورس
+                // 1. جلب تفاصيل المادة
                 var course = await _courseRepository.GetById(courseId);
                 if (course == null)
                 {
                     result.IsEligible = false;
-                    result.Message = "الكورس غير موجود";
+                    result.Message = "المادة غير موجود";
                     return result;
                 }
 
@@ -203,7 +203,7 @@ namespace SoumerMVCView.Services.CourseService
                 if (isEnrolled)
                 {
                     result.IsEligible = false;
-                    result.Message = "أنت مسجل بالفعل في هذا الكورس";
+                    result.Message = "أنت مسجل بالفعل في هذا المادة";
                     result.IsAlreadyEnrolled = true;
                     return result;
                 }
@@ -220,7 +220,7 @@ namespace SoumerMVCView.Services.CourseService
 
                     result.Message = course.HasActiveDiscount
                         ? $"الرصيد غير كافٍ. سعر العرض {result.CoursePrice:N0} نقطة، ورصيدك {result.UserBalance:N0} نقطة. ينقصك {shortage:N0} نقطة"
-                        : $"الرصيد غير كافٍ. سعر الكورس {result.CoursePrice:N0} نقطة، ورصيدك {result.UserBalance:N0} نقطة. ينقصك {shortage:N0} نقطة";
+                        : $"الرصيد غير كافٍ. سعر المادة {result.CoursePrice:N0} نقطة، ورصيدك {result.UserBalance:N0} نقطة. ينقصك {shortage:N0} نقطة";
                     return result;
                 }
 
@@ -228,7 +228,7 @@ namespace SoumerMVCView.Services.CourseService
                 result.IsEligible = true;
                 result.Message = course.HasActiveDiscount
                     ? $"يمكنك التسجيل بسعر العرض ({result.CoursePrice:N0} نقطة بدلاً من {course.Price:N0} نقطة)"
-                    : "يمكنك التسجيل في هذا الكورس";
+                    : "يمكنك التسجيل في هذا المادة";
 
                 return result;
             }

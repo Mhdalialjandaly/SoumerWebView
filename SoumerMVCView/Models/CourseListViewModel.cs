@@ -24,6 +24,7 @@ namespace SoumerMVCView.Models
         public List<TeacherDto> Teachers { get; set; } = new();
         public int TotalVideos { get; set; }
         public int FreeVideos { get; set; }
+        public int TotalPdfs { get; set; }
 
         // ====== بيانات العرض ======
         public decimal EffectivePrice => Course?.EffectivePrice ?? 0;

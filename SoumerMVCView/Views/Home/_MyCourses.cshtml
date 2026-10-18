@@ -7,7 +7,7 @@
             <div class="stat-card-icon">📚</div>
             <div class="stat-card-content">
                 <div class="stat-card-number">@Model.TotalEnrolled</div>
-                <div class="stat-card-label">كورس مسجل</div>
+                <div class="stat-card-label">مادة مسجل</div>
             </div>
         </div>
         <div class="stat-card stat-card-success">
@@ -21,17 +21,17 @@
             <div class="stat-card-icon">🎓</div>
             <div class="stat-card-content">
                 <div class="stat-card-number">@Model.TotalEnrolled</div>
-                <div class="stat-card-label">كورساتي</div>
+                <div class="stat-card-label">موادي</div>
             </div>
         </div>
     </div>
 
-    <!-- قائمة الكورسات المسجلة -->
+    <!-- قائمة المواد المسجلة -->
     <div class="courses-list-card">
         <div class="card-header-custom">
             <div class="header-icon">📖</div>
-            <h5 class="header-title">الكورسات المسجل فيها</h5>
-            <span class="header-badge">@Model.TotalEnrolled كورس</span>
+            <h5 class="header-title">المواد المسجل فيها</h5>
+            <span class="header-badge">@Model.TotalEnrolled مادة</span>
         </div>
 
         <div class="card-body-custom">
@@ -98,10 +98,10 @@
             {
                 <div class="empty-courses">
                     <div class="empty-icon">📚</div>
-                    <p class="empty-title">لم تسجل في أي كورس بعد</p>
+                    <p class="empty-title">لم تسجل في أي مادة بعد</p>
                     <p class="empty-description">ابدأ رحلتك التعليمية الآن</p>
                     <a asp-controller="Course" asp-action="Index" class="btn-browse-courses">
-                        استعرض الكورسات <span>→</span>
+                        استعرض المواد <span>→</span>
                     </a>
                 </div>
             }

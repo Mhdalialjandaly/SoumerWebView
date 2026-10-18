@@ -1,6 +1,6 @@
 ﻿@model TeacherCourse
 @{
-    ViewData["Title"] = "ربط أستاذ بكورس";
+    ViewData["Title"] = "ربط أستاذ بمادة";
     Layout = "_AdminLayout";
 }
 
@@ -36,10 +36,10 @@
             </div>
             <div class="col-md-6 mb-3">
                 <label asp-for="CourseId" class="form-label">
-                    <i class="fas fa-book me-1"></i> الكورس
+                    <i class="fas fa-book me-1"></i> المادة
                 </label>
                 <select asp-for="CourseId" class="form-select select2" required>
-                    <option value="">اختر الكورس...</option>
+                    <option value="">اختر المادة...</option>
                     @foreach (var course in ViewBag.Courses)
                     {
                         <option value="@course.Id">@course.Name - @course.Price.ToString("N0") نقطة</option>
@@ -51,12 +51,12 @@
 
         <div class="alert alert-info">
             <i class="fas fa-info-circle me-2"></i>
-            <strong>ملاحظة:</strong> سيتم ربط الأستاذ المحدد بالكورس المحدد. تأكد من عدم وجود ربط مسبق بينهما.
+            <strong>ملاحظة:</strong> سيتم ربط الأستاذ المحدد بالمادة المحدد. تأكد من عدم وجود ربط مسبق بينهما.
         </div>
 
         <div class="d-flex gap-2 mt-4">
             <button type="submit" class="btn-primary-admin" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
-                <i class="fas fa-link"></i> ربط الأستاذ بالكورس
+                <i class="fas fa-link"></i> ربط الأستاذ بالمادة
             </button>
             <a href="/Admin/TeacherCourses" class="btn btn-secondary">
                 <i class="fas fa-times"></i> إلغاء

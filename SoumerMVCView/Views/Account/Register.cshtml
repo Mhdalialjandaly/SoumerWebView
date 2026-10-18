@@ -571,13 +571,13 @@
                     <span asp-validation-for="Email" class="validation-error"></span>
                 </div>
 
-                <!-- رقم الهاتف (اختياري) -->
+                <!-- رقم الهاتف (اجباري) -->
                 <div class="form-group">
-                    <label class="input-label" asp-for="PhoneNumber">
-                        رقم الهاتف <span style="color: var(--icon-color); font-weight: 400;">(اختياري)</span>
+                    <label class="input-label" asp-for="PhoneNumber" required>
+                       "واتساب" رقم الهاتف <span style="color: var(--icon-color); font-weight: 400;">(اجباري)</span>
                     </label>
                     <div class="input-wrapper">
-                        <input asp-for="PhoneNumber" class="input-field" placeholder="+966 5X XXX XXXX" type="tel" autocomplete="tel" />
+                        <input asp-for="PhoneNumber" class="input-field" placeholder="+966 5X XXX XXXX" type="tel" autocomplete="tel"  />
                         <i class="fas fa-phone input-icon"></i>
                     </div>
                     <span asp-validation-for="PhoneNumber" class="validation-error"></span>
@@ -616,10 +616,10 @@
                     <span asp-validation-for="ConfirmPassword" class="validation-error"></span>
                 </div>
 
-                <!-- الوصف (اختياري) -->
+                <!-- الوصف (اجباري) -->
                 <div class="form-group">
                     <label class="input-label" asp-for="Description">
-                        نبذة عنك <span style="color: var(--icon-color); font-weight: 400;">(اختياري)</span>
+                        نبذة عنك <span style="color: var(--icon-color); font-weight: 400;">(اجباري)</span>
                     </label>
                     <div class="input-wrapper">
                         <input asp-for="Description" class="input-field" placeholder="اكتب نبذة قصيرة عن نفسك" />

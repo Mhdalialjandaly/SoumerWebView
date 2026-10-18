@@ -12,11 +12,11 @@
         <a href="/Course/Index" class="cd-back-btn">
             <i class="fas fa-arrow-right"></i>
         </a>
-        <h1 class="cd-page-title">تفاصيل الكورس</h1>
+        <h1 class="cd-page-title">تفاصيل المادة</h1>
     </div>
 
     <!-- ==========================================
-         بطاقة الكورس الرئيسية
+         بطاقة المادة الرئيسية
          ========================================== -->
     <div class="cd-hero @(Model.HasActiveDiscount ? "has-discount" : "")">
         @if (Model.HasActiveDiscount)
@@ -63,8 +63,8 @@
     </div>
 
     <!-- ==========================================
-         المعلومات السريعة (Meta)
-         ========================================== -->
+       المعلومات السريعة (Meta)
+       ========================================== -->
     <div class="cd-meta-grid">
         <div class="cd-meta-card">
             <div class="cd-meta-icon cd-meta-icon-blue">
@@ -75,6 +75,7 @@
                 <span class="cd-meta-label">فيديو</span>
             </div>
         </div>
+
         <div class="cd-meta-card">
             <div class="cd-meta-icon cd-meta-icon-green">
                 <i class="fas fa-gift"></i>
@@ -84,6 +85,20 @@
                 <span class="cd-meta-label">مجاني</span>
             </div>
         </div>
+
+        <!-- ✅ بطاقة ملفات PDF (قابلة للنقر) -->
+        <a href="/Course/Pdfs?courseId=@Model.Course.Id"
+           class="cd-meta-card cd-meta-card-link @(Model.TotalPdfs == 0 ? "cd-meta-card-disabled" : "")"
+           title="@(Model.TotalPdfs == 0 ? "لا توجد ملفات مرفقة" : "عرض ملفات PDF")">
+            <div class="cd-meta-icon cd-meta-icon-red">
+                <i class="fas fa-file-pdf"></i>
+            </div>
+            <div class="cd-meta-body">
+                <span class="cd-meta-value">@Model.TotalPdfs</span>
+                <span class="cd-meta-label">ملف PDF</span>
+            </div>
+        </a>
+
         <div class="cd-meta-card">
             <div class="cd-meta-icon cd-meta-icon-purple">
                 <i class="fas fa-calendar-alt"></i>
@@ -135,7 +150,7 @@
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="cd-status-text">
-                    <h3>أنت مسجل في هذا الكورس</h3>
+                    <h3>أنت مسجل في هذا المادة</h3>
                     <p>ابدأ المشاهدة الآن واستكمل تقدمك</p>
                 </div>
             </div>
@@ -144,6 +159,10 @@
                 <a href="/Course/CourseVideos?courseId=@Model.Course.Id" class="cd-btn cd-btn-primary">
                     <i class="fas fa-play-circle"></i>
                     <span>مشاهدة الفيديوهات</span>
+                </a>
+                <a href="/Course/Pdfs?courseId=@Model.Course.Id" class="cd-btn cd-btn-primary">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>ملفات PDF</span>
                 </a>
                 <button type="button" class="cd-btn cd-btn-ghost" onclick="unenrollFromCourse()">
                     <i class="fas fa-times"></i>
@@ -238,7 +257,7 @@
 
 <style>
     /* ==========================================
-           تنسيقات صفحة تفاصيل الكورس
+           تنسيقات صفحة تفاصيل المادة
            ========================================== */
     .course-details-page {
         width: 100%;
@@ -409,7 +428,7 @@
     /* ---------- شبكة المعلومات ---------- */
     .cd-meta-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: var(--spacing-sm);
     }
 
@@ -423,49 +442,78 @@
         align-items: center;
         gap: 8px;
         box-shadow: var(--shadow-sm);
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.2s ease;
     }
 
-    .cd-meta-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: var(--radius-md);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1rem;
+    /* ✅ نمط بطاقة PDF القابلة للنقر */
+    .cd-meta-card-link {
+        position: relative;
+        cursor: pointer;
     }
 
-    .cd-meta-icon-blue {
-        background: #dbeafe;
-        color: #2563eb;
+        .cd-meta-card-link:hover {
+            border-color: #dc2626;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(220, 38, 38, 0.18);
+        }
+
+            .cd-meta-card-link:hover .cd-meta-icon-red {
+                background: #dc2626;
+                color: #fff;
+            }
+
+            .cd-meta-card-link:hover .cd-meta-label {
+                color: #dc2626;
+            }
+
+        /* سهم صغير يشير إلى إمكانية النقر */
+        .cd-meta-card-link::after {
+            content: '\f054';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            font-size: 0.6rem;
+            color: var(--icon-color);
+            opacity: 0.6;
+            transition: all 0.2s;
+        }
+
+        .cd-meta-card-link:hover::after {
+            color: #dc2626;
+            opacity: 1;
+            transform: translateX(-2px);
+        }
+
+    /* حالة عدم وجود ملفات */
+    .cd-meta-card-disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
     }
 
-    .cd-meta-icon-green {
-        background: #d1fae5;
-        color: #059669;
-    }
+        .cd-meta-card-disabled:hover {
+            transform: none;
+            box-shadow: var(--shadow-sm);
+            border-color: var(--border-color);
+        }
 
-    .cd-meta-icon-purple {
-        background: var(--primary-soft);
-        color: var(--primary-color);
-    }
+            .cd-meta-card-disabled:hover .cd-meta-icon-red {
+                background: #fee2e2;
+                color: #dc2626;
+            }
 
-    .cd-meta-body {
-        text-align: center;
-    }
+            .cd-meta-card-disabled:hover .cd-meta-label {
+                color: var(--icon-color);
+            }
 
-    .cd-meta-value {
-        display: block;
-        font-size: 0.95rem;
-        font-weight: 800;
-        color: var(--text-color);
-        line-height: 1.2;
-    }
-
-    .cd-meta-label {
-        font-size: 0.7rem;
-        color: var(--icon-color);
-        font-weight: 600;
+    /* ✅ أيقونة PDF الحمراء */
+    .cd-meta-icon-red {
+        background: #fee2e2;
+        color: #dc2626;
+        transition: all 0.2s ease;
     }
 
     /* ---------- بطاقة عامة ---------- */
@@ -737,35 +785,53 @@
     }
 
     /* ---------- استجابة ---------- */
+    @@media (max-width: 600px) {
+        .cd-meta-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .cd-meta-card {
+            padding: var(--spacing-sm) 4px;
+        }
+
+        .cd-meta-value {
+            font-size: 0.85rem;
+        }
+
+        .cd-meta-label {
+            font-size: 0.62rem;
+        }
+
+        .cd-meta-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 0.85rem;
+        }
+    }
+
     @@media (max-width: 360px) {
-        .course-details-page
+        .course-details-page {
+            padding: var(--spacing-md);
+        }
 
-    {
-        padding: var(--spacing-md);
-    }
+        .cd-meta-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 0.8rem;
+        }
 
-    .cd-meta-grid {
-        gap: 6px;
-    }
+        .cd-meta-value {
+            font-size: 0.8rem;
+        }
 
-    .cd-meta-card {
-        padding: var(--spacing-sm);
-    }
+        .cd-action-buttons {
+            flex-direction: column;
+        }
 
-    .cd-meta-icon {
-        width: 36px;
-        height: 36px;
-        font-size: 0.85rem;
-    }
-
-    .cd-action-buttons {
-        flex-direction: column;
-    }
-
-    .cd-btn {
-        width: 100%;
-    }
-
+        .cd-btn {
+            width: 100%;
+        }
     }
 </style>
 
@@ -800,7 +866,7 @@
                 title: 'تأكيد التسجيل',
                 html: `
                     <div style="text-align:right;">
-                        <p style="margin:0; font-size:0.9rem;">هل تريد التسجيل في كورس</p>
+                        <p style="margin:0; font-size:0.9rem;">هل تريد التسجيل في مادة</p>
                         <strong style="color:#210057; font-size:1rem;">"${courseName}"</strong>
                         <p style="margin:8px 0 0; font-size:0.85rem; color:#9496a5;">سيتم خصم المبلغ التالي من رصيدك:</p>
                         ${priceInfo}
@@ -862,7 +928,7 @@
         function unenrollFromCourse() {
             Swal.fire({
                 title: 'تأكيد إلغاء التسجيل',
-                text: 'هل تريد إلغاء تسجيلك في هذا الكورس؟',
+                text: 'هل تريد إلغاء تسجيلك في هذا المادة؟',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'نعم، إلغاء',

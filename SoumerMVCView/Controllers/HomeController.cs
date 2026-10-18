@@ -42,7 +42,7 @@ namespace SoumerMVCView.Controllers
                 GradesTeachers = await _assignmentService.GetOrganizedGradesTeachers()
             };
 
-            // جلب الكورسات المشترك بها المستخدم الحالي
+            // جلب المواد المشترك بها المستخدم الحالي
             if (!string.IsNullOrEmpty(userId))
             {
                 try
@@ -176,7 +176,7 @@ namespace SoumerMVCView.Controllers
 
                 var teacherCourses = await _teacherCourseRepository.GetTeacherCoursesWithDetails(id);
 
-                // ✅ جلب كورسات المستخدم المشترك بها
+                // ✅ جلب مواد المستخدم المشترك بها
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 var enrolledIds = new HashSet<int>();
                 if (!string.IsNullOrEmpty(userId))
@@ -252,6 +252,8 @@ namespace SoumerMVCView.Controllers
                 return Json(new { success = false, message = "حدث خطأ في تحميل بيانات المعلم" });
             }
         }
+
+
 
         public IActionResult Privacy()
         {

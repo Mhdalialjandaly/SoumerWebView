@@ -29,7 +29,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
             _teacherCourseRepository = teacherCourseRepository;
         }
 
-        // عرض صفحة كورساتي
+        // عرض صفحة موادي
         public async Task<IActionResult> Index()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -40,7 +40,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
 
             var enrolledCourses = await _courseService.GetUserEnrolledCourses(userId);
 
-            // جلب الفيديوهات لكل كورس مسجل فيه المستخدم
+            // جلب الفيديوهات لكل مادة مسجل فيه المستخدم
             var courseVideos = new Dictionary<int, List<CourseVideoDto>>();
             var courseVideosCount = new Dictionary<int, int>();
             var totalVideos = 0;
@@ -83,7 +83,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
             return View(model);
         }
 
-        // الحصول على فيديوهات كورس معين
+        // الحصول على فيديوهات مادة معين
         [HttpGet]
         public async Task<IActionResult> GetCourseVideos(int courseId)
         {
@@ -95,11 +95,11 @@ namespace SoumerMVCView.Controllers.CoursesManagment
                     return Json(new { success = false, message = "يرجى تسجيل الدخول أولاً" });
                 }
 
-                // التحقق من أن المستخدم مسجل في الكورس
+                // التحقق من أن المستخدم مسجل في المادة
                 var isEnrolled = await _courseService.IsUserEnrolled(courseId, userId);
                 if (!isEnrolled)
                 {
-                    return Json(new { success = false, message = "يجب التسجيل في الكورس أولاً لمشاهدة الفيديوهات" });
+                    return Json(new { success = false, message = "يجب التسجيل في المادة أولاً لمشاهدة الفيديوهات" });
                 }
 
                 var videos = await _courseVideoService.GetCourseVideos(courseId);
@@ -134,7 +134,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
                 var canWatch = await _courseVideoService.CanWatchVideo(videoId, userId);
                 if (!canWatch)
                 {
-                    return Json(new { success = false, message = "لا يمكنك مشاهدة هذا الفيديو. يرجى التسجيل في الكورس أولاً" });
+                    return Json(new { success = false, message = "لا يمكنك مشاهدة هذا الفيديو. يرجى التسجيل في المادة أولاً" });
                 }
 
                 // بناء EmbedUrl
@@ -261,7 +261,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
                 var canWatch = await _courseVideoService.CanWatchVideo(videoId, userId);
                 if (!canWatch)
                 {
-                    TempData["Error"] = "لا يمكنك مشاهدة هذا الفيديو. يرجى التسجيل في الكورس أولاً";
+                    TempData["Error"] = "لا يمكنك مشاهدة هذا الفيديو. يرجى التسجيل في المادة أولاً";
                     return RedirectToAction("Index");
                 }
 

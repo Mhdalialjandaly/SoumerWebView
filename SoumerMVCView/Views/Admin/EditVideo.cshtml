@@ -116,10 +116,10 @@
 
                         <div class="mb-3">
                             <label asp-for="CourseId" class="form-label fw-bold">
-                                <i class="fas fa-book me-1"></i> الكورس
+                                <i class="fas fa-book me-1"></i> المادة
                             </label>
                             <select asp-for="CourseId" class="form-select select2" required>
-                                <option value="">اختر الكورس...</option>
+                                <option value="">اختر المادة...</option>
                                 @if (ViewBag.Courses != null)
                                 {
                                     @foreach (var course in ViewBag.Courses)
@@ -145,8 +145,8 @@
                                 <i class="fas fa-sort-numeric-up me-1"></i> الترتيب
                             </label>
                             <input asp-for="Order" type="number" class="form-control"
-                                   min="1" step="1" placeholder="ترتيب الفيديو في الكورس" required>
-                            <small class="text-muted">يحدد ترتيب ظهور الفيديو ضمن الكورس</small>
+                                   min="1" step="1" placeholder="ترتيب الفيديو في المادة" required>
+                            <small class="text-muted">يحدد ترتيب ظهور الفيديو ضمن المادة</small>
                             <span asp-validation-for="Order" class="text-danger"></span>
                         </div>
                     </div>
@@ -165,7 +165,7 @@
                                 <label asp-for="IsFree" class="form-check-label fw-bold">
                                     <i class="fas fa-gift me-1"></i> فيديو مجاني
                                 </label>
-                                <div class="form-text">متاح للجميع بدون تسجيل في الكورس</div>
+                                <div class="form-text">متاح للجميع بدون تسجيل في المادة</div>
                             </div>
                         </div>
 
@@ -205,7 +205,7 @@
                 theme: 'bootstrap-5',
                 language: 'ar',
                 dir: 'rtl',
-                placeholder: 'اختر الكورس...'
+                placeholder: 'اختر المادة...'
             });
 
             // إذا كان الفيديو موجود (تعديل)، اعرض المعاينة

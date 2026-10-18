@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261017120016_AddPrecentageForCoursPrice")]
-    partial class AddPrecentageForCoursPrice
+    [Migration("20261018123959_AddCoursPdf")]
+    partial class AddCoursPdf
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -142,6 +142,63 @@ namespace DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Courses");
+                });
+
+            modelBuilder.Entity("DataAccess.Entities.CoursePdf", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FilePath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsFree")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OriginalFileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.ToTable("CoursePdfs");
                 });
 
             modelBuilder.Entity("DataAccess.Entities.CourseRegistration", b =>
@@ -545,6 +602,25 @@ namespace DataAccess.Migrations
                             SecurityStamp = "FIXED_STAMP_12345",
                             TwoFactorEnabled = false,
                             UserName = "admin@system.com"
+                        },
+                        new
+                        {
+                            Id = "2",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "FIXED_CONCURRENCY_12345",
+                            CreatedAt = new DateTime(2026, 2, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "مدير النظام",
+                            Email = "student@system.com",
+                            EmailConfirmed = true,
+                            IsActive = true,
+                            LockoutEnabled = true,
+                            NormalizedEmail = "Student@SYSTEM.COM",
+                            NormalizedUserName = "Student@SYSTEM.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIJPo4WuBKtpsZhjP/uYwhUixPJs+RLJFHwMaU12CUPdcLTVbv9T0ODgOKvSMnkITg==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "FIXED_STAMP_12345",
+                            TwoFactorEnabled = false,
+                            UserName = "Student"
                         });
                 });
 
@@ -577,43 +653,50 @@ namespace DataAccess.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "2",
+                            Id = "1",
                             ConcurrencyStamp = "1",
+                            Name = "Student",
+                            NormalizedName = "STUDENT"
+                        },
+                        new
+                        {
+                            Id = "2",
+                            ConcurrencyStamp = "2",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
                             Id = "3",
-                            ConcurrencyStamp = "2",
+                            ConcurrencyStamp = "3",
                             Name = "Teacher",
                             NormalizedName = "TEACHER"
                         },
                         new
                         {
                             Id = "4",
-                            ConcurrencyStamp = "3",
+                            ConcurrencyStamp = "4",
                             Name = "Employee",
                             NormalizedName = "EMPLOYEE"
                         },
                         new
                         {
                             Id = "5",
-                            ConcurrencyStamp = "4",
+                            ConcurrencyStamp = "5",
                             Name = "FinEmployee",
                             NormalizedName = "FINEMPLOYEE"
                         },
                         new
                         {
                             Id = "6",
-                            ConcurrencyStamp = "5",
+                            ConcurrencyStamp = "6",
                             Name = "HREmployee",
                             NormalizedName = "HREMPLOYEE"
                         },
                         new
                         {
                             Id = "7",
-                            ConcurrencyStamp = "6",
+                            ConcurrencyStamp = "7",
                             Name = "STUEmployee",
                             NormalizedName = "STUEMPLOYEE"
                         });
@@ -710,6 +793,11 @@ namespace DataAccess.Migrations
                         {
                             UserId = "1",
                             RoleId = "2"
+                        },
+                        new
+                        {
+                            UserId = "2",
+                            RoleId = "1"
                         });
                 });
 
@@ -741,6 +829,17 @@ namespace DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("Balance");
+                });
+
+            modelBuilder.Entity("DataAccess.Entities.CoursePdf", b =>
+                {
+                    b.HasOne("DataAccess.Entities.Course", "Course")
+                        .WithMany("CoursePdfs")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
                 });
 
             modelBuilder.Entity("DataAccess.Entities.CourseRegistration", b =>
@@ -879,6 +978,8 @@ namespace DataAccess.Migrations
 
             modelBuilder.Entity("DataAccess.Entities.Course", b =>
                 {
+                    b.Navigation("CoursePdfs");
+
                     b.Navigation("CourseRegistrations");
 
                     b.Navigation("CourseVideos");

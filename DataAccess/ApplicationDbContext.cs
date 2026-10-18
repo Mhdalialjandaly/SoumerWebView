@@ -20,6 +20,7 @@ namespace DataAccess
         public DbSet<TeacherGradeAssignment> TeacherGradeAssignments { get; set; }
         public DbSet<CourseVideo> CourseVideos { get; set; }
         public DbSet<PointsCode> PointsCodes { get; set; }
+        public DbSet<CoursePdf> CoursePdfs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

@@ -10,6 +10,7 @@ namespace DataAccess.Entities
             TeacherCourses = new HashSet<TeacherCourse>();
             CourseRegistrations = new HashSet<CourseRegistration>();
             CourseVideos = new HashSet<CourseVideo>();
+            CoursePdfs = new HashSet<CoursePdf>();
         }
 
         public int Id { get; set; }
@@ -52,6 +53,7 @@ namespace DataAccess.Entities
         public virtual ICollection<TeacherCourse> TeacherCourses { get; set; }
         public virtual ICollection<CourseRegistration> CourseRegistrations { get; set; }
         public virtual ICollection<CourseVideo> CourseVideos { get; set; }
+        public virtual ICollection<CoursePdf> CoursePdfs { get; set; } 
         public DateTime CreatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
         public DateTime? ModifiedAt { get; set; }

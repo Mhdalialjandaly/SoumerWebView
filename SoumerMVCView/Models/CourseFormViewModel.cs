@@ -6,8 +6,8 @@ namespace SoumerMVCView.Models
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "اسم الكورس مطلوب")]
-        [StringLength(200, MinimumLength = 2, ErrorMessage = "اسم الكورس بين 2 و 200 حرف")]
+        [Required(ErrorMessage = "اسم المادة مطلوب")]
+        [StringLength(200, MinimumLength = 2, ErrorMessage = "اسم المادة بين 2 و 200 حرف")]
         public string Name { get; set; }
 
         [StringLength(2000, ErrorMessage = "الوصف لا يتجاوز 2000 حرف")]

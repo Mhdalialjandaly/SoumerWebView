@@ -1,15 +1,15 @@
 ﻿@model List<Course>
 @{
-    ViewData["Title"] = "إدارة الكورسات";
+    ViewData["Title"] = "إدارة المواد";
     Layout = "_AdminLayout";
 }
 
 <div class="courses-page">
     <div class="table-card">
         <div class="table-card-header">
-            <h5 class="table-card-title">📚 قائمة الكورسات</h5>
+            <h5 class="table-card-title">📚 قائمة المواد</h5>
             <a href="/Admin/CreateCourse" class="btn-primary-admin">
-                <i class="fas fa-plus"></i> إضافة كورس جديد
+                <i class="fas fa-plus"></i> إضافة مادة جديد
             </a>
         </div>
 
@@ -108,6 +108,10 @@
                                 <a href="/Admin/EditCourse/@course.Id" class="btn-action btn-edit" title="تعديل">
                                     <i class="fas fa-edit"></i>
                                 </a>
+                                <a href="/Admin/CoursePdfs?courseId=@course.Id" class="btn-action"
+                                   title="ملفات PDF" style="background:#fee2e2; color:#dc2626;">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
                                 <form id="deleteForm-@course.Id" action="/Admin/DeleteCourse" method="post" style="display: inline;">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@course.Id" />
@@ -125,13 +129,13 @@
 </div>
 
 <!-- ==========================================
-     مودال تفاصيل الكورس
+     مودال تفاصيل المادة
      ========================================== -->
 <div class="modal fade" id="courseDetailsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">تفاصيل الكورس</h5>
+                <h5 class="modal-title">تفاصيل المادة</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="courseDetailsContent"></div>
@@ -149,7 +153,7 @@
             <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none;">
                 <h5 class="modal-title" id="discountModalTitle">
                     <i class="fas fa-fire"></i>
-                    إدارة عرض الكورس
+                    إدارة عرض المادة
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -165,10 +169,10 @@
                 <!-- النموذج -->
                 <div id="discountForm" style="display: none;">
 
-                    <!-- معلومات الكورس -->
+                    <!-- معلومات المادة -->
                     <div style="background: #f8f9fc; border-radius: 12px; padding: 14px; margin-bottom: 20px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <span style="color: #9496a5; font-size: 0.8rem;">اسم الكورس</span>
+                            <span style="color: #9496a5; font-size: 0.8rem;">اسم المادة</span>
                             <strong id="discountCourseName" style="color: #333; font-size: 0.9rem;"></strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -486,7 +490,7 @@
             const confirmed = await Swal.fire({
                 icon: 'warning',
                 title: 'إزالة العرض',
-                text: 'هل أنت متأكد من إزالة العرض؟ سيعود الكورس إلى سعره الأصلي فوراً.',
+                text: 'هل أنت متأكد من إزالة العرض؟ سيعود المادة إلى سعره الأصلي فوراً.',
                 showCancelButton: true,
                 confirmButtonText: 'نعم، أزل العرض',
                 cancelButtonText: 'إلغاء',
@@ -536,7 +540,7 @@
         }
 
         // ==========================================
-        // دالة عرض تفاصيل الكورس (الموجودة أصلاً)
+        // دالة عرض تفاصيل المادة (الموجودة أصلاً)
         // ==========================================           
         function viewCourse(id) {
             // مؤشر تحميل

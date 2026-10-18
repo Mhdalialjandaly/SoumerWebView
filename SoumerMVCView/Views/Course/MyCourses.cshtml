@@ -1,6 +1,6 @@
 ﻿@model MyCoursesViewModel
 @{
-    ViewData["Title"] = "كورساتي";
+    ViewData["Title"] = "موادي";
 }
 
 <div class="my-courses-page">
@@ -8,10 +8,10 @@
     <div class="my-courses-header">
         <h1 class="my-courses-title">
             <span class="title-icon">📚</span>
-            كورساتي
+            موادي
         </h1>
         <span class="my-courses-badge">
-            @Model.TotalEnrolled كورس
+            @Model.TotalEnrolled مادة
         </span>
     </div>
 
@@ -20,7 +20,7 @@
         <div class="stats-card">
             <div class="stats-icon">📖</div>
             <div class="stats-number">@Model.TotalEnrolled</div>
-            <div class="stats-label">كورس مسجل</div>
+            <div class="stats-label">مادة مسجل</div>
         </div>
         <div class="stats-card">
             <div class="stats-icon">💎</div>
@@ -34,12 +34,12 @@
         </div>
     </div>
 
-    <!-- قسم الكورسات المسجل فيها -->
+    <!-- قسم المواد المسجل فيها -->
     <div class="enrolled-courses-section">
         <div class="section-header">
             <h2 class="section-title">
                 <span>📖</span>
-                الكورسات المسجل فيها
+                المواد المسجل فيها
             </h2>
             <span class="section-count">
                 @(Model.EnrolledCourses?.Count ?? 0)
@@ -86,7 +86,7 @@
                         {
                             <div class="course-videos-dropdown" id="videosDropdown-@enrollment.CourseId">
                                 <div class="videos-header">
-                                    <span>🎬 فيديوهات الكورس</span>
+                                    <span>🎬 فيديوهات المادة</span>
                                     <span>@videos.Count(v => v.IsPublished) فيديو</span>
                                 </div>
                                 <div class="videos-list">
@@ -130,11 +130,11 @@
         {
             <div class="empty-courses">
                 <div class="empty-courses-icon">📭</div>
-                <h3 class="empty-courses-title">لم تسجل في أي كورس بعد</h3>
-                <p class="empty-courses-text">استعرض الكورسات المتاحة وابدأ رحلتك التعليمية</p>
+                <h3 class="empty-courses-title">لم تسجل في أي مادة بعد</h3>
+                <p class="empty-courses-text">استعرض المواد المتاحة وابدأ رحلتك التعليمية</p>
                 <a href="/Course/Index" class="browse-courses-btn">
                     <i class="fa-solid fa-book-open"></i>
-                    استعرض الكورسات
+                    استعرض المواد
                 </a>
             </div>
         }

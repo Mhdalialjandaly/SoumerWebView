@@ -1,6 +1,8 @@
 ﻿using Core.Enums;
+using DataAccess.Entities;
 using DataAccess.IRepositories;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 using SoumerMVCView.Models;
@@ -17,23 +19,30 @@ namespace SoumerMVCView.Controllers.CoursesManagment
         private readonly ICourseService _courseService;
         private readonly IBalanceService _balanceService;
         private readonly ICourseVideoService _courseVideoService;
+        private readonly ICoursePdfRepository _coursePdfRepository;
+        private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ILogger<CourseController> _logger;
 
         public CourseController(
             ICourseService courseService,
             IBalanceService balanceService,
             ITeacherCourseRepository teacherCourseRepository,
+            ICoursePdfRepository coursePdfRepository,
             ILogger<CourseController> logger,
-            ICourseVideoService courseVideoService)
+            ICourseVideoService courseVideoService,
+            IWebHostEnvironment webHostEnvironment)
         {
             _courseService = courseService;
             _balanceService = balanceService;
             _logger = logger;
             _courseVideoService = courseVideoService;
             _teacherCourseRepository = teacherCourseRepository;
+            _coursePdfRepository = coursePdfRepository;
+            _webHostEnvironment = webHostEnvironment;
         }
+     
 
-        // عرض جميع الكورسات
+        // عرض جميع المواد
         public async Task<IActionResult> Index()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -53,7 +62,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
             return View(model);
         }
 
-        // عرض تفاصيل الكورس
+        // عرض تفاصيل المادة
         public async Task<IActionResult> Details(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -66,7 +75,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
             var userBalance = await _balanceService.GetUserBalance(userId);
             var eligibility = await _courseService.CheckEnrollmentEligibility(id, userId);
 
-            // جلب الأساتذة المرتبطين بالكورس
+            // جلب الأساتذة المرتبطين بالمادة
             var teacherCourses = await _teacherCourseRepository
                 .GetByKey(tc => tc.CourseId == id);
 
@@ -85,7 +94,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
             var videos = await _courseVideoService.GetCourseVideos(id);
             var totalVideos = videos?.Count(v => v.IsPublished) ?? 0;
             var freeVideos = videos?.Count(v => v.IsPublished && v.IsFree) ?? 0;
-
+            var pdfs = (await _coursePdfRepository.GetByKey(p => p.CourseId == id && p.DeletedAt == null && p.IsPublished)).ToList();
             var model = new CourseDetailViewModel
             {
                 Course = course,
@@ -95,13 +104,14 @@ namespace SoumerMVCView.Controllers.CoursesManagment
                 EnrollmentMessage = eligibility.Message,
                 Teachers = teachers,
                 TotalVideos = totalVideos,
-                FreeVideos = freeVideos
+                FreeVideos = freeVideos,
+                TotalPdfs = pdfs.Count
             };
 
             return View(model);
         }
 
-        // التسجيل في الكورس
+        // التسجيل في المادة
         [HttpPost]
         public async Task<IActionResult> Enroll(int courseId)
         {
@@ -120,7 +130,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
                     return Json(new { success = false, message = eligibility.Message });
                 }
 
-                // التسجيل في الكورس
+                // التسجيل في المادة
                 var result = await _courseService.EnrollInCourse(courseId, userId);
 
                 if (result)
@@ -128,11 +138,11 @@ namespace SoumerMVCView.Controllers.CoursesManagment
                     return Json(new
                     {
                         success = true,
-                        message = $"تم التسجيل في الكورس بنجاح. تم خصم {eligibility.CoursePrice} نقطة من رصيدك"
+                        message = $"تم التسجيل في المادة بنجاح. تم خصم {eligibility.CoursePrice} نقطة من رصيدك"
                     });
                 }
 
-                return Json(new { success = false, message = "حدث خطأ أثناء التسجيل في الكورس" });
+                return Json(new { success = false, message = "حدث خطأ أثناء التسجيل في المادة" });
             }
             catch (Exception ex)
             {
@@ -141,7 +151,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
             }
         }
 
-        // إلغاء التسجيل من الكورس
+        // إلغاء التسجيل من المادة
         [HttpPost]
         public async Task<IActionResult> Unenroll(int courseId)
         {
@@ -158,7 +168,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
 
                 if (result)
                 {
-                    return Json(new { success = true, message = "تم إلغاء التسجيل من الكورس بنجاح" });
+                    return Json(new { success = true, message = "تم إلغاء التسجيل من المادة بنجاح" });
                 }
 
                 return Json(new { success = false, message = "حدث خطأ أثناء إلغاء التسجيل" });
@@ -170,7 +180,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
             }
         }
 
-        // عرض الكورسات المسجل فيها المستخدم
+        // عرض المواد المسجل فيها المستخدم
         public async Task<IActionResult> MyCourses()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -205,22 +215,22 @@ namespace SoumerMVCView.Controllers.CoursesManagment
                 return RedirectToAction("Login", "Account");
             }
 
-            // التحقق من أن المستخدم مسجل في الكورس
+            // التحقق من أن المستخدم مسجل في المادة
             var isEnrolled = await _courseService.IsUserEnrolled(courseId, userId);
             if (!isEnrolled)
             {
-                TempData["Error"] = "يجب التسجيل في الكورس أولاً لمشاهدة الفيديوهات";
+                TempData["Error"] = "يجب التسجيل في المادة أولاً لمشاهدة الفيديوهات";
                 return RedirectToAction("Details", new { id = courseId });
             }
 
-            // جلب معلومات الكورس
+            // جلب معلومات المادة
             var course = await _courseService.GetCourseById(courseId);
             if (course == null)
             {
                 return NotFound();
             }
 
-            // جلب فيديوهات الكورس
+            // جلب فيديوهات المادة
             var videos = await _courseVideoService.GetCourseVideos(courseId);
             var publishedVideos = videos.Where(v => v.IsPublished).OrderBy(v => v.Order).ToList();
 
@@ -308,7 +318,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
             }
         }
 
-        // الحصول على فيديوهات الكورس (للعرض في المودال)
+        // الحصول على فيديوهات المادة (للعرض في المودال)
         [HttpGet]
         public async Task<IActionResult> GetCourseVideos(int courseId)
         {
@@ -324,18 +334,18 @@ namespace SoumerMVCView.Controllers.CoursesManagment
                     });
                 }
 
-                // التحقق من أن المستخدم مسجل في الكورس
+                // التحقق من أن المستخدم مسجل في المادة
                 var isEnrolled = await _courseService.IsUserEnrolled(courseId, userId);
                 if (!isEnrolled)
                 {
                     return Json(new
                     {
                         success = false,
-                        message = "يجب التسجيل في الكورس أولاً لمشاهدة الفيديوهات"
+                        message = "يجب التسجيل في المادة أولاً لمشاهدة الفيديوهات"
                     });
                 }
 
-                // جلب فيديوهات الكورس
+                // جلب فيديوهات المادة
                 var videos = await _courseVideoService.GetCourseVideos(courseId);
 
                 // فلترة الفيديوهات المنشورة فقط
@@ -368,7 +378,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
                     return Json(new
                     {
                         success = false,
-                        message = "لا توجد فيديوهات منشورة في هذا الكورس حالياً"
+                        message = "لا توجد فيديوهات منشورة في هذا المادة حالياً"
                     });
                 }
 
@@ -476,7 +486,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
                     return Json(new
                     {
                         success = false,
-                        message = "لا يمكنك مشاهدة هذا الفيديو. يرجى التسجيل في الكورس أولاً"
+                        message = "لا يمكنك مشاهدة هذا الفيديو. يرجى التسجيل في المادة أولاً"
                     });
                 }
 
@@ -538,7 +548,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
                 var canWatch = await _courseVideoService.CanWatchVideo(videoId, userId);
                 if (!canWatch)
                 {
-                    return Content("لا يمكنك مشاهدة هذا الفيديو. يرجى التسجيل في الكورس أولاً");
+                    return Content("لا يمكنك مشاهدة هذا الفيديو. يرجى التسجيل في المادة أولاً");
                 }
 
                 // تمرير الفيديو إلى View مخصصة لتشغيله
@@ -577,7 +587,7 @@ namespace SoumerMVCView.Controllers.CoursesManagment
                 _logger.LogWarning(ex, "Error tracking video view for video {VideoId}", videoId);
             }
         }
-        // البحث عن الكورسات
+        // البحث عن المواد
         [HttpGet]
         public async Task<IActionResult> Search(string query)
         {
@@ -601,6 +611,73 @@ namespace SoumerMVCView.Controllers.CoursesManagment
             {
                 return false;
             }
+        }
+
+        // ==========================================
+        // GET: /Course/Pdfs?courseId=X
+        // عرض ملفات المادة (للطالب المشترك)
+        // ==========================================
+        public async Task<IActionResult> Pdfs(int courseId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return RedirectToAction("Login", "Account");
+
+            var course = await _courseService.GetCourseById(courseId);
+            if (course == null) return NotFound();
+
+            var isEnrolled = await _courseService.IsUserEnrolled(courseId, userId);
+
+            // جلب الملفات: المنشورة فقط
+            var pdfs = (await _coursePdfRepository
+                .GetByKey(p => p.CourseId == courseId && p.DeletedAt == null && p.IsPublished))
+                .OrderBy(p => p.Order)
+                .ToList();
+
+            // إذا لم يكن مشتركاً، يعرض فقط الملفات المجانية
+            if (!isEnrolled)
+                pdfs = pdfs.Where(p => p.IsFree).ToList();
+
+            ViewBag.CourseId = courseId;
+            ViewBag.CourseName = course.Name;
+            ViewBag.IsEnrolled = isEnrolled;
+
+            return View(pdfs);
+        }
+
+        // ==========================================
+        // GET: /Course/DownloadPdf/{id}
+        // تحميل ملف PDF
+        // ==========================================
+        [HttpGet]
+        public async Task<IActionResult> DownloadPdf(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return RedirectToAction("Login", "Account", new { returnUrl = Request.Path });
+
+            var pdf = await _coursePdfRepository.GetById(id);
+            if (pdf == null || pdf.DeletedAt != null || !pdf.IsPublished)
+                return NotFound();
+
+            // التحقق من صلاحية التحميل
+            var isEnrolled = await _courseService.IsUserEnrolled(pdf.CourseId, userId);
+            if (!isEnrolled && !pdf.IsFree)
+            {
+                TempData["Error"] = "يجب شراء المادة أولاً لتحميل هذا الملف";
+                return RedirectToAction("Details", new { id = pdf.CourseId });
+            }
+
+            var fullPath = Path.Combine(_webHostEnvironment.WebRootPath, pdf.FilePath.TrimStart('/'));
+            if (!System.IO.File.Exists(fullPath))
+                return NotFound("الملف غير موجود على الخادم");
+
+            var contentType = "application/pdf";
+            var downloadName = string.IsNullOrEmpty(pdf.OriginalFileName)
+                ? Path.GetFileName(fullPath)
+                : pdf.OriginalFileName;
+
+            return PhysicalFile(fullPath, contentType, downloadName);
         }
     }
 }

@@ -191,11 +191,11 @@ namespace SoumerMVCView.Services.CourseService
             // إذا كان الفيديو مجاني، يمكن مشاهدته
             if (video.IsFree) return true;
 
-            // التحقق من أن المستخدم مسجل في الكورس
+            // التحقق من أن المستخدم مسجل في المادة
             var course = await _courseRepository.GetById(video.CourseId);
             if (course == null) return false;
 
-            // التحقق من تسجيل المستخدم في الكورس
+            // التحقق من تسجيل المستخدم في المادة
             var isEnrolled = await _courseRepository.IsUserEnrolled(video.CourseId, userId);
             return isEnrolled;
         }

@@ -567,7 +567,7 @@ namespace SoumerMVCView.Controllers.Managment
             _context.Courses.Add(course);
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "تم إضافة الكورس بنجاح";
+            TempData["SuccessMessage"] = "تم إضافة المادة بنجاح";
             return RedirectToAction(nameof(Courses));
         }
 
@@ -628,7 +628,7 @@ namespace SoumerMVCView.Controllers.Managment
 
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "تم تحديث الكورس بنجاح";
+            TempData["SuccessMessage"] = "تم تحديث المادة بنجاح";
             return RedirectToAction(nameof(Courses));
         }
 
@@ -686,7 +686,7 @@ namespace SoumerMVCView.Controllers.Managment
             course.DeletedBy = User.Identity?.Name;
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "تم حذف الكورس بنجاح";
+            TempData["SuccessMessage"] = "تم حذف المادة بنجاح";
             return RedirectToAction(nameof(Courses));
         }
 
@@ -938,7 +938,7 @@ namespace SoumerMVCView.Controllers.Managment
                 _context.TeacherCourses.Add(teacherCourse);
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = "تم ربط الأستاذ بالكورس بنجاح";
+                TempData["SuccessMessage"] = "تم ربط الأستاذ بالمادة بنجاح";
                 return RedirectToAction(nameof(TeacherCourses));
             }
 
@@ -1073,7 +1073,7 @@ namespace SoumerMVCView.Controllers.Managment
 
         // ==========================================
         // GET: /Admin/GetCourseDiscount?id=X
-        // جلب بيانات العرض الحالية للكورس
+        // جلب بيانات العرض الحالية للمادة
         // ==========================================
         [HttpGet]
         public async Task<IActionResult> GetCourseDiscount(int id)
@@ -1083,7 +1083,7 @@ namespace SoumerMVCView.Controllers.Managment
                 .FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt == null);
 
             if (course == null)
-                return Json(new { success = false, message = "الكورس غير موجود" });
+                return Json(new { success = false, message = "المادة غير موجود" });
 
             return Json(new
             {
@@ -1122,7 +1122,7 @@ namespace SoumerMVCView.Controllers.Managment
                     .FirstOrDefaultAsync(c => c.Id == courseId && c.DeletedAt == null);
 
                 if (course == null)
-                    return Json(new { success = false, message = "الكورس غير موجود" });
+                    return Json(new { success = false, message = "المادة غير موجود" });
 
                 // التحقق
                 if (!discountPrice.HasValue || discountPrice.Value <= 0)
@@ -1173,7 +1173,7 @@ namespace SoumerMVCView.Controllers.Managment
                     .FirstOrDefaultAsync(c => c.Id == courseId && c.DeletedAt == null);
 
                 if (course == null)
-                    return Json(new { success = false, message = "الكورس غير موجود" });
+                    return Json(new { success = false, message = "المادة غير موجود" });
 
                 course.DiscountPrice = null;
                 course.DiscountEndDate = null;
@@ -1294,7 +1294,7 @@ namespace SoumerMVCView.Controllers.Managment
                 .FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt == null);
 
             if (course == null)
-                return Json(new { success = false, message = "الكورس غير موجود" });
+                return Json(new { success = false, message = "المادة غير موجود" });
 
             return Json(new
             {
@@ -1335,6 +1335,156 @@ namespace SoumerMVCView.Controllers.Managment
                         })
                 }
             });
+        }
+
+        // ==========================================
+        // GET: /Admin/CoursePdfs?courseId=X
+        // إدارة ملفات PDF لمادة
+        // ==========================================
+        public async Task<IActionResult> CoursePdfs(int courseId)
+        {
+            var course = await _context.Courses
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == courseId && c.DeletedAt == null);
+
+            if (course == null) return NotFound();
+
+            var pdfs = await _context.Set<CoursePdf>()
+                .AsNoTracking()
+                .Where(p => p.CourseId == courseId && p.DeletedAt == null)
+                .OrderBy(p => p.Order)
+                .ToListAsync();
+
+            ViewBag.CourseId = courseId;
+            ViewBag.CourseName = course.Name;
+            return View(pdfs);
+        }
+
+        // ==========================================
+        // POST: /Admin/UploadPdf
+        // ==========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadPdf(int courseId, string title, string description, int order, bool isFree, bool isPublished, IFormFile pdfFile)
+        {
+            try
+            {
+                if (pdfFile == null || pdfFile.Length == 0)
+                {
+                    TempData["ErrorMessage"] = "لم يتم اختيار ملف";
+                    return RedirectToAction(nameof(CoursePdfs), new { courseId });
+                }
+
+                // التحقق من الصيغة
+                var ext = Path.GetExtension(pdfFile.FileName).ToLowerInvariant();
+                if (ext != ".pdf")
+                {
+                    TempData["ErrorMessage"] = "يُسمح بملفات PDF فقط";
+                    return RedirectToAction(nameof(CoursePdfs), new { courseId });
+                }
+
+                // التحقق من الحجم (50MB)
+                const long maxSize = 50 * 1024 * 1024;
+                if (pdfFile.Length > maxSize)
+                {
+                    TempData["ErrorMessage"] = "حجم الملف يتجاوز 50 ميجابايت";
+                    return RedirectToAction(nameof(CoursePdfs), new { courseId });
+                }
+
+                // التحقق من وجود المادة
+                var course = await _context.Courses.FirstOrDefaultAsync(c => c.Id == courseId && c.DeletedAt == null);
+                if (course == null) return NotFound();
+
+                // مجلد الرفع
+                var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "pdfs", $"course-{courseId}");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                // اسم فريد
+                var fileName = $"{Guid.NewGuid()}{ext}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await pdfFile.CopyToAsync(stream);
+                }
+
+                // حفظ السجل
+                var pdf = new CoursePdf
+                {
+                    CourseId = courseId,
+                    Title = string.IsNullOrWhiteSpace(title) ? pdfFile.FileName : title.Trim(),
+                    Description = description?.Trim(),
+                    FilePath = $"/uploads/pdfs/course-{courseId}/{fileName}",
+                    OriginalFileName = pdfFile.FileName,
+                    FileSize = pdfFile.Length,
+                    Order = order,
+                    IsFree = isFree,
+                    IsPublished = isPublished,
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.Add(pdf);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "تم رفع الملف بنجاح";
+                return RedirectToAction(nameof(CoursePdfs), new { courseId });
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error uploading PDF for course {CourseId}", courseId);
+                TempData["ErrorMessage"] = "حدث خطأ أثناء رفع الملف";
+                return RedirectToAction(nameof(CoursePdfs), new { courseId });
+            }
+        }
+
+        // ==========================================
+        // POST: /Admin/DeletePdf
+        // ==========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeletePdf(int id)
+        {
+            var pdf = await _context.Set<CoursePdf>().FindAsync(id);
+            if (pdf == null) return NotFound();
+
+            var courseId = pdf.CourseId;
+
+            // حذف الملف من القرص
+            if (!string.IsNullOrEmpty(pdf.FilePath))
+            {
+                var fullPath = Path.Combine(_webHostEnvironment.WebRootPath, pdf.FilePath.TrimStart('/'));
+                if (System.IO.File.Exists(fullPath))
+                {
+                    try { System.IO.File.Delete(fullPath); } catch { /* تجاهل */ }
+                }
+            }
+
+            // Soft delete
+            pdf.DeletedAt = DateTime.Now;
+            pdf.DeletedBy = User.Identity?.Name;
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "تم حذف الملف بنجاح";
+            return RedirectToAction(nameof(CoursePdfs), new { courseId });
+        }
+
+        // ==========================================
+        // POST: /Admin/TogglePdfPublished
+        // ==========================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TogglePdfPublished(int id)
+        {
+            var pdf = await _context.Set<CoursePdf>().FindAsync(id);
+            if (pdf == null) return NotFound();
+
+            pdf.IsPublished = !pdf.IsPublished;
+            pdf.ModifiedAt = DateTime.Now;
+            pdf.ModifiedBy = User.Identity?.Name;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, isPublished = pdf.IsPublished });
         }
     }
 }

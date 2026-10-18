@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260331132557_assighnmentForTeacers")]
-    partial class assighnmentForTeacers
+    [Migration("20261018090222_InitialDB")]
+    partial class InitialDB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -51,6 +51,9 @@ namespace DataAccess.Migrations
                     b.Property<string>("ModifiedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.ToTable("Balances");
@@ -79,13 +82,16 @@ namespace DataAccess.Migrations
                     b.Property<string>("DeletedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("ModifiedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("MyProperty")
+                    b.Property<int>("TransactionType")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -114,6 +120,12 @@ namespace DataAccess.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DiscountEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("DiscountPrice")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
@@ -170,6 +182,120 @@ namespace DataAccess.Migrations
                     b.ToTable("CourseRegistrations");
                 });
 
+            modelBuilder.Entity("DataAccess.Entities.CourseVideo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Duration")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsFree")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Platform")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PublishDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VideoId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VideoUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.ToTable("CourseVideos");
+                });
+
+            modelBuilder.Entity("DataAccess.Entities.PointsCode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("PointsValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UsedByUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsedByUserId");
+
+                    b.ToTable("PointsCodes");
+                });
+
             modelBuilder.Entity("DataAccess.Entities.Teacher", b =>
                 {
                     b.Property<int>("Id")
@@ -195,6 +321,9 @@ namespace DataAccess.Migrations
 
                     b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");
@@ -301,6 +430,9 @@ namespace DataAccess.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("BalanceId")
                         .HasColumnType("int");
 
@@ -326,6 +458,9 @@ namespace DataAccess.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("FullName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -410,6 +545,25 @@ namespace DataAccess.Migrations
                             SecurityStamp = "FIXED_STAMP_12345",
                             TwoFactorEnabled = false,
                             UserName = "admin@system.com"
+                        },
+                        new
+                        {
+                            Id = "2",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "FIXED_CONCURRENCY_12345",
+                            CreatedAt = new DateTime(2026, 2, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "مدير النظام",
+                            Email = "student@system.com",
+                            EmailConfirmed = true,
+                            IsActive = true,
+                            LockoutEnabled = true,
+                            NormalizedEmail = "Student@SYSTEM.COM",
+                            NormalizedUserName = "Student@SYSTEM.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIJPo4WuBKtpsZhjP/uYwhUixPJs+RLJFHwMaU12CUPdcLTVbv9T0ODgOKvSMnkITg==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "FIXED_STAMP_12345",
+                            TwoFactorEnabled = false,
+                            UserName = "Student"
                         });
                 });
 
@@ -442,43 +596,50 @@ namespace DataAccess.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "2",
+                            Id = "1",
                             ConcurrencyStamp = "1",
+                            Name = "Student",
+                            NormalizedName = "STUDENT"
+                        },
+                        new
+                        {
+                            Id = "2",
+                            ConcurrencyStamp = "2",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
                             Id = "3",
-                            ConcurrencyStamp = "2",
+                            ConcurrencyStamp = "3",
                             Name = "Teacher",
                             NormalizedName = "TEACHER"
                         },
                         new
                         {
                             Id = "4",
-                            ConcurrencyStamp = "3",
+                            ConcurrencyStamp = "4",
                             Name = "Employee",
                             NormalizedName = "EMPLOYEE"
                         },
                         new
                         {
                             Id = "5",
-                            ConcurrencyStamp = "4",
+                            ConcurrencyStamp = "5",
                             Name = "FinEmployee",
                             NormalizedName = "FINEMPLOYEE"
                         },
                         new
                         {
                             Id = "6",
-                            ConcurrencyStamp = "5",
+                            ConcurrencyStamp = "6",
                             Name = "HREmployee",
                             NormalizedName = "HREMPLOYEE"
                         },
                         new
                         {
                             Id = "7",
-                            ConcurrencyStamp = "6",
+                            ConcurrencyStamp = "7",
                             Name = "STUEmployee",
                             NormalizedName = "STUEMPLOYEE"
                         });
@@ -575,6 +736,11 @@ namespace DataAccess.Migrations
                         {
                             UserId = "1",
                             RoleId = "2"
+                        },
+                        new
+                        {
+                            UserId = "2",
+                            RoleId = "1"
                         });
                 });
 
@@ -623,6 +789,26 @@ namespace DataAccess.Migrations
                     b.Navigation("Course");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DataAccess.Entities.CourseVideo", b =>
+                {
+                    b.HasOne("DataAccess.Entities.Course", "Course")
+                        .WithMany("CourseVideos")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("DataAccess.Entities.PointsCode", b =>
+                {
+                    b.HasOne("DataAccess.Entities.User", "UsedByUser")
+                        .WithMany()
+                        .HasForeignKey("UsedByUserId");
+
+                    b.Navigation("UsedByUser");
                 });
 
             modelBuilder.Entity("DataAccess.Entities.TeacherCourse", b =>
@@ -725,6 +911,8 @@ namespace DataAccess.Migrations
             modelBuilder.Entity("DataAccess.Entities.Course", b =>
                 {
                     b.Navigation("CourseRegistrations");
+
+                    b.Navigation("CourseVideos");
 
                     b.Navigation("TeacherCourses");
                 });

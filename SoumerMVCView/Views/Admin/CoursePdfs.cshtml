@@ -1,0 +1,207 @@
+﻿@model List<DataAccess.Entities.CoursePdf>
+@{
+    ViewData["Title"] = "ملفات PDF";
+    Layout = "_AdminLayout";
+    var courseId = (int)ViewBag.CourseId;
+    var courseName = (string)ViewBag.CourseName;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h4 class="mb-1"><i class="fas fa-file-pdf text-danger me-2"></i>ملفات PDF للمادة</h4>
+        <p class="text-muted mb-0 small">@courseName</p>
+    </div>
+    <a asp-action="Courses" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-right"></i> رجوع للمواد
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- ==========================================
+     نموذج الرفع
+     ========================================== -->
+<div class="form-card mb-4">
+    <h5 class="mb-3"><i class="fas fa-upload me-2"></i>رفع ملف PDF جديد</h5>
+
+    <form asp-action="UploadPdf" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="courseId" value="@courseId" />
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">عنوان الملف</label>
+                <input name="title" class="form-control" placeholder="مثال: ملزمة الفصل الأول" />
+            </div>
+            <div class="col-md-8">
+                <label class="form-label fw-bold">اختر ملف PDF <span class="text-danger">*</span></label>
+                <input type="file" name="pdfFile" accept="application/pdf,.pdf" class="form-control" required />
+                <small class="text-muted">الحد الأقصى 50 ميجابايت</small>
+            </div>
+            <div class="col-md-12">
+                <label class="form-label fw-bold">الوصف (اختياري)</label>
+                <textarea name="description" class="form-control" rows="2" placeholder="وصف مختصر للمحتوى"></textarea>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">الترتيب</label>
+                <input name="order" type="number" class="form-control" value="0" min="0" />
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <div class="form-check">
+                    <input type="checkbox" name="isFree" value="true" class="form-check-input" id="isFree" />
+                    <label class="form-check-label" for="isFree">مجاني (بدون شراء)</label>
+                </div>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <div class="form-check">
+                    <input type="checkbox" name="isPublished" value="true" class="form-check-input" id="isPublished" checked />
+                    <label class="form-check-label" for="isPublished">منشور للطلاب</label>
+                </div>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn-primary-admin w-100">
+                    <i class="fas fa-cloud-upload-alt"></i> رفع الملف
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- ==========================================
+     جدول الملفات
+     ========================================== -->
+<div class="table-card">
+    <div class="table-card-header">
+        <h5 class="table-card-title">
+            <i class="fas fa-list me-2"></i>الملفات المرفوعة (@Model.Count)
+        </h5>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table datatable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>العنوان</th>
+                        <th>الحجم</th>
+                        <th>النوع</th>
+                        <th>الحالة</th>
+                        <th>تاريخ الرفع</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var i = 1;
+                    }
+                    @foreach (var pdf in Model)
+                    {
+                        <tr>
+                            <td>@(i++)</td>
+                            <td>
+                                <strong>@pdf.Title</strong>
+                                @if (!string.IsNullOrEmpty(pdf.Description))
+                                {
+                                    <br />
+                        
+                                    <small class="text-muted">@pdf.Description</small>
+                                }
+                            </td>
+                            <td>
+                                @{
+                                    var size = pdf.FileSize;
+                                    var sizeStr = size < 1024 ? $"{size} B"
+                                    : size < 1024 * 1024 ? $"{size / 1024.0:F1} KB"
+                                    : $"{size / (1024.0 * 1024.0):F1} MB";
+                                }
+                                <span class="badge bg-light text-dark">@sizeStr</span>
+                            </td>
+                            <td>
+                                @if (pdf.IsFree)
+                                {
+                                    <span class="badge bg-success">🎁 مجاني</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-primary">💎 للمشتركين</span>
+                                }
+                            </td>
+                            <td>
+                                @if (pdf.IsPublished)
+                                {
+                                    <span class="badge bg-success">منشور</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">مخفي</span>
+                                }
+                            </td>
+                            <td>@pdf.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                            <td>
+                                <a href="@pdf.FilePath" target="_blank" class="btn-action btn-view" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <form asp-action="TogglePdfPublished" method="post" style="display:inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@pdf.Id" />
+                                    <button type="submit" class="btn-action btn-edit" title="تغيير الحالة">
+                                        <i class="fas fa-@(pdf.IsPublished ? "eye-slash" : "eye")"></i>
+                                    </button>
+                                </form>
+                                <form asp-action="DeletePdf" method="post" style="display:inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@pdf.Id" />
+                                    <button type="button" class="btn-action btn-delete"
+                                            onclick="confirmDelete(this)" title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-file-pdf fa-3x mb-3 d-block opacity-25"></i>
+            <p>لم يتم رفع أي ملفات لهذه المادة بعد</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(btn) {
+            Swal.fire({
+                title: 'تأكيد الحذف',
+                text: 'هل تريد حذف هذا الملف؟ لا يمكن التراجع.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'حذف',
+                cancelButtonText: 'إلغاء'
+            }).then(r => {
+                if (r.isConfirmed) btn.closest('form').submit();
+            });
+        }
+    </script>
+}

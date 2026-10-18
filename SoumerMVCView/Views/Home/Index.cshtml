@@ -178,7 +178,7 @@
             });
         });
 
-        // النقر على السلايد لعرض كورسات المعلم
+        // النقر على السلايد لعرض مواد المعلم
         heroSlides.forEach(slide => {
             slide.addEventListener('click', function () {
                 const teacherId = this.dataset.teacherId;
@@ -241,7 +241,7 @@
         });
 
         // ==========================================
-        // عرض كورسات المعلم
+        // عرض مواد المعلم
         // ==========================================
         async function showTeacherCourses(teacherId) {
             closeTeachersModal();
@@ -258,7 +258,7 @@
         }
 
         // ==========================================
-        // عرض بطاقات الكورسات (مع دعم العروض + الاشتراكات)
+        // عرض بطاقات المواد (مع دعم العروض + الاشتراكات)
         // ==========================================
         function displayTeacherCourses(teacher) {
             const courses = teacher.teacherCourses || teacher.courses || [];
@@ -339,7 +339,7 @@
                         padding-right: 12px;
                         border-right: 3px solid #210057;
                         color: #333;
-                    ">📘 كورسات ${escapeHtml(teacher.name)}</h2>
+                    ">📘 مواد ${escapeHtml(teacher.name)}</h2>
 
                     <div style="
                         display: flex;
@@ -491,7 +491,7 @@
                                                 font-family: 'Tajawal', sans-serif;
                                             ">
                                         <i class="fas fa-play-circle"></i>
-                                        مشاهدة الكورس
+                                        مشاهدة المادة
                                     </button>
                                 `
                                 : `
@@ -576,8 +576,8 @@
                                 border-radius: 16px;
                             ">
                                 <div style="font-size: 3rem; margin-bottom: 16px; opacity: 0.5;">📚</div>
-                                <p style="color: #333; margin-bottom: 8px;">لا توجد كورسات متاحة حالياً</p>
-                                <small style="color: #9496a5;">سيتم إضافة كورسات جديدة قريباً</small>
+                                <p style="color: #333; margin-bottom: 8px;">لا توجد مواد متاحة حالياً</p>
+                                <small style="color: #9496a5;">سيتم إضافة مواد جديدة قريباً</small>
                             </div>
                         `}
                     </div>
@@ -599,14 +599,14 @@
         }
 
         // ==========================================
-        // الانتقال إلى مشاهدة الكورس (للمشتركين)
+        // الانتقال إلى مشاهدة المادة (للمشتركين)
         // ==========================================
         function watchCourse(courseId) {
             window.location.href = `/Course/CourseVideos?courseId=${courseId}`;
         }
 
         // ==========================================
-        // عدّاد تنازلي حيّ لكل كورس عليه عرض
+        // عدّاد تنازلي حيّ لكل مادة عليه عرض
         // ==========================================
         let courseCountdownInterval = null;
 
@@ -674,7 +674,7 @@
         });
 
         // ==========================================
-        // التسجيل في كورس
+        // التسجيل في مادة
         // ==========================================
         async function enrollInCourse(teacherId, courseId) {
             try {
@@ -703,7 +703,7 @@
                         title: '🎉 تم التسجيل بنجاح!',
                         text: data.message,
                         icon: 'success',
-                        confirmButtonText: 'عرض كورساتي',
+                        confirmButtonText: 'عرض موادي',
                         confirmButtonColor: '#210057',
                         showCancelButton: true,
                         cancelButtonText: 'البقاء هنا',
