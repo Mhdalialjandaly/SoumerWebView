@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using SoumerMVCView.Services.BalanceService;
 using SoumerMVCView.Services.CourseService;
+using SoumerMVCView.Services.ExamService;
 using SoumerMVCView.Services.TeacherAssignmentService;
 using SoumerMVCView.ViewComponents;
 
@@ -33,6 +34,7 @@ namespace SoumerMVCView
             builder.Services.AddScoped<ICourseService, CourseService>();
             builder.Services.AddScoped<ICourseVideoService, CourseVideoService>();
             builder.Services.AddScoped<UserHeaderViewComponent>();
+            builder.Services.AddScoped<IExamService, ExamService>();
             // ثانياً: تسجيل Identity
             builder.Services.AddIdentity<User, IdentityRole>(options =>
             {

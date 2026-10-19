@@ -1,0 +1,170 @@
+﻿@model List<DataAccess.Entities.Exam>
+@{
+    ViewData["Title"] = "إدارة الامتحانات";
+    Layout = "_AdminLayout";
+    var courses = ViewBag.Courses as List<DataAccess.Entities.Course> ?? new List<DataAccess.Entities.Course>();
+    var selectedCourseId = ViewBag.SelectedCourseId as int?;
+}
+
+<div class="exams-admin-page">
+
+    <!-- رأس الصفحة -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h4 class="mb-1">
+                <i class="fas fa-file-alt text-primary me-2"></i>
+                إدارة الامتحانات
+            </h4>
+            <p class="text-muted mb-0 small">إنشاء وإدارة امتحانات المواد</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <form method="get" asp-action="Index" class="d-flex gap-2">
+                <select name="courseId" class="form-select" style="min-width: 220px;" onchange="this.form.submit()">
+                    <option value="">كل المواد</option>
+                    @foreach (var c in courses)
+                    {
+                        <option value="@c.Id" selected="@(selectedCourseId == c.Id ? "selected" : null)">
+                            @c.Name
+                        </option>
+                    }
+                </select>
+            </form>
+            <a asp-action="Create" class="btn-primary-admin">
+                <i class="fas fa-plus"></i>
+                إنشاء امتحان
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- الجدول -->
+    <div class="table-card">
+        @if (!Model.Any())
+        {
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-file-alt fa-3x mb-3 d-block opacity-25"></i>
+                <p>لا توجد امتحانات بعد</p>
+                <a asp-action="Create" class="btn-primary-admin">
+                    <i class="fas fa-plus"></i>
+                    أنشئ أول امتحان
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table datatable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>العنوان</th>
+                            <th>المادة</th>
+                            <th>المدة</th>
+                            <th>الأسئلة</th>
+                            <th>النجاح</th>
+                            <th>الحالة</th>
+                            <th>تاريخ الإنشاء</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var exam in Model)
+                        {
+                            <tr>
+                                <td>@exam.Id</td>
+                                <td>
+                                    <strong>@exam.Title</strong>
+                                    @if (!string.IsNullOrEmpty(exam.Description))
+                                    {
+                                        <br />
+                                        <small class="text-muted">@exam.Description</small>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">@exam.Course?.Name</span>
+                                </td>
+                                <td>
+                                    <i class="fas fa-clock text-muted"></i>
+                                    @exam.DurationMinutes د
+                                </td>
+                                <td>
+                                    <i class="fas fa-question-circle text-info"></i>
+                                    @(exam.Questions?.Count(q => q.DeletedAt == null) ?? 0)
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">@exam.PassingScore%</span>
+                                </td>
+                                <td>
+                                    @if (exam.IsPublished)
+                                    {
+                                        <span class="badge bg-success">منشور</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark">مخفي</span>
+                                    }
+                                </td>
+                                <td>
+                                    <small>@exam.CreatedAt.ToString("yyyy/MM/dd")</small>
+                                </td>
+                                <td>
+                                    <a asp-action="Edit" asp-route-id="@exam.Id"
+                                       class="btn-action btn-edit" title="تعديل وإدارة الأسئلة">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a asp-action="Attempts" asp-route-examId="@exam.Id"
+                                       class="btn-action" title="محاولات الطلاب"
+                                       style="background:#dbeafe; color:#2563eb;">
+                                        <i class="fas fa-users"></i>
+                                    </a>
+                                    <form asp-action="Delete" method="post" style="display:inline;"
+                                          id="deleteForm-@exam.Id">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@exam.Id" />
+                                        <button type="button" class="btn-action btn-delete"
+                                                onclick="confirmDelete(@exam.Id)" title="حذف">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'تأكيد الحذف',
+                text: 'هل تريد حذف هذا الامتحان؟ سيتم حذف جميع أسئلته.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'نعم، احذف',
+                cancelButtonText: 'إلغاء'
+            }).then(r => {
+                if (r.isConfirmed) document.getElementById(`deleteForm-${id}`).submit();
+            });
+        }
+    </script>
+}

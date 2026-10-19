@@ -1,0 +1,176 @@
+﻿@model List<DataAccess.Entities.ExamAttempt>
+@{
+    var exam = ViewBag.Exam as DataAccess.Entities.Exam;
+    ViewData["Title"] = $"محاولات: {exam?.Title}";
+    Layout = "_AdminLayout";
+}
+
+<div class="exam-attempts-page">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h4 class="mb-1">
+                <i class="fas fa-users text-primary me-2"></i>
+                محاولات الطلاب
+            </h4>
+            <p class="text-muted mb-0 small">
+                @exam?.Course?.Name — @exam?.Title
+            </p>
+        </div>
+        <a asp-action="Edit" asp-route-id="@exam?.Id" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-right"></i>
+            رجوع للامتحان
+        </a>
+    </div>
+
+    <!-- إحصائيات -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-6">
+            <div class="stat-card text-center">
+                <div class="stat-value">@Model.Count</div>
+                <div class="stat-label">إجمالي المحاولات</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card text-center">
+                <div class="stat-value text-success">@Model.Count(a => a.IsPassed)</div>
+                <div class="stat-label">ناجحون</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card text-center">
+                <div class="stat-value text-danger">@Model.Count(a => a.Status >= 2 && !a.IsPassed)</div>
+                <div class="stat-label">راسبون</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card text-center">
+                <div class="stat-value text-warning">@Model.Count(a => a.Status == 1)</div>
+                <div class="stat-label">جارية الآن</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الجدول -->
+    <div class="table-card">
+        @if (!Model.Any())
+        {
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-users fa-3x mb-3 d-block opacity-25"></i>
+                <p>لم يقم أي طالب بمحاولة هذا الامتحان بعد</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table datatable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الطالب</th>
+                            <th>البدء</th>
+                            <th>التسليم</th>
+                            <th>النتيجة</th>
+                            <th>الإجابات الصحيحة</th>
+                            <th>الحالة</th>
+                            <th>سبب الانتهاء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var a in Model.OrderByDescending(x => x.StartedAt))
+                        {
+                            <tr>
+                                <td>@a.Id</td>
+                                <td>
+                                    <strong>@a.User?.UserName</strong>
+                                    @if (!string.IsNullOrEmpty(a.User?.Email))
+                                    {
+                                        <br />
+                            
+                                        <small class="text-muted">@a.User.Email</small>
+                                    }
+                                </td>
+                                <td>
+                                    <small>@a.StartedAt.ToString("yyyy/MM/dd HH:mm")</small>
+                                </td>
+                                <td>
+                                    @if (a.SubmittedAt.HasValue)
+                                    {
+                                        <small>@a.SubmittedAt.Value.ToString("yyyy/MM/dd HH:mm")</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    <strong>@a.Score.ToString("N0")/@a.MaxScore.ToString("N0")</strong>
+                                    @{
+                                        var percent = a.MaxScore > 0 ? (a.Score / a.MaxScore * 100) : 0;
+                                    }
+                                    <br />
+                                    <small class="text-muted">@percent.ToString("N1")%</small>
+                                </td>
+                                <td>
+                                    @a.CorrectAnswers / @a.TotalQuestions
+                                </td>
+                                <td>
+                                    @switch (a.Status)
+                                    {
+                                        case 1:
+                                            <span class="badge bg-warning text-dark">جارية</span>
+                                            break;
+                                        case 2:
+                                            <span class="badge bg-success">مسلّمة</span>
+                                            break;
+                                        case 3:
+                                            <span class="badge bg-info">انتهى الوقت</span>
+                                            break;
+                                        case 4:
+                                            <span class="badge bg-danger">رسوب تلقائي</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">—</span>
+                                            break;
+                                    }
+                                    <br />
+                                    @if (a.Status >= 2)
+                                    {
+                                        if (a.IsPassed)
+                                        {
+                                            <span class="badge bg-success mt-1">ناجح</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger mt-1">راسب</span>
+                                        }
+                                    }
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(a.EndReason))
+                                    {
+                                        <small>@GetReasonText(a.EndReason)</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@functions {
+    string GetReasonText(string reason) => reason switch
+    {
+        "ManualSubmit" => "تسليم يدوي",
+        "TimeExpired" => "انتهى الوقت",
+        "ForcedFail" => "مغادرة الصفحة",
+        _ => reason
+    };
+}

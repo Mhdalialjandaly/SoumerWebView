@@ -1,0 +1,492 @@
+﻿@model DataAccess.Entities.Exam
+@{
+    ViewData["Title"] = $"تعديل امتحان: {Model.Title}";
+    Layout = "_AdminLayout";
+    var courses = ViewBag.Courses as List<DataAccess.Entities.Course> ?? new List<DataAccess.Entities.Course>();
+    var questions = Model.Questions?
+        .Where(q => q.DeletedAt == null)
+        .OrderBy(q => q.Order)
+        .ToList() ?? new List<DataAccess.Entities.ExamQuestion>();
+}
+
+<div class="exam-edit-page">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- ==========================================
+         بطاقة إعدادات الامتحان
+         ========================================== -->
+    <div class="form-card mb-4">
+        <h4 class="mb-4">
+            <i class="fas fa-cog me-2"></i>
+            إعدادات الامتحان
+        </h4>
+
+        <form asp-action="Edit" method="post" id="editExamForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="CourseId" class="form-label">المادة</label>
+                    <select asp-for="CourseId" class="form-select" required>
+                        @foreach (var c in courses)
+                        {
+                            <option value="@c.Id" selected="@(Model.CourseId == c.Id ? "selected" : null)">
+                                @c.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Title" class="form-label">العنوان</label>
+                    <input asp-for="Title" class="form-control" required />
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="Description" class="form-label">الوصف</label>
+                    <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="DurationMinutes" class="form-label">المدة (دقائق)</label>
+                    <input asp-for="DurationMinutes" type="number" class="form-control" min="1" required />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="PassingScore" class="form-label">النجاح (%)</label>
+                    <input asp-for="PassingScore" type="number" class="form-control" min="0" max="100" required />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="MaxAttempts" class="form-label">المحاولات</label>
+                    <input asp-for="MaxAttempts" type="number" class="form-control" min="0" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label d-block">الحالة</label>
+                    <div class="form-check form-switch mt-2">
+                        <input asp-for="IsPublished" class="form-check-input" type="checkbox" />
+                        <label asp-for="IsPublished" class="form-check-label">منشور</label>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-check form-switch">
+                        <input asp-for="ShuffleQuestions" class="form-check-input" type="checkbox" />
+                        <label asp-for="ShuffleQuestions" class="form-check-label">خلط الأسئلة</label>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-check form-switch">
+                        <input asp-for="AllowRetake" class="form-check-input" type="checkbox" />
+                        <label asp-for="AllowRetake" class="form-check-label">السماح بإعادة المحاولة</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn-primary-admin">
+                    <i class="fas fa-save"></i>
+                    حفظ الإعدادات
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">رجوع</a>
+                <a asp-action="Attempts" asp-route-examId="@Model.Id" class="btn btn-outline-info ms-auto">
+                    <i class="fas fa-users"></i>
+                    محاولات الطلاب
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ==========================================
+         إدارة الأسئلة
+         ========================================== -->
+    <div class="questions-section">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h4 class="mb-0">
+                <i class="fas fa-question-circle me-2"></i>
+                الأسئلة
+                <span class="badge bg-primary">@questions.Count</span>
+            </h4>
+            <button type="button" class="btn-primary-admin" onclick="openAddQuestionModal()">
+                <i class="fas fa-plus"></i>
+                إضافة سؤال
+            </button>
+        </div>
+
+        @if (!questions.Any())
+        {
+            <div class="table-card text-center text-muted py-5">
+                <i class="fas fa-question-circle fa-3x mb-3 d-block opacity-25"></i>
+                <p>لا توجد أسئلة بعد</p>
+                <button type="button" class="btn-primary-admin" onclick="openAddQuestionModal()">
+                    <i class="fas fa-plus"></i>
+                    أضف أول سؤال
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="questions-list" id="questionsList">
+                @foreach (var q in questions)
+                {
+                    <div class="question-card" data-question-id="@q.Id" id="question-@q.Id">
+                        <div class="question-header">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="question-number">@q.Order</span>
+                                <span class="badge bg-info">@q.Points نقطة</span>
+                            </div>
+                            <div class="d-flex gap-1">
+                                <button type="button" class="btn-action btn-delete"
+                                        onclick="deleteQuestion(@q.Id)" title="حذف السؤال">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <p class="question-text">@q.QuestionText</p>
+
+                        <div class="options-list">
+                            @foreach (var opt in q.Options.Where(o => o.DeletedAt == null).OrderBy(o => o.Order))
+                            {
+                                <div class="option-item @(opt.IsCorrect ? "correct" : "")" data-option-id="@opt.Id">
+                                    <div class="d-flex align-items-center gap-2 flex-grow-1">
+                                        @if (opt.IsCorrect)
+                                        {
+                                            <i class="fas fa-check-circle text-success"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="far fa-circle text-muted"></i>
+                                        }
+                                        <span>@opt.OptionText</span>
+                                    </div>
+                                    <button type="button" class="btn-action btn-delete"
+                                            onclick="deleteOption(@opt.Id)" title="حذف الخيار">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- نموذج إضافة خيار -->
+                        <div class="add-option-form">
+                            <div class="d-flex gap-2">
+                                <input type="text" class="form-control form-control-sm"
+                                       placeholder="نص الخيار الجديد..."
+                                       id="newOptionText-@q.Id" />
+                                <div class="form-check form-switch ms-2">
+                                    <input class="form-check-input" type="checkbox"
+                                           id="newOptionCorrect-@q.Id" />
+                                    <label class="form-check-label small" for="newOptionCorrect-@q.Id">
+                                        صحيح
+                                    </label>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-primary"
+                                        onclick="addOption(@q.Id)">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- ==========================================
+     مودال إضافة سؤال
+     ========================================== -->
+<div class="modal fade" id="addQuestionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle"></i>
+                    إضافة سؤال جديد
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">نص السؤال <span class="text-danger">*</span></label>
+                    <textarea id="questionText" class="form-control" rows="3"
+                              placeholder="اكتب السؤال هنا..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">النقاط</label>
+                    <input type="number" id="questionPoints" class="form-control" min="1" value="1" />
+                </div>
+                <div class="alert alert-info small mb-0">
+                    <i class="fas fa-info-circle"></i>
+                    بعد إضافة السؤال، ستتمكن من إضافة خياراته من البطاقة.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn-primary-admin" onclick="addQuestion()">
+                    <i class="fas fa-plus"></i>
+                    إضافة
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .exam-edit-page {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    /* بطاقة السؤال */
+    .question-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .question-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .question-number {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #4f46e5;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.85rem;
+    }
+
+    .question-text {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 12px;
+        line-height: 1.6;
+    }
+
+    /* الخيارات */
+    .options-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+
+    .option-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        background: #f8fafc;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        font-size: 0.85rem;
+    }
+
+        .option-item.correct {
+            background: #f0fdf4;
+            border-color: #a7f3d0;
+        }
+
+    /* نموذج إضافة خيار */
+    .add-option-form {
+        padding-top: 12px;
+        border-top: 1px dashed #e2e8f0;
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const examId = @Model.Id;
+        const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        // ==========================================
+        // إضافة سؤال
+        // ==========================================
+        function openAddQuestionModal() {
+            document.getElementById('questionText').value = '';
+            document.getElementById('questionPoints').value = 1;
+            new bootstrap.Modal(document.getElementById('addQuestionModal')).show();
+        }
+
+        async function addQuestion() {
+            const text = document.getElementById('questionText').value.trim();
+            const points = parseInt(document.getElementById('questionPoints').value) || 1;
+
+            if (!text) {
+                Swal.fire('تنبيه', 'يجب إدخال نص السؤال', 'warning');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('examId', examId);
+                formData.append('questionText', text);
+                formData.append('points', points);
+                formData.append('__RequestVerificationToken', antiForgeryToken);
+
+                const response = await fetch('/AdminExam/AddQuestion', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'تم',
+                        text: 'تم إضافة السؤال',
+                        timer: 1000,
+                        showConfirmButton: false
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire('خطأ', data.message || 'تعذر إضافة السؤال', 'error');
+                }
+            } catch {
+                Swal.fire('خطأ', 'حدث خطأ في الاتصال', 'error');
+            }
+        }
+
+        // ==========================================
+        // إضافة خيار
+        // ==========================================
+        async function addOption(questionId) {
+            const textEl = document.getElementById(`newOptionText-${questionId}`);
+            const correctEl = document.getElementById(`newOptionCorrect-${questionId}`);
+            const text = textEl.value.trim();
+            const isCorrect = correctEl.checked;
+
+            if (!text) {
+                Swal.fire('تنبيه', 'يجب إدخال نص الخيار', 'warning');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('questionId', questionId);
+                formData.append('optionText', text);
+                formData.append('isCorrect', isCorrect);
+                formData.append('__RequestVerificationToken', antiForgeryToken);
+
+                const response = await fetch('/AdminExam/AddOption', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    textEl.value = '';
+                    correctEl.checked = false;
+                    location.reload();
+                } else {
+                    Swal.fire('خطأ', data.message || 'تعذر إضافة الخيار', 'error');
+                }
+            } catch {
+                Swal.fire('خطأ', 'حدث خطأ في الاتصال', 'error');
+            }
+        }
+
+        // ==========================================
+        // حذف سؤال
+        // ==========================================
+        async function deleteQuestion(id) {
+            const confirmed = await Swal.fire({
+                title: 'حذف السؤال',
+                text: 'هل تريد حذف هذا السؤال؟',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، احذف',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6c757d'
+            });
+
+            if (!confirmed.isConfirmed) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('id', id);
+                formData.append('__RequestVerificationToken', antiForgeryToken);
+
+                const response = await fetch('/AdminExam/DeleteQuestion', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById(`question-${id}`)?.remove();
+                    Swal.fire({ icon: 'success', title: 'تم', timer: 1000, showConfirmButton: false });
+                } else {
+                    Swal.fire('خطأ', data.message || 'تعذر الحذف', 'error');
+                }
+            } catch {
+                Swal.fire('خطأ', 'حدث خطأ في الاتصال', 'error');
+            }
+        }
+
+        // ==========================================
+        // حذف خيار
+        // ==========================================
+        async function deleteOption(id) {
+            const confirmed = await Swal.fire({
+                title: 'حذف الخيار',
+                text: 'هل تريد حذف هذا الخيار؟',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6c757d'
+            });
+
+            if (!confirmed.isConfirmed) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('id', id);
+                formData.append('__RequestVerificationToken', antiForgeryToken);
+
+                const response = await fetch('/AdminExam/DeleteOption', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    location.reload();
+                } else {
+                    Swal.fire('خطأ', data.message || 'تعذر الحذف', 'error');
+                }
+            } catch {
+                Swal.fire('خطأ', 'حدث خطأ في الاتصال', 'error');
+            }
+        }
+    </script>
+}

@@ -1,0 +1,146 @@
+﻿@model DataAccess.Entities.Exam
+@{
+    ViewData["Title"] = "إنشاء امتحان جديد";
+    Layout = "_AdminLayout";
+    var courses = ViewBag.Courses as List<DataAccess.Entities.Course> ?? new List<DataAccess.Entities.Course>();
+}
+
+<div class="form-card" style="max-width: 800px; margin: 0 auto;">
+    <h4 class="mb-4">
+        <i class="fas fa-plus-circle me-2"></i>
+        إنشاء امتحان جديد
+    </h4>
+
+    <form asp-action="Create" method="post" id="createExamForm">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-3">
+
+            <!-- المادة -->
+            <div class="col-md-6">
+                <label asp-for="CourseId" class="form-label">
+                    <i class="fas fa-book me-1"></i>
+                    المادة <span class="text-danger">*</span>
+                </label>
+                <select asp-for="CourseId" class="form-select" required>
+                    <option value="">اختر المادة...</option>
+                    @foreach (var c in courses)
+                    {
+                        <option value="@c.Id">@c.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="CourseId" class="text-danger small"></span>
+            </div>
+
+            <!-- العنوان -->
+            <div class="col-md-6">
+                <label asp-for="Title" class="form-label">
+                    <i class="fas fa-heading me-1"></i>
+                    عنوان الامتحان <span class="text-danger">*</span>
+                </label>
+                <input asp-for="Title" class="form-control" required
+                       placeholder="مثال: امتحان الفصل الأول" />
+                <span asp-validation-for="Title" class="text-danger small"></span>
+            </div>
+
+            <!-- الوصف -->
+            <div class="col-12">
+                <label asp-for="Description" class="form-label">
+                    <i class="fas fa-align-left me-1"></i>
+                    الوصف
+                </label>
+                <textarea asp-for="Description" class="form-control" rows="2"
+                          placeholder="وصف مختصر للامتحان (اختياري)"></textarea>
+            </div>
+
+            <!-- المدة -->
+            <div class="col-md-6">
+                <label asp-for="DurationMinutes" class="form-label">
+                    <i class="fas fa-clock me-1"></i>
+                    المدة (دقائق) <span class="text-danger">*</span>
+                </label>
+                <input asp-for="DurationMinutes" type="number" class="form-control"
+                       min="1" max="480" value="30" required />
+                <small class="text-muted">من 1 إلى 480 دقيقة</small>
+            </div>
+
+            <!-- درجة النجاح -->
+            <div class="col-md-6">
+                <label asp-for="PassingScore" class="form-label">
+                    <i class="fas fa-percentage me-1"></i>
+                    درجة النجاح (%) <span class="text-danger">*</span>
+                </label>
+                <input asp-for="PassingScore" type="number" class="form-control"
+                       min="0" max="100" value="50" required />
+                <small class="text-muted">النسبة المئوية المطلوبة للنجاح</small>
+            </div>
+
+            <!-- الحد الأقصى للمحاولات -->
+            <div class="col-md-6">
+                <label asp-for="MaxAttempts" class="form-label">
+                    <i class="fas fa-redo me-1"></i>
+                    عدد المحاولات المسموح
+                </label>
+                <input asp-for="MaxAttempts" type="number" class="form-control"
+                       min="0" value="1" />
+                <small class="text-muted">0 = غير محدود</small>
+            </div>
+
+            <!-- خيارات -->
+            <div class="col-md-6">
+                <label class="form-label d-block">خيارات إضافية</label>
+
+                <div class="form-check form-switch mb-2">
+                    <input asp-for="ShuffleQuestions" class="form-check-input" type="checkbox" checked />
+                    <label asp-for="ShuffleQuestions" class="form-check-label">
+                        خلط ترتيب الأسئلة
+                    </label>
+                </div>
+
+                <div class="form-check form-switch mb-2">
+                    <input asp-for="AllowRetake" class="form-check-input" type="checkbox" />
+                    <label asp-for="AllowRetake" class="form-check-label">
+                        السماح بإعادة المحاولة
+                    </label>
+                </div>
+
+                <div class="form-check form-switch">
+                    <input asp-for="IsPublished" class="form-check-input" type="checkbox" checked />
+                    <label asp-for="IsPublished" class="form-check-label">
+                        منشور للطلاب
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- رسالة توضيحية -->
+        <div class="alert alert-info mt-4">
+            <i class="fas fa-info-circle me-2"></i>
+            بعد إنشاء الامتحان، سيتم توجيهك إلى صفحة إضافة الأسئلة والخيارات.
+        </div>
+
+        <!-- الأزرار -->
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn-primary-admin" id="submitBtn">
+                <i class="fas fa-save"></i>
+                إنشاء الامتحان
+            </button>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-times"></i>
+                إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('createExamForm').addEventListener('submit', function () {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> جارٍ الإنشاء...';
+        });
+    </script>
+}

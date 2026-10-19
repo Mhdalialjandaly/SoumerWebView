@@ -1,0 +1,685 @@
+﻿@model ExamSessionDto
+@{
+    ViewData["Title"] = $"امتحان - {Model.ExamTitle}";
+    Layout = "_Layout";
+}
+
+<div class="exam-take-page" id="examTakePage">
+
+    <!-- شريط علوي ثابت -->
+    <div class="exam-toolbar">
+        <div class="exam-toolbar-left">
+            <h1 class="exam-toolbar-title">@Model.ExamTitle</h1>
+            <span class="exam-toolbar-sub">@Model.CourseName</span>
+        </div>
+        <div class="exam-toolbar-right">
+            <div class="exam-timer" id="examTimer">
+                <i class="fas fa-clock"></i>
+                <span id="timerText">--:--</span>
+            </div>
+            <button type="button" class="exam-submit-btn" id="submitExamBtn">
+                <i class="fas fa-paper-plane"></i>
+                تسليم
+            </button>
+        </div>
+    </div>
+
+    <!-- شريط تقدم الأسئلة -->
+    <div class="exam-progress-bar">
+        <div class="exam-progress-info">
+            <span id="answeredCount">0</span> / @Model.TotalQuestions سؤال
+        </div>
+        <div class="exam-progress-track">
+            <div class="exam-progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+    </div>
+
+    @Html.AntiForgeryToken()
+
+    <!-- الأسئلة -->
+    <div class="exam-questions" id="questionsContainer">
+        @foreach (var q in Model.Questions)
+        {
+            <div class="exam-question-card" data-question-id="@q.Id">
+                <div class="exam-question-header">
+                    <span class="exam-question-number">@q.Order</span>
+                    <span class="exam-question-points">@q.Points نقطة</span>
+                </div>
+                <h3 class="exam-question-text">@q.QuestionText</h3>
+                <div class="exam-options">
+                    @foreach (var opt in q.Options)
+                    {
+                        <label class="exam-option">
+                            <input type="radio"
+                                   name="question_@q.Id"
+                                   value="@opt.Id"
+                                   data-question-id="@q.Id"
+                                   data-option-id="@opt.Id"
+                                   onchange="onAnswerSelected(this)" />
+                            <span class="exam-option-custom"></span>
+                            <span class="exam-option-text">@opt.OptionText</span>
+                        </label>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- زر تسليم في الأسفل -->
+    <div class="exam-bottom-actions">
+        <button type="button" class="exam-submit-btn-large" id="submitExamBtnBottom">
+            <i class="fas fa-paper-plane"></i>
+            تسليم الامتحان
+        </button>
+    </div>
+</div>
+
+<style>
+    /* ==========================================
+           صفحة الامتحان
+           ========================================== */
+    .exam-take-page {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 80px 16px 100px;
+        min-height: 100vh;
+    }
+
+    /* الشريط العلوي */
+    .exam-toolbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #210057, #3a1a7a);
+        color: #fff;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        z-index: 1000;
+        box-shadow: 0 2px 12px rgba(33, 0, 87, 0.3);
+    }
+
+    .exam-toolbar-left {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .exam-toolbar-title {
+        font-size: 0.95rem;
+        font-weight: 800;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .exam-toolbar-sub {
+        font-size: 0.72rem;
+        opacity: 0.8;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .exam-toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .exam-timer {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 8px 14px;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 0.95rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        min-width: 100px;
+        justify-content: center;
+    }
+
+        .exam-timer.warning {
+            background: #f59e0b;
+            border-color: #d97706;
+            animation: pulse 1s infinite;
+        }
+
+        .exam-timer.danger {
+            background: #dc2626;
+            border-color: #b91c1c;
+            animation: pulse 0.7s infinite;
+        }
+
+    @@keyframes pulse {
+        0%, 100%
+
+    {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    }
+
+    .exam-submit-btn {
+        padding: 8px 14px;
+        background: #10b981;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        cursor: pointer;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+        .exam-submit-btn:hover {
+            background: #059669;
+        }
+
+    /* شريط التقدم */
+    .exam-progress-bar {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        background: #fff;
+        padding: 8px 16px;
+        z-index: 999;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    .exam-progress-info {
+        font-size: 0.72rem;
+        color: var(--icon-color);
+        margin-bottom: 4px;
+        font-weight: 600;
+    }
+
+    .exam-progress-track {
+        height: 6px;
+        background: #e8eaf0;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .exam-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #210057, #3a1a7a);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    /* الأسئلة */
+    .exam-questions {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .exam-question-card {
+        background: #fff;
+        border-radius: var(--radius-xl);
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s;
+    }
+
+        .exam-question-card.answered {
+            border-color: #a7f3d0;
+            background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+        }
+
+    .exam-question-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .exam-question-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--primary-soft);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.85rem;
+    }
+
+    .exam-question-card.answered .exam-question-number {
+        background: #059669;
+        color: #fff;
+    }
+
+    .exam-question-points {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--icon-color);
+        background: var(--light-bg);
+        padding: 3px 10px;
+        border-radius: 10px;
+    }
+
+    .exam-question-text {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin: 0 0 16px;
+        line-height: 1.6;
+    }
+
+    /* الخيارات */
+    .exam-options {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .exam-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fff;
+    }
+
+        .exam-option:hover {
+            border-color: var(--primary-color);
+            background: var(--primary-soft);
+        }
+
+        .exam-option input[type="radio"] {
+            display: none;
+        }
+
+    .exam-option-custom {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--icon-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.2s;
+        background: #fff;
+    }
+
+    .exam-option input:checked ~ .exam-option-custom {
+        border-color: var(--primary-color);
+        background: var(--primary-color);
+    }
+
+        .exam-option input:checked ~ .exam-option-custom::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #fff;
+        }
+
+    .exam-option input:checked ~ .exam-option-text {
+        color: var(--primary-color);
+        font-weight: 700;
+    }
+
+    .exam-option:has(input:checked) {
+        border-color: var(--primary-color);
+        background: var(--primary-soft);
+    }
+
+    .exam-option-text {
+        font-size: 0.88rem;
+        color: var(--text-color);
+        line-height: 1.4;
+    }
+
+    /* زر التسليم السفلي */
+    .exam-bottom-actions {
+        display: flex;
+        justify-content: center;
+        margin-top: 24px;
+    }
+
+    .exam-submit-btn-large {
+        padding: 14px 40px;
+        background: linear-gradient(135deg, #059669, #047857);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-lg);
+        font-weight: 800;
+        font-size: 1rem;
+        cursor: pointer;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 6px 20px rgba(5, 150, 105, 0.35);
+        transition: all 0.2s;
+    }
+
+        .exam-submit-btn-large:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(5, 150, 105, 0.45);
+        }
+
+    /* تحذير الانتهاء */
+    .exam-timeout-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 3000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        text-align: center;
+        padding: 20px;
+    }
+
+        .exam-timeout-overlay.show {
+            display: flex;
+        }
+
+    .exam-timeout-content h2 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+</style>
+
+<!-- Overlay انتهاء الوقت -->
+<div class="exam-timeout-overlay" id="timeoutOverlay">
+    <div class="exam-timeout-content">
+        <h2>⏰ انتهى الوقت</h2>
+        <p>يتم تسليم امتحانك تلقائياً...</p>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // ==========================================
+        // البيانات من الخادم
+        // ==========================================
+        const attemptId = @Model.AttemptId;
+        const totalQuestions = @Model.TotalQuestions;
+        const remainingSeconds = @Model.RemainingSeconds;
+        const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        let answeredQuestionIds = new Set();
+        let timeLeft = remainingSeconds;
+        let timerInterval = null;
+        let isSubmitting = false;
+        let isLeaving = false;
+
+        // ==========================================
+        // المؤقت
+        // ==========================================
+        const timerEl = document.getElementById('examTimer');
+        const timerText = document.getElementById('timerText');
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function updateTimer() {
+            timerText.textContent = formatTime(timeLeft);
+
+            // تلوين بحسب الوقت المتبقي
+            timerEl.classList.remove('warning', 'danger');
+            if (timeLeft <= 30) {
+                timerEl.classList.add('danger');
+            } else if (timeLeft <= 120) {
+                timerEl.classList.add('warning');
+            }
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                handleTimeExpired();
+                return;
+            }
+            timeLeft--;
+        }
+
+        function startTimer() {
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        // ==========================================
+        // انتهاء الوقت → تسليم تلقائي
+        // ==========================================
+        async function handleTimeExpired() {
+            if (isSubmitting) return;
+            isSubmitting = true;
+
+            document.getElementById('timeoutOverlay').classList.add('show');
+
+            try {
+                const formData = new FormData();
+                formData.append('attemptId', attemptId);
+                formData.append('__RequestVerificationToken', antiForgeryToken);
+
+                const response = await fetch('/Exam/TimeExpired', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    window.location.href = data.resultUrl;
+                } else {
+                    window.location.href = `/Exam/Result?attemptId=${attemptId}`;
+                }
+            } catch {
+                window.location.href = `/Exam/Result?attemptId=${attemptId}`;
+            }
+        }
+
+        // ==========================================
+        // اختيار إجابة
+        // ==========================================
+        async function onAnswerSelected(input) {
+            const questionId = parseInt(input.dataset.questionId);
+            const optionId = parseInt(input.dataset.optionId);
+
+            // تحديث الواجهة فوراً
+            markQuestionAnswered(questionId);
+
+            try {
+                const response = await fetch('/Exam/Answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': antiForgeryToken
+                    },
+                    body: JSON.stringify({
+                        attemptId: attemptId,
+                        questionId: questionId,
+                        optionId: optionId
+                    })
+                });
+                const data = await response.json();
+
+                if (!data.success) {
+                    Swal.fire('تنبيه', data.message || 'فشل حفظ الإجابة', 'warning');
+                    return;
+                }
+
+                // مزامنة الوقت المتبقي (في حال تباطؤ الشبكة)
+                if (data.remainingSeconds !== undefined && data.remainingSeconds < timeLeft) {
+                    timeLeft = data.remainingSeconds;
+                }
+            } catch (err) {
+                console.error('Error saving answer:', err);
+                Swal.fire('تنبيه', 'تعذر الاتصال بالخادم', 'warning');
+            }
+        }
+
+        function markQuestionAnswered(questionId) {
+            answeredQuestionIds.add(questionId);
+            const card = document.querySelector(`.exam-question-card[data-question-id="${questionId}"]`);
+            if (card) card.classList.add('answered');
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const count = answeredQuestionIds.size;
+            document.getElementById('answeredCount').textContent = count;
+            const percentage = (count / totalQuestions) * 100;
+            document.getElementById('progressFill').style.width = percentage + '%';
+        }
+
+        // ==========================================
+        // تسليم يدوي
+        // ==========================================
+        async function submitExam() {
+            if (isSubmitting) return;
+
+            const unanswered = totalQuestions - answeredQuestionIds.size;
+
+            const confirmed = await Swal.fire({
+                title: 'تأكيد التسليم',
+                html: `
+                    <div style="text-align:right;">
+                        <p style="margin:0 0 8px;">هل تريد تسليم الامتحان؟</p>
+                        ${unanswered > 0
+                            ? `<div style="padding:8px 12px; background:#fef3c7; border-radius:8px; color:#b45309; font-size:0.85rem;">
+                                 <i class="fas fa-exclamation-triangle"></i>
+                                 لديك <strong>${unanswered}</strong> سؤال بدون إجابة
+                               </div>`
+                            : `<div style="padding:8px 12px; background:#d1fae5; border-radius:8px; color:#059669; font-size:0.85rem;">
+                                 <i class="fas fa-check-circle"></i>
+                                 أجبت على جميع الأسئلة
+                               </div>`
+                        }
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، سلّم الآن',
+                cancelButtonText: 'متابعة الامتحان',
+                confirmButtonColor: '#059669',
+                cancelButtonColor: '#9496a5'
+            });
+
+            if (!confirmed.isConfirmed) return;
+
+            isSubmitting = true;
+            clearInterval(timerInterval);
+
+            Swal.fire({
+                title: 'جارٍ التسليم...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            try {
+                const formData = new FormData();
+                formData.append('attemptId', attemptId);
+                formData.append('__RequestVerificationToken', antiForgeryToken);
+
+                const response = await fetch('/Exam/Submit', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    window.location.href = data.resultUrl;
+                } else {
+                    Swal.fire('خطأ', data.message || 'تعذر تسليم الامتحان', 'error');
+                    isSubmitting = false;
+                }
+            } catch {
+                Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
+                isSubmitting = false;
+            }
+        }
+
+        document.getElementById('submitExamBtn').addEventListener('click', submitExam);
+        document.getElementById('submitExamBtnBottom').addEventListener('click', submitExam);
+
+        // ==========================================
+        // منع الخروج / مغادرة الصفحة = رسوب
+        // ==========================================
+        function forceFailOnExit() {
+            if (isLeaving || isSubmitting) return;
+            isLeaving = true;
+
+            // استخدام sendBeacon لأنه يضمن إرسال الطلب حتى لو أُغلقت الصفحة
+            const formData = new FormData();
+            formData.append('attemptId', attemptId);
+            formData.append('__RequestVerificationToken', antiForgeryToken);
+
+            navigator.sendBeacon('/Exam/ForceFail', formData);
+        }
+
+        // 1. منع إغلاق/تحديث الصفحة
+        window.addEventListener('beforeunload', function (e) {
+            if (isSubmitting || isLeaving) return;
+
+            // 2. تسجيل الخروج كرسوب
+            forceFailOnExit();
+
+            e.preventDefault();
+            e.returnValue = '';
+            return '';
+        });
+
+        // 3. عند إخفاء الصفحة (تبديل تاب/تطبيق) — تنبيه اختياري
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden && !isSubmitting && !isLeaving) {
+                // اختياري: يمكن تسجيل ForceFail هنا أيضاً إن أردت صرامة أكبر
+                // forceFailOnExit();
+            }
+        });
+
+        // 4. منع زر الرجوع
+        history.pushState(null, null, location.href);
+        window.addEventListener('popstate', function () {
+            history.pushState(null, null, location.href);
+        });
+
+        // 5. منع النقر على أي رابط خارجي
+        document.addEventListener('click', function (e) {
+            const link = e.target.closest('a');
+            if (link && !link.href.startsWith('javascript:')) {
+                e.preventDefault();
+                Swal.fire('تنبيه', 'لا يمكنك مغادرة الامتحان أثناء تقديمه', 'warning');
+            }
+        });
+
+        // ==========================================
+        // التهيئة
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', function () {
+            startTimer();
+            updateProgress();
+        });
+    </script>
+}

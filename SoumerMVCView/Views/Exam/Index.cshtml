@@ -1,0 +1,204 @@
+﻿@model List<ExamListItemDto>
+@{
+    ViewData["Title"] = "الامتحانات";
+    var courseId = ViewBag.CourseId as int? ?? 0;
+}
+
+<div class="exams-page">
+    <div class="exams-header">
+        <a href="/Course/Details/@courseId" class="exams-back-btn">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+        <div>
+            <h1 class="exams-title">الامتحانات</h1>
+            <p class="exams-subtitle">@Model.Count امتحان متاح</p>
+        </div>
+    </div>
+
+    @Html.AntiForgeryToken()
+
+    @if (!Model.Any())
+    {
+        <div class="exams-empty">
+            <div class="exams-empty-icon"><i class="fas fa-file-alt"></i></div>
+            <h3>لا توجد امتحانات</h3>
+            <p>لم يتم إضافة امتحانات لهذه المادة بعد</p>
+        </div>
+    }
+    else
+    {
+        <div class="exams-list">
+            @foreach (var exam in Model)
+            {
+                <div class="exam-card @(exam.LastAttempt != null ? (exam.LastAttempt.IsPassed ? "passed" : "failed") : "")">
+                    <div class="exam-card-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="exam-card-body">
+                        <h3 class="exam-card-title">@exam.Title</h3>
+                        @if (!string.IsNullOrEmpty(exam.Description))
+                        {
+                            <p class="exam-card-desc">@exam.Description</p>
+                        }
+                        <div class="exam-card-meta">
+                            <span><i class="fas fa-clock"></i> @exam.DurationMinutes دقيقة</span>
+                            <span><i class="fas fa-question-circle"></i> @exam.QuestionCount سؤال</span>
+                            <span><i class="fas fa-percentage"></i> النجاح @exam.PassingScore%</span>
+                            @if (exam.MaxAttempts > 0)
+                            {
+                                <span><i class="fas fa-redo"></i> @exam.AttemptsCount/@exam.MaxAttempts</span>
+                            }
+                        </div>
+                        @if (exam.LastAttempt != null)
+                        {
+                            <div class="exam-last-attempt @(exam.LastAttempt.IsPassed ? "success" : "danger")">
+                                <i class="fas @(exam.LastAttempt.IsPassed ? "fa-check-circle" : "fa-times-circle")"></i>
+                                <span>
+                                    آخر محاولة: @exam.LastAttempt.Score.ToString("N0")/@exam.LastAttempt.MaxScore.ToString("N0") نقطة
+                                    @if (exam.LastAttempt.IsPassed)
+                                    {
+                                        <strong>(ناجح)</strong>
+                                    }
+                                    else
+                                    {
+                                        <strong>(راسب)</strong>
+                                    }
+                                    @if (!string.IsNullOrEmpty(exam.LastAttempt.EndReason))
+                                    {
+                                        <small class="d-block text-muted">
+                                            السبب: @GetReasonText(exam.LastAttempt.EndReason)
+                                        </small>
+                                    }
+                                </span>
+                            </div>
+                        }
+                    </div>
+                    <div class="exam-card-actions">
+                        @if (exam.CanStart)
+                        {
+                            <button type="button" class="btn-exam-start" onclick="startExam(@exam.Id, '@Html.Raw(Html.Encode(exam.Title))')">
+                                <i class="fas fa-play"></i>
+                                ابدأ الامتحان
+                            </button>
+                        }
+                        else if (exam.LastAttempt != null && exam.LastAttempt.Status >= 2)
+                        {
+                            <a href="/Exam/Result?attemptId=@exam.LastAttempt.Id" class="btn-exam-result">
+                                <i class="fas fa-chart-bar"></i>
+                                عرض النتيجة
+                            </a>
+                            @if (!string.IsNullOrEmpty(exam.BlockReason))
+                            {
+                                <small class="text-muted d-block mt-1">@exam.BlockReason</small>
+                            }
+                        }
+                        else
+                        {
+                            <button type="button" class="btn-exam-start disabled" disabled>
+                                <i class="fas fa-lock"></i>
+                                غير متاح
+                            </button>
+                            @if (!string.IsNullOrEmpty(exam.BlockReason))
+                            {
+                                <small class="text-danger d-block mt-1">@exam.BlockReason</small>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@functions {
+    string GetReasonText(string reason) => reason switch
+    {
+        "ManualSubmit" => "تسليم يدوي",
+        "TimeExpired" => "انتهاء الوقت",
+        "ForcedFail" => "مغادرة الصفحة (رسوب تلقائي)",
+        _ => reason
+    };
+}
+
+<style>
+    .exams-page { max-width: 800px; margin: 0 auto; padding: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-lg); }
+    .exams-header { display: flex; align-items: center; gap: var(--spacing-md); }
+    .exams-back-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--white); border: 1px solid var(--border-color); color: var(--primary-color); display: flex; align-items: center; justify-content: center; text-decoration: none; box-shadow: var(--shadow-sm); }
+    .exams-back-btn:hover { background: var(--primary-color); color: #fff; }
+    .exams-title { font-size: 1.05rem; font-weight: 800; color: var(--text-color); margin: 0 0 2px; }
+    .exams-subtitle { font-size: 0.78rem; color: var(--icon-color); margin: 0; }
+    .exams-list { display: flex; flex-direction: column; gap: 12px; }
+    .exam-card { display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--white); border: 1px solid var(--border-color); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); transition: all 0.2s; flex-wrap: wrap; }
+    .exam-card:hover { box-shadow: var(--shadow-md); border-color: var(--primary-color); }
+    .exam-card.passed { border-color: #a7f3d0; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); }
+    .exam-card.failed { border-color: #fecaca; background: linear-gradient(135deg, #fef2f2, #fee2e2); }
+    .exam-card-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--primary-soft); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .exam-card-body { flex: 1; min-width: 200px; }
+    .exam-card-title { font-size: 0.95rem; font-weight: 800; color: var(--text-color); margin: 0 0 4px; }
+    .exam-card-desc { font-size: 0.8rem; color: var(--icon-color); margin: 0 0 8px; line-height: 1.4; }
+    .exam-card-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.75rem; color: var(--icon-color); margin-bottom: 8px; }
+    .exam-card-meta i { margin-left: 3px; }
+    .exam-last-attempt { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; }
+    .exam-last-attempt.success { background: #d1fae5; color: #059669; }
+    .exam-last-attempt.danger { background: #fee2e2; color: #dc2626; }
+    .exam-card-actions { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+    .btn-exam-start { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; background: var(--primary-color); color: #fff; border: none; border-radius: var(--radius-md); font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; font-family: inherit; white-space: nowrap; }
+    .btn-exam-start:hover { background: var(--primary-dark); transform: translateY(-2px); }
+    .btn-exam-start.disabled { background: #94a3b8; cursor: not-allowed; }
+    .btn-exam-result { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; background: var(--primary-soft); color: var(--primary-color); border: none; border-radius: var(--radius-md); font-weight: 700; font-size: 0.85rem; text-decoration: none; white-space: nowrap; }
+    .btn-exam-result:hover { background: var(--primary-color); color: #fff; }
+    .exams-empty { background: var(--white); border-radius: var(--radius-xl); padding: var(--spacing-2xl); text-align: center; border: 1px dashed var(--border-color); }
+    .exams-empty-icon { width: 80px; height: 80px; margin: 0 auto var(--spacing-md); border-radius: 50%; background: var(--primary-soft); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
+    @@media (max-width: 500px) { .exam-card { flex-direction: column; align-items: stretch; } .exam-card-actions { width: 100%; } }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        async function startExam(examId, examTitle) {
+            const confirmed = await Swal.fire({
+                title: 'تأكيد بدء الامتحان',
+                html: `
+                    <div style="text-align:right;">
+                        <p style="margin:0 0 8px;">سيتم بدء امتحان</p>
+                        <strong style="color:#210057;">"${examTitle}"</strong>
+                        <div style="margin-top:12px; padding:10px; background:#fef3c7; border-radius:8px; font-size:0.85rem; color:#b45309;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>تنبيه مهم:</strong> بمجرد البدء، يبدأ المؤقت ولا يمكن إيقافه. الخروج من الصفحة يُحسب رسوباً.
+                        </div>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، ابدأ الآن',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#210057',
+                cancelButtonColor: '#9496a5'
+            });
+
+            if (!confirmed.isConfirmed) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('examId', examId);
+                formData.append('__RequestVerificationToken',
+                    document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                const response = await fetch('/Exam/Start', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    window.location.href = data.redirectUrl;
+                } else {
+                    Swal.fire('خطأ', data.message || 'تعذر بدء الامتحان', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
+            }
+        }
+    </script>
+}

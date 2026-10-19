@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace DataAccess
 {
@@ -22,16 +23,56 @@ namespace DataAccess
         public DbSet<PointsCode> PointsCodes { get; set; }
         public DbSet<CoursePdf> CoursePdfs { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder builder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(builder);
+            base.OnModelCreating(modelBuilder);
 
-            builder.Entity<IdentityUserRole<string>>()
+            modelBuilder.Entity<IdentityUserRole<string>>()
                 .HasKey(ur => new { ur.UserId, ur.RoleId });
+            // 1. ExamAttempt → Exam (Cascade)
+            modelBuilder.Entity<ExamAttempt>()
+                .HasOne(a => a.Exam)
+                .WithMany(e => e.Attempts)
+                .HasForeignKey(a => a.ExamId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            OnModelCreatingPartial(builder);
+            // 2. ExamQuestion → Exam (Cascade)
+            modelBuilder.Entity<ExamQuestion>()
+                .HasOne(q => q.Exam)
+                .WithMany(e => e.Questions)
+                .HasForeignKey(q => q.ExamId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+            // 3. ExamOption → ExamQuestion (Cascade)
+            modelBuilder.Entity<ExamOption>()
+                .HasOne(o => o.ExamQuestion)
+                .WithMany(q => q.Options)
+                .HasForeignKey(o => o.ExamQuestionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // 4. ExamAnswer → ExamAttempt (Cascade)
+            modelBuilder.Entity<ExamAnswer>()
+                .HasOne(a => a.ExamAttempt)
+                .WithMany(t => t.Answers)
+                .HasForeignKey(a => a.ExamAttemptId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ✅ 5. ExamAnswer → ExamQuestion (NoAction) — حل مشكلة Cascade Cycle
+            modelBuilder.Entity<ExamAnswer>()
+                .HasOne(a => a.ExamQuestion)
+                .WithMany()
+                .HasForeignKey(a => a.ExamQuestionId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // ✅ 6. ExamAnswer → ExamOption (NoAction) — لتجنب مسار ثالث
+            modelBuilder.Entity<ExamAnswer>()
+                .HasOne(a => a.SelectedOption)
+                .WithMany()
+                .HasForeignKey(a => a.SelectedOptionId)
+                .OnDelete(DeleteBehavior.NoAction);
+            OnModelCreatingPartial(modelBuilder);
+
+            modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         }
 
         partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
